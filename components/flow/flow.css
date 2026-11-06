@@ -1,0 +1,399 @@
+/*
+ * /flow lab styles that are awkward as utilities: era typography, the
+ * composer/posted-comment stack, and small looping animations.
+ */
+
+.fl-era {
+  font-family: var(--f-font);
+  font-size: var(--f-size);
+  color: var(--f-text);
+  line-height: 1.34;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Children share one grid cell: the cell is as tall as the tallest child, so
+   swapping which one is visible never moves anything below. */
+.fl-stack {
+  display: grid;
+}
+.fl-stack > * {
+  grid-area: 1 / 1;
+}
+
+.fl-caret {
+  display: inline-block;
+  width: 1px;
+  height: 1.1em;
+  margin-left: 1px;
+  vertical-align: -2px;
+  background: currentColor;
+  animation: fl-blink 1s steps(1) infinite;
+}
+@keyframes fl-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.fl-spin {
+  animation: fl-spin 0.8s linear infinite;
+}
+@keyframes fl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fl-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.fl-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: translateX(-100%);
+  animation: fl-shimmer 1.4s infinite;
+}
+@keyframes fl-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.fl-heart-pop {
+  animation: fl-heart 0.9s ease-out forwards;
+}
+@keyframes fl-heart {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  30% {
+    transform: scale(0.95);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+/* -------------------------------- Landing -------------------------------- */
+/* A click's result announces itself while the feed holds still (see
+   FLOW_TIMING.land): buttons pop, a posted comment slides in, and the
+   2005–2012 text links get the yellow fade of their day. */
+.fl-pop {
+  animation: fl-pop 0.46s cubic-bezier(0.25, 0.8, 0.35, 1);
+}
+@keyframes fl-pop {
+  0% {
+    transform: scale(0.7);
+  }
+  40% {
+    transform: scale(1.3);
+  }
+  68% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.fl-arrive {
+  animation: fl-arrive 0.42s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+@keyframes fl-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.fl-flash {
+  animation: fl-flash 1.5s ease-out;
+}
+@keyframes fl-flash {
+  0%,
+  20% {
+    background-color: #fff29e;
+    box-shadow: 0 0 0 2px #fff29e;
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+
+/* The picked reaction swells in the palette before it closes. */
+.fl-pick {
+  transition:
+    transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.4),
+    opacity 0.16s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-pop,
+  .fl-arrive {
+    animation: none;
+  }
+}
+
+.fl-ghost {
+  background: linear-gradient(90deg, #8b5cf6, #ec4899, #8b5cf6);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fl-ghost 2s linear infinite;
+}
+@keyframes fl-ghost {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Agent cursor */
+[data-flow-cursor] svg {
+  transition: transform 0.08s;
+  transform-origin: 2px 2px;
+}
+[data-flow-cursor] .fl-cursor-ring {
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 0.12s,
+    transform 0.12s;
+}
+[data-flow-cursor][data-pressed='true'] .fl-cursor-ring {
+  opacity: 1;
+  transform: scale(1);
+}
+[data-flow-cursor][data-pressed='true'] svg {
+  transform: scale(0.88);
+}
+
+/* Art-direction notes inside media placeholders: lab guides only. */
+[data-flow-guides='off'] .fl-note {
+  opacity: 0;
+}
+
+/* Notifications under Ashley's chip */
+.fl-toast {
+  animation: fl-toast-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes fl-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-14px) scale(0.97);
+  }
+}
+
+/* ------------------------------ The machine ------------------------------ */
+/* Devtools box-model colours: margin, border, padding, content. */
+
+.fl-m-margin {
+  position: relative;
+  margin-bottom: 18px;
+  padding: 10px;
+  background: rgba(249, 204, 157, 0.55);
+}
+.fl-m-border {
+  border: 2px solid #f4c879;
+}
+.fl-m-padding {
+  position: relative;
+  padding: 12px;
+  background: rgba(195, 208, 139, 0.5);
+}
+.fl-m-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(140, 182, 192, 0.32);
+}
+.fl-m-label {
+  position: absolute;
+  top: 0;
+  left: 4px;
+  font-size: 9px;
+  line-height: 10px;
+  color: #7a4b00;
+}
+.fl-m-dims {
+  position: absolute;
+  right: 6px;
+  bottom: -14px;
+  font-size: 9px;
+  color: #6e7781;
+}
+.fl-tag {
+  position: relative;
+  padding: 15px 8px 7px;
+  outline: 1px dashed #8c959f;
+  outline-offset: -1px;
+}
+.fl-tag::before {
+  content: attr(data-tag);
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  max-width: calc(100% - 12px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  line-height: 11px;
+  color: #8250df;
+}
+/* Wireframe image: a box with an X through it. */
+.fl-m-img {
+  display: inline-block;
+  flex-shrink: 0;
+  border: 1px solid #8c959f;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 0.5px), #8c959f, transparent calc(50% + 0.5px)),
+    linear-gradient(to bottom right, transparent calc(50% - 0.5px), #8c959f, transparent calc(50% + 0.5px)),
+    #f6f8fa;
+}
+
+/* -------------------------------- Glitch --------------------------------- */
+
+.fl-glitch-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  mix-blend-mode: difference;
+  background: #00e5ff;
+}
+.fl-glitch-bar:nth-child(2n) {
+  background: #ff2bd6;
+}
+.fl-glitch-bar:nth-child(3n) {
+  background: #ffffff;
+}
+[data-glitch='on'] [data-flow-content] {
+  text-shadow:
+    calc(var(--glitch) * 3px) 0 rgba(255, 0, 90, 0.6),
+    calc(var(--glitch) * -3px) 0 rgba(0, 200, 255, 0.6);
+}
+
+/* -------------------------------- Reveal --------------------------------- */
+
+/* Status LEDs blink in perfect sync across every session: a machine tell. */
+.fl-led {
+  animation: fl-led 1.2s steps(1) infinite;
+}
+@keyframes fl-led {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Other sessions' feeds keep scrolling on their own. */
+.fl-minifeed {
+  animation: fl-minifeed 9s linear infinite;
+}
+@keyframes fl-minifeed {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+/* New tool calls slide into the log. */
+.fl-call {
+  animation: fl-call-in 0.3s ease-out both;
+}
+@keyframes fl-call-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* "Agent is controlling this browser": a glow around the live browser… */
+.fl-agent-frame {
+  outline: 3px solid rgba(124, 92, 255, 0.85);
+  animation: fl-agent 2.4s ease-in-out infinite;
+}
+@keyframes fl-agent {
+  50% {
+    outline-color: rgba(124, 92, 255, 0.35);
+    box-shadow: 0 0 60px rgba(124, 92, 255, 0.35);
+  }
+}
+
+/* The live browser window: the AGENT badge and glow only show once the
+   reveal starts. */
+[data-flow-window] .fl-agent-badge {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+[data-flow-window][data-agent='on'] .fl-agent-badge {
+  opacity: 1;
+}
+[data-flow-window][data-agent='on'] {
+  outline: 4px solid rgba(124, 92, 255, 0.85);
+  animation: fl-agent 2.4s ease-in-out infinite;
+}
+
+/* ------------------------------ Page backdrop ----------------------------- */
+/* The page behind the browser window. Registering the colours lets the
+   gradient itself transition when the era changes (see PageBackdrop). */
+@property --bd-base {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #e9e5dd;
+}
+@property --bd-glow {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #e9e5dd;
+}
+@property --bd-glow2 {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #e9e5dd;
+}
+
+.fl-backdrop {
+  background:
+    radial-gradient(75% 90% at 8% 0%, var(--bd-glow), transparent 72%),
+    radial-gradient(75% 90% at 94% 100%, var(--bd-glow2), transparent 72%),
+    var(--bd-base);
+  transition:
+    --bd-base 1.4s ease,
+    --bd-glow 1.4s ease,
+    --bd-glow2 1.4s ease;
+}
+
+/* ------------------------- Morphing between eras -------------------------- */
+/* The pinned pieces are the same elements in every era; when the era's
+   tokens change they animate to the new look instead of being swapped. */
+.fl-morph,
+.fl-morph * {
+  transition-property: background-color, color, border-color, border-radius, box-shadow, padding, margin, opacity, min-width;
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fl-date-in {
+  animation: fl-date-in 0.5s ease-out both;
+}
+@keyframes fl-date-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}

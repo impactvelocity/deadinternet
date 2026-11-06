@@ -1,0 +1,955 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Install test dependencies and configure Vitest": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152049
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840163997
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840258565
+      }
+    ],
+    "1.2 Delete the old implementation and stub the page": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152079
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840164743
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840259170
+      }
+    ],
+    "2.1 Implement seeded randomness in `lib/story/rng.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152105
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840262806
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840538731
+      }
+    ],
+    "2.3 Implement Era ranges in `lib/story/ranges.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152130
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840264021
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840538908
+      }
+    ],
+    "2.5 Implement scroll mapping and viewport fit": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152150
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840264818
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840539696
+      }
+    ],
+    "3.1 Create `data/profiles.ts` and `data/eras.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152175
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840266015
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840540525
+      }
+    ],
+    "3.2 Create the Asset_Manifest in `data/assets.ts` and the asset folders": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152195
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840545175
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841164283
+      }
+    ],
+    "3.3 Create Site_Page themes in `data/themes.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152217
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840266726
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840541440
+      }
+    ],
+    "3.4 Implement `validateRegistry()` in `lib/story/validate.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152238
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840546076
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841165163
+      }
+    ],
+    "4.1 Implement the pure resolver in `lib/assets/resolve.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152265
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841186254
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841617656
+      }
+    ],
+    "4.3 Implement the server-only presence check in `lib/assets/presence.server.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152287
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841191200
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841618774
+      }
+    ],
+    "4.4 Implement `Placeholder`, `StoryImage`, and the asset context": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152307
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841624788
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841858786
+      }
+    ],
+    "5.1 Create the cursor script in `data/cursor-script.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152326
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841191580
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841619578
+      }
+    ],
+    "5.2 Implement one-shot events in `lib/story/events.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152352
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841192568
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841620497
+      }
+    ],
+    "5.3 Implement `compileTimeline()` in `lib/story/compile.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152376
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841625737
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841859767
+      }
+    ],
+    "6.1 Implement `lib/story/nav.ts` and `lib/story/dial-status.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152397
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841866304
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842112635
+      }
+    ],
+    "6.2 Implement `lib/story/chrome-state.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152418
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842122900
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842392605
+      }
+    ],
+    "7.1 Implement `lib/story/page-scroll.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152440
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841866355
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842112671
+      }
+    ],
+    "7.3 Implement `lib/story/cursor-path.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152462
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841867529
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842113268
+      }
+    ],
+    "7.5 Implement `lib/story/cursor.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152483
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842124856
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842835576
+      }
+    ],
+    "7.7 Implement `lib/story/interactions.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152506
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841868317
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842114468
+      }
+    ],
+    "7.9 Implement `lib/story/camera.ts` and `lib/story/glitch.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152526
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841869279
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842115164
+      }
+    ],
+    "8.1 Implement `lib/story/frame.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152546
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842841378
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793849978136
+      }
+    ],
+    "8.3 Implement `lib/story/autoplay-plan.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152572
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842121437
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842392568
+      }
+    ],
+    "9. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152593
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793849987330
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850045535
+      }
+    ],
+    "10.1 Implement the pure mixer in `lib/audio/mixer.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152619
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842122115
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842392584
+      }
+    ],
+    "10.3 Implement procedural beds and sfx in `lib/audio/procedural.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152641
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842124116
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842836306
+      }
+    ],
+    "10.4 Implement `lib/audio/engine.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152662
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842841917
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793849978900
+      }
+    ],
+    "11.1 Implement `lib/runtime/gsap.ts` and `lib/runtime/motion.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152683
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842842695
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793849979920
+      }
+    ],
+    "11.2 Implement `lib/runtime/progress-store.ts` and `lib/runtime/discrete-store.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152706
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850049898
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850587545
+      }
+    ],
+    "11.4 Implement `lib/runtime/frame-applier.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152727
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850050687
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850588226
+      }
+    ],
+    "11.6 Implement `lib/runtime/layout-measure.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152750
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850052036
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850589339
+      }
+    ],
+    "11.7 Implement `lib/runtime/autoplay-controller.ts` and `lib/runtime/input-interrupt.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152773
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850053092
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850590536
+      }
+    ],
+    "12. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152794
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850600050
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850824228
+      }
+    ],
+    "13.1 Create `data/feed-posts.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152817
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850053881
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850591165
+      }
+    ],
+    "13.2 Create `data/feed-styles.ts` and `data/myspace-profile.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152841
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850600877
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850823318
+      }
+    ],
+    "14.1 Implement `components/os/XpFrame.tsx`, `XpTaskbar.tsx`, `MacFrame.tsx`, `MacMenuBar.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152864
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850840524
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793851653133
+      }
+    ],
+    "14.2 Implement `components/chrome/Ie6Chrome.tsx`, `Firefox2Chrome.tsx`, `ChromeMac.tsx`, `cursors.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152885
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850840548
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793851653151
+      }
+    ],
+    "14.3 Implement `components/story/BrowserWindow.tsx` and `components/story/PageViewport.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152909
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793854696003
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855017044
+      }
+    ],
+    "15.1 Implement `components/pages/LoadingPage.tsx` and `DialUpDialog.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152937
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850840628
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793851654032
+      }
+    ],
+    "15.2 Implement `components/pages/MySpacePage.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152958
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850841832
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793851655226
+      }
+    ],
+    "15.3 Implement the Continuous_Feed components in `components/pages/feed/`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840152982
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793851669385
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793854688678
+      }
+    ],
+    "15.4 Write runtime-driven rules in `app/globals.css`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153004
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793854696653
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855017909
+      }
+    ],
+    "16.1 Implement `components/reveal/DeskScene.tsx`, `AgentPanel.tsx`, `ServerRoom.tsx`, `RevealWorld.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153025
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850842824
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793851656582
+      }
+    ],
+    "16.2 Implement `components/reveal/useLedTimeline.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153048
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793851670579
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793854689209
+      }
+    ],
+    "16.3 Implement `components/story/ScriptedCursor.tsx` and `components/story/Camera.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153069
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793854697852
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855019042
+      }
+    ],
+    "16.4 Implement `components/controls/PlayButton.tsx`, `MuteButton.tsx`, `ProgressSlider.tsx`, `ControlBar.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153091
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793851671630
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793854690397
+      }
+    ],
+    "17.1 Implement `lib/runtime/frame-loop.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153112
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793854698646
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855020064
+      }
+    ],
+    "17.2 Implement `components/story/ScrollStory.tsx` and extend `components/story/StoryContext.tsx`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153136
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855025132
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855350493
+      }
+    ],
+    "17.3 Update `app/page.tsx`, `app/layout.tsx`, and `next.config.ts`": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153159
+      },
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855351334
+      }
+    ],
+    "18. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840153181
+      }
+    ],
+    "1. Set up test tooling and clear the old implementation": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840259200
+      }
+    ],
+    "2. Implement pure foundation utilities": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793840539720
+      }
+    ],
+    "3. Implement the Era_Registry, profiles, Asset_Manifest, and themes": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841165196
+      }
+    ],
+    "4. Implement asset resolution and placeholders": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841858816
+      }
+    ],
+    "5. Implement the timeline compiler": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793841859804
+      }
+    ],
+    "6. Implement navigation, chrome, and dial-up state": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842392627
+      }
+    ],
+    "7. Implement page scroll, cursor, interactions, and camera functions": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793842835604
+      }
+    ],
+    "8. Implement `frameAt` and the autoplay plan": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793849978166
+      }
+    ],
+    "10. Implement the Audio_Engine": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793849978926
+      }
+    ],
+    "11. Implement the client runtime modules": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850590565
+      }
+    ],
+    "13. Create feed and MySpace content data": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793850823368
+      }
+    ],
+    "14. Build the OS frames, browser chrome, and Browser_Window": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855017079
+      }
+    ],
+    "15. Build the Site_Pages and runtime-driven CSS": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855017941
+      }
+    ],
+    "16. Build the reveal world, cursor, camera, and controls": [
+      {
+        "executionId": "4b90f118-02cd-4a59-95f5-bdd3bf29556b",
+        "chatSessionId": "sess_84a2661d-47b0-47fe-a090-5313e6abb0c5",
+        "timestamp": 1793855019070
+      }
+    ]
+  }
+}
