@@ -4,7 +4,7 @@
  * form works). While it's empty, the pop-up says the video is on its way.
  */
 export const FILM_VIDEO = {
-  youtube: '',
+  youtube: 'https://youtu.be/ydEq0oPjJnE',
   title: 'Dead Internet, the film',
 } as const;
 
