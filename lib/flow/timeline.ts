@@ -98,6 +98,8 @@ export type Beat =
       to: number;
       bounce: number;
       cursor: Pt;
+      /** In the film the cursor glides from `cursor` to here, out of the way, as the feed scrolls. */
+      cursorTo?: Pt;
       continuous?: boolean;
       v0?: number;
       v1?: number;
@@ -184,7 +186,9 @@ export interface Timeline {
   eraStarts: number[];
   /** `s` at which the feed finishes its entrance into era k and pauses. */
   eraArrivals: number[];
-  /** The camera starts pulling back (during the last era's narration). */
+  /** The last era's rush starts, just before "Behind the feed" (`FLOW_TIMING.revealRush`). */
+  rushStart: number;
+  /** The camera starts pulling back (with "Behind the feed", unless the last line sets an earlier cue). */
   pullbackStart: number;
   /** "Behind the feed": the last era's narration ends and the reveal's begins. */
   revealStart: number;
@@ -280,12 +284,14 @@ export const FLOW_TIMING = {
   glitchIn: 260,
   glitchOut: 520,
   /**
-   * Relative lengths of the pull-back while the last line plays: to the
-   * chat, a short hold on it, to the wall, to the farm. The later phases are
+   * Relative lengths of the pull-back, which takes `revealPullMin` in all:
+   * out to the chat as "Behind the feed" starts ("The internet used to be our
+   * sandbox…"), a long hold on it so it can be read (the "user" turns out to
+   * be a scheduler), then out to the wall and the farm. The later phases are
    * set by the reveal narration's cues (data/flow/narration.json); their
    * weights here only matter without cues.
    */
-  reveal: { sandbox: 2400, chat: 1500, servers: 1900, farm: 1700, dots: 1600, signal: 6000, end: 1800 } as Record<
+  reveal: { sandbox: 1500, chat: 2900, servers: 700, farm: 600, dots: 1600, signal: 6000, end: 1800 } as Record<
     RevealPhase,
     number
   >,
@@ -324,12 +330,24 @@ export const FLOW_TIMING = {
     trailMax: 140,
     trailSeconds: 0.35,
   },
+  /**
+   * Where the film's cursor rests between actions: this many px right of the
+   * feed (in the gutter before the sidebar), at this share of its height; and
+   * how long (s) it takes to glide there once the feed moves on.
+   */
+  cursorRest: { x: 34, y: 0.58, seconds: 0.55 },
   /** Ramp (share of the reveal) over which the endless tail gets up to speed. */
   tailRamp: 0.035,
-  /** Seconds the sessions take to shrink into dots, ending as "Behind the feed" starts. */
-  revealMorph: 2.4,
-  /** Least time (s) for the pull-back from the window to the field. */
-  revealPullMin: 4,
+  /** Seconds the sessions take to shrink into dots, straight after the pull-back. */
+  revealMorph: 0.8,
+  /** Seconds the pull-back takes, from the window to the field (see `reveal`). */
+  revealPullMin: 5.7,
+  /**
+   * Seconds before "Behind the feed" that the last era rushes: the bots'
+   * notifications flood in, the counts start to explode and her business
+   * inbox runs away with itself. Until then she just posts.
+   */
+  revealRush: 1.5,
   /** Seconds over which the screen fades out with the last note. */
   revealEndCard: 6,
   /** Dwell/travel multipliers by agent style. */
@@ -481,6 +499,12 @@ export function compileTimeline(
   posts: Readonly<Record<string, readonly FlowPost[]>>,
   m: FlowMeasure,
   T: FlowTiming = FLOW_TIMING,
+  /**
+   * Seconds of score the story runs to. The site starts the score with the
+   * first word; the movie (lib/flow/movie.ts) starts it under its opening
+   * titles, so the story gets that much less of it.
+   */
+  scoreSeconds: number = MUSIC.durationSeconds,
 ): Timeline {
   const beats: Beat[] = [];
   const events: FlowEvent[] = [];
@@ -491,7 +515,11 @@ export function compileTimeline(
 
   let s = 0;
   let offset = 0;
-  let cursor: Pt = { x: m.viewport.x + m.viewport.w * 0.82, y: m.viewport.y + vh * 0.72 };
+  // In the film the cursor waits in the gutter right of the feed whenever the
+  // agent isn't doing anything, and comes back there after each action.
+  const rest: Pt = { x: m.viewport.x + m.viewport.w + T.cursorRest.x, y: m.viewport.y + vh * T.cursorRest.y };
+  const filmFirst = eras.length > 0 && (posts[eras[0].id] ?? []).length > 0 && (posts[eras[0].id] ?? []).every((p) => p.endsAtSeconds !== undefined);
+  let cursor: Pt = filmFirst ? rest : { x: m.viewport.x + m.viewport.w * 0.82, y: m.viewport.y + vh * 0.72 };
 
   // Per-era scroll feel, set as each era is compiled.
   let rate: number = T.scrollRate;
@@ -504,7 +532,9 @@ export function compileTimeline(
     if (d < 1) return false;
     const len = rate * (T.scrollBase + d ** T.scrollExp);
     const bounce = continuous ? 0 : Math.min(T.bounceMax, d * T.bounceShare) * bounciness;
-    beats.push({ kind: 'scroll', s0: s, s1: s + len, from: offset, to, bounce: bounce * Math.sign(delta), cursor, continuous });
+    const away = continuous && (cursor.x !== rest.x || cursor.y !== rest.y);
+    beats.push({ kind: 'scroll', s0: s, s1: s + len, from: offset, to, bounce: bounce * Math.sign(delta), cursor, cursorTo: away ? rest : undefined, continuous });
+    if (away) cursor = rest;
     s += len;
     offset = to;
     return true;
@@ -989,16 +1019,20 @@ export function compileTimeline(
 
   /*
    * The reveal. "Behind the feed" starts when the last era's line ends
-   * (`revealStart`), but the camera sets off earlier, on a cue inside that
-   * line ("It was the only thing anyone wanted…"), while the agent keeps
-   * working in the window:
+   * (`revealStart`). Her posts play out in the window first; only in the
+   * last moments before it (`rushStart`) does everything run away with
+   * itself. Then the camera pulls back (a line can set an earlier cue with
+   * `pullbackAtSeconds`, but the film doesn't):
    *
-   *   pullbackStart  sandbox → chat → servers → farm, then every session
-   *                  shrinks into a dot, finishing as the line ends
-   *   revealStart    rows of blinking dots ("The internet used to be our
-   *                  sandbox,"), then the camera pushes in until they read as
-   *                  pixels, which show symbols in step with the voice and
-   *                  after it, through the music's swell (signal.ts)
+   *   rushStart      the bots' notifications flood in, the counts explode
+   *   pullbackStart  "The internet used to be our sandbox…": out to the chat
+   *                  session, a long hold there to read it, then out through
+   *                  the wall and the farm, and every session shrinks into a
+   *                  dot ("…to be ourselves")
+   *   signal cue     the camera packs the dots into a screen of pixels,
+   *                  which show symbols in step with the voice ("Now it's
+   *                  just a chat agent…") and after it, through the music's
+   *                  swell (signal.ts)
    *   total          the score's last note, as the screen fades to black
    */
   const revealStart = s;
@@ -1008,13 +1042,15 @@ export function compileTimeline(
   const lastStart = eraStarts.at(-1) ?? 0;
   const cue = lastLine?.pullbackAtSeconds;
   const pullbackStart = cue === undefined ? revealStart : Math.min(revealStart, lastStart + cue * P);
-  // Sessions finish shrinking into dots as the line ends (or soon after, without a cue).
-  const dotsStart = Math.max(pullbackStart + T.revealPullMin * P, revealStart - T.revealMorph * P);
+  // The sessions shrink into dots as soon as the camera reaches the field.
+  const dotsStart = pullbackStart + T.revealPullMin * P;
   const morphEnd = dotsStart + T.revealMorph * P;
-  const signalAt = Math.max(morphEnd + P, revealStart + voice.cues.signal * P);
+  // At least a moment of twinkling rows before the camera packs them into a screen.
+  const signalAt = Math.max(morphEnd + 0.4 * P, revealStart + voice.cues.signal * P);
+  const rushStart = Math.max(lastStart, Math.min(pullbackStart, revealStart - T.revealRush * P));
   const speechEnd = revealStart + voice.durationSeconds * P;
   // The film runs until the score finishes (it starts with the first word).
-  const total = Math.max(MUSIC.durationSeconds * P, speechEnd + T.revealEndCard * P, signalAt + 2 * T.revealEndCard * P);
+  const total = Math.max(scoreSeconds * P, speechEnd + T.revealEndCard * P, signalAt + 2 * T.revealEndCard * P);
   const cardAt = total - T.revealEndCard * P;
 
   const reveal: RevealSpan[] = [];
@@ -1060,18 +1096,26 @@ export function compileTimeline(
 
   events.sort((x, y) => x.s - y.s);
 
-  // Notifications: spread across each era, after it settles in.
+  // Notifications: spread across each era, after it settles in. In the last
+  // era only the people's few arrive while she posts; the bots' flood in
+  // during the rush, faster and faster.
   const pings: PingSlot[] = [];
   eras.forEach((era, k) => {
-    const n = era.pings.length;
-    if (!n) return;
+    if (!era.pings.length) return;
     const start = eraSettled[k];
     const end = eraEnds[k];
-    const step = Math.max(1, (end - start) / n);
-    const life = Math.min(T.pingLife, step * 1.35);
-    era.pings.forEach((_, i) => {
-      const s0 = start + (end - start) * (era.id === 'dead' ? ((i + 0.15) / n) ** 0.45 : (i + 0.15) / n);
-      pings.push({ s0, s1: Math.min(end, s0 + life), era: k, index: i });
+    const indices = era.pings.map((_, i) => i);
+    const flood = k === eras.length - 1 ? indices.filter((i) => era.pings[i].tone === 'machine') : [];
+    const calm = indices.filter((i) => !flood.includes(i));
+    const calmEnd = flood.length ? Math.max(start, rushStart) : end;
+    const life = Math.min(T.pingLife, Math.max(1, (calmEnd - start) / Math.max(1, calm.length)) * 1.35);
+    calm.forEach((index, j) => {
+      const s0 = start + (calmEnd - start) * ((j + 0.15) / calm.length);
+      pings.push({ s0, s1: Math.min(end, s0 + life), era: k, index });
+    });
+    flood.forEach((index, j) => {
+      const s0 = calmEnd + (end - calmEnd) * ((j + 0.5) / flood.length) ** 0.6;
+      pings.push({ s0, s1: Math.min(end, s0 + T.pingLife / 3), era: k, index });
     });
   });
   pings.sort((x, y) => x.s0 - y.s0);
@@ -1085,7 +1129,7 @@ export function compileTimeline(
     glitches.push({ s: out, width: T.glitchOut, strength: era.glitch.out });
   });
 
-  return { beats, events, total: s, eraStarts, eraArrivals, pullbackStart, revealStart, reveal, pings, glitches, warnings };
+  return { beats, events, total: s, eraStarts, eraArrivals, rushStart, pullbackStart, revealStart, reveal, pings, glitches, warnings };
 }
 
 /* --------------------------------- Sample --------------------------------- */
@@ -1175,7 +1219,14 @@ export function sampleTimeline(t: Timeline, sIn: number): FlowFrame {
         progress = line ? hermite(u, (beat.v0 ?? 0) / line, (beat.v1 ?? 0) / line) : u;
       } else progress = glide(u);
       const settled = lerp(beat.from, beat.to, progress);
-      return { ...base, offset: settled + beat.bounce * bump(u), settled, cursor: beat.cursor };
+      let cursor = beat.cursor;
+      if (beat.cursorTo) {
+        // Out of the way: a short glide to the rest spot as the feed moves on.
+        const glideLen = Math.min(beat.s1 - beat.s0, FLOW_TIMING.cursorRest.seconds * PLAY_SPEED);
+        const k = easeInOut(clamp((s - beat.s0) / glideLen, 0, 1));
+        cursor = { x: lerp(beat.cursor.x, beat.cursorTo.x, k), y: lerp(beat.cursor.y, beat.cursorTo.y, k) };
+      }
+      return { ...base, offset: settled + beat.bounce * bump(u), settled, cursor };
     }
     case 'hold':
       return { ...base, offset: beat.offset, settled: beat.offset, cursor: beat.cursor };

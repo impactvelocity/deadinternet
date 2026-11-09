@@ -18,6 +18,8 @@ import {
   typedCount,
 } from '@/lib/flow/timeline';
 
+import { SPOKEN } from '@/lib/flow/signal';
+import { FILM_ERAS, FILM_POSTS } from '@/data/flow/scenes';
 import { fakeMeasure } from '../fixtures/flow-measure';
 
 describe('flow timeline', () => {
@@ -43,8 +45,8 @@ describe('flow timeline', () => {
         expect((end - start) / PLAY_SPEED, era.id).toBeCloseTo(duration, 6);
         expect(sampleTimeline(timeline, end - 1).era).toBe(k);
         if (k + 1 < FLOW_ERAS.length) expect(sampleTimeline(timeline, end).era).toBe(k + 1);
-        // By "Behind the feed" every session has already become a dot.
-        else expect(sampleTimeline(timeline, end).reveal).toMatchObject({ phase: 'dots' });
+        // "Behind the feed" is where the camera pulls back.
+        else expect(sampleTimeline(timeline, end).reveal).toMatchObject({ phase: 'sandbox', u: 0 });
       });
       expect(timeline.beats.some((b) => b.kind === 'hold' && b.label.startsWith('breath'))).toBe(false);
       expect(timeline.beats.every((b) => b.s1 > b.s0)).toBe(true);
@@ -222,27 +224,55 @@ describe('flow timeline', () => {
     }
   });
 
-  it('pulls back on "…and with AI", while the agent keeps working in the window', () => {
+  it('lets her post until just before "Behind the feed", then rushes, then pulls back with it', () => {
     const dead = FLOW_ERAS.length - 1;
-    const cue = narration.chunks.find((c) => c.era === FLOW_ERAS[dead].id)!.pullbackAtSeconds!;
-    expect((t.pullbackStart - t.eraStarts[dead]) / PLAY_SPEED).toBeCloseTo(cue, 6);
+    expect(narration.chunks.find((c) => c.era === FLOW_ERAS[dead].id)).not.toHaveProperty('pullbackAtSeconds');
+    expect(t.pullbackStart).toBe(t.revealStart);
     expect(sampleTimeline(t, t.pullbackStart - 1).reveal).toBeNull();
     expect(sampleTimeline(t, t.pullbackStart).reveal?.phase).toBe('sandbox');
-    // The last era's own beats run on under the camera until its line ends.
-    expect(t.beats.some((b) => b.kind === 'act' && b.s0 >= t.pullbackStart && b.s1 <= t.revealStart)).toBe(true);
+    // The rush is a moment, not the whole era.
+    expect((t.revealStart - t.rushStart) / PLAY_SPEED).toBeCloseTo(FLOW_TIMING.revealRush, 6);
+    expect(t.rushStart).toBeGreaterThan(t.eraStarts[dead]);
+    // In the film, her last post is up before the rush.
+    const film = compileTimeline(FILM_ERAS, FILM_POSTS, fakeMeasure(FILM_ERAS, FILM_POSTS));
+    const posted = film.events.filter((e) => e.type === 'post' && e.s > film.eraStarts.at(-1)!);
+    expect(posted.length).toBeGreaterThan(0);
+    expect(posted.at(-1)!.s).toBeLessThan(film.rushStart);
+    // Only the people write while she posts; the bots flood in during the rush, faster and faster.
+    const era = FLOW_ERAS[dead];
+    const mine = t.pings.filter((p) => p.era === dead);
+    for (const p of mine) {
+      const machine = era.pings[p.index].tone === 'machine';
+      if (machine) expect(p.s0).toBeGreaterThanOrEqual(t.rushStart);
+      else expect(p.s0).toBeLessThan(t.rushStart);
+      expect(p.s1).toBeLessThanOrEqual(t.revealStart);
+    }
+    const flood = mine.filter((p) => era.pings[p.index].tone === 'machine').map((p) => p.s0);
+    expect(flood.length).toBeGreaterThan(5);
+    expect(flood[1] - flood[0]).toBeGreaterThan(flood.at(-1)! - flood.at(-2)!);
     expect(t.reveal.map((r) => r.phase)).toEqual(REVEAL_PHASES);
     for (let i = 1; i < t.reveal.length; i++) expect(t.reveal[i].s0).toBeCloseTo(t.reveal[i - 1].s1, 6);
   });
 
-  it('opens "Behind the feed" on rows of dots, turns them into a screen, and fades out with the score', () => {
+  it('holds on the chat long enough to read it', () => {
+    const chat = t.reveal.find((r) => r.phase === 'chat')!;
+    expect((chat.s1 - chat.s0) / PLAY_SPEED).toBeGreaterThan(2.5);
+    const sandbox = t.reveal.find((r) => r.phase === 'sandbox')!;
+    expect((sandbox.s1 - sandbox.s0) / PLAY_SPEED).toBeGreaterThan(1);
+  });
+
+  it('opens "Behind the feed" on the chat, has the field of dots by "Now it\'s just a chat agent", and fades out with the score', () => {
     const at = (phase: string) => t.reveal.find((r) => r.phase === phase)!;
     const into = (s: number) => (s - t.revealStart) / PLAY_SPEED;
-    // "Behind the feed" opens on rows of dots that have finished forming.
-    const rows = sampleTimeline(t, t.revealStart).reveal!;
-    expect(rows.phase).toBe('dots');
-    expect(rows.u).toBeGreaterThanOrEqual(DOT_MORPH - 1e-6);
-    // The push in starts on its cue and runs through the voice and the music.
+    const dots = at('dots');
+    expect((dots.s0 - t.pullbackStart) / PLAY_SPEED).toBeCloseTo(FLOW_TIMING.revealPullMin, 6);
+    // Every session is a dot, twinkling for a moment, before the camera packs them into a screen...
+    const formed = into(dots.s0) + FLOW_TIMING.revealMorph;
+    expect(formed).toBeLessThan(narration.reveal.cues.signal);
+    expect(sampleTimeline(t, dots.s0 + FLOW_TIMING.revealMorph * PLAY_SPEED).reveal!.u).toBeGreaterThanOrEqual(DOT_MORPH - 1e-6);
+    // ...on its cue, before the first symbol.
     expect(into(at('signal').s0)).toBeCloseTo(narration.reveal.cues.signal, 6);
+    expect(narration.reveal.cues.signal).toBeLessThan(SPOKEN[0].at);
     expect(into(at('end').s0)).toBeGreaterThan(narration.reveal.durationSeconds);
     expect(narration.reveal).not.toHaveProperty('foley');
     expect(t.total / PLAY_SPEED).toBeCloseTo(MUSIC.durationSeconds, 6);

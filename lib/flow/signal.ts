@@ -4,10 +4,10 @@
  *
  * Once "Behind the feed" starts, the camera holds on the rows of session dots
  * and pushes in until they read as a coarse screen of pixels. Then the pixels
- * light up as symbols, in step with the voice, and after it a slow cycle of
- * worse ones while the music swells: a skull, an eye, the bots' "YES". Each
- * symbol flickers on, hums, and drops out; now and then another flashes for a
- * frame or two. The red and blue channels sit slightly off the green, like a
+ * light up as symbols, in step with the voice; after it, only a skull,
+ * blinking on and off to the end while the music swells. Each symbol
+ * flickers on, hums, and drops out; while the voice lasts, now and then
+ * another flashes for a frame or two. The red and blue channels sit slightly off the green, like a
  * screen losing sync.
  *
  * Symbols are drawn once each, off screen, as a soft greyscale mask; every
@@ -40,10 +40,10 @@ export const SPOKEN: readonly Slot[] = [
   { at: 26.95, until: 28.6, glyph: 'forever' }, // "for the rest of your life."
 ];
 
-/** After the voice: the worst of it, slowly, on repeat. */
-const AFTER: readonly Glyph[] = ['skull', 'eye', 'yes', 'skull', 'smile', 'question', 'skull', 'you'];
-const AFTER_STEP = 3.1;
-const AFTER_ON = 2.3;
+/** After the voice: only the skull, blinking on and off to the end. */
+const AFTER: readonly Glyph[] = ['skull'];
+const AFTER_STEP = 2.4;
+const AFTER_ON = 1.6;
 /** Brief flashes of another symbol, at most this often (seconds). */
 const FLASH_EVERY = 1.7;
 
@@ -88,9 +88,9 @@ export function signalAt(clock: number, speech: number): SignalFrame {
   const glyph = slot && clock >= slot.at && clock < slot.until ? slot.glyph : null;
   const level = slot && glyph ? envelope(clock - slot.at, slot.until - slot.at, Math.round(slot.at * 100)) : 0;
 
-  // Flashes: only once the symbols have started, never in the first stutter.
+  // Flashes: only while the voice lasts (after it there's only the skull), never in the first stutter.
   let flash: Glyph | null = null;
-  if (clock >= SPOKEN[0].at) {
+  if (clock >= SPOKEN[0].at && clock < speech) {
     const k = Math.floor(clock / FLASH_EVERY);
     const t = clock - k * FLASH_EVERY;
     const start = noise(k * 5.3) * (FLASH_EVERY - 0.2);

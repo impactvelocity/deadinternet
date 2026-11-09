@@ -705,6 +705,9 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         kind: 'document',
         count: 10,
         src: '/assets/posts/pro-5.jpg',
+        // The film caps media height, so show the whole slide, centred on its own beige.
+        fit: 'contain',
+        fill: '#efdac7',
       },
       stats: { likes: 22000, comments: 3100, shares: 1900, reactions: ['👍', '💡', '👏'] },
       actions: [{ type: 'comment', text: 'Agree! 💡 Thanks for sharing' }],

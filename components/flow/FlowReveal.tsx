@@ -59,7 +59,7 @@ const FUTURE: ToolCall[] = [
   { tool: 'left_click', args: '(684, 431)', note: 'publish opportunity post' },
   { tool: 'screenshot', args: '' },
   { tool: 'left_click', args: '(512, 588)', note: 'comment box' },
-  { tool: 'type', args: '"I AM IN? Here’s your link: join.daybreak.example/ashley 💛"' },
+  { tool: 'type', args: '"YES? Here’s your link: join.daybreak.example/ashley 💛"' },
   { tool: 'key', args: '"Return"' },
   { tool: 'scroll', args: '(down, 388px)' },
   { tool: 'screenshot', args: '' },
@@ -71,7 +71,7 @@ const FUTURE: ToolCall[] = [
   { tool: 'screenshot', args: '' },
 ];
 
-const ASK = 'Run Ashley’s Daybreak business. Sell the opportunity. Post “Comment I AM IN”, reply to every lead, and send her invite link. Call it a digital business, not an MLM. Keep going.';
+const ASK = 'Run Ashley’s Daybreak business. Sell the opportunity. Post “Comment YES”, reply to every lead, and send her invite link. Call it a digital business, not an MLM. Keep going.';
 const REPLY_1 = 'Continuing as Ashley. Publishing pitches and messaging leads.';
 const REPLY_2 = 'Today: 128 posts. 1,204 replies. 387 invite links sent. Continuing outreach.';
 
@@ -350,41 +350,16 @@ export const FlowReveal = memo(function FlowReveal({ visible, phase, k, calls }:
 
 /* --------------------------------- Overlay --------------------------------- */
 
-function sessionsAt(phase: RevealPhase | null, k: number): number {
-  const u = k / (STEPS - 1);
-  if (phase === 'servers') return Math.round(1 + 24 * u);
-  if (phase === 'farm') return Math.round(25 * (48213 / 25) ** u);
-  if (phase && REVEAL_PHASES.indexOf(phase) > REVEAL_PHASES.indexOf('farm')) return 48213;
-  return 1;
-}
-
-const group = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
 /**
- * Screen-space layer over the reveal: a vignette as the camera pulls back,
- * the running session counter, and the end card.
+ * Screen-space layer over the reveal: a vignette as the camera pulls back.
  */
-export function RevealOverlay({ phase, k }: { phase: RevealPhase | null; k: number }) {
-  const idx = phase ? REVEAL_PHASES.indexOf(phase) : -1;
-  const wide = idx >= REVEAL_PHASES.indexOf('servers');
-  const counting = wide && idx <= REVEAL_PHASES.indexOf('signal');
-  // Up over the rows of dots; gone as the camera pushes in on them.
-  const counterOpacity = phase === 'servers' ? 'clamp(0, var(--reveal-u, 0) * 5, 1)' : phase === 'signal' ? 'clamp(0, 1 - var(--reveal-u, 0) * 20, 1)' : counting ? 1 : 0;
+export function RevealOverlay({ phase }: { phase: RevealPhase | null }) {
   return (
     <div aria-hidden={!phase} className="pointer-events-none absolute inset-0 z-10" style={{ fontFamily: FONT }}>
       <div className="absolute inset-0" style={{
         opacity: phase === 'servers' ? 'var(--reveal-u, 0)' : phase === 'farm' ? 1 : phase === 'dots' ? 'clamp(0, 1 - var(--reveal-u, 0) * 2, 1)' : 0,
         background: 'radial-gradient(ellipse 75% 75% at 50% 50%, transparent 35%, rgba(5,5,7,.65))',
       }} />
-      <div className="absolute inset-x-0 bottom-[72px] flex justify-center" style={{ opacity: counterOpacity }}>
-        <div className="flex items-center gap-3 rounded-full px-5 py-2.5 text-[14px]" style={{ background: '#050507e6', border: '1px solid #ffffff14', color: '#dfe2eb' }}>
-          <span className="size-1.5 rounded-full bg-[#bcb1ed]" />
-          <span className="tabular-nums">{group(sessionsAt(phase, k))} sessions running</span>
-          <span className="h-3 w-px bg-white/20" />
-          <span className="text-white/75">0 people</span>
-        </div>
-      </div>
-
     </div>
   );
 }

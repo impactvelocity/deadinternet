@@ -67,7 +67,13 @@ export const FILM_POSTS: Readonly<Record<FlowEraId, readonly FlowPost[]>> = {
   // These lines are barely two seconds long: one image is the whole scene.
   slop: [shot('slop', 1, undefined, { actions: [] })],
   pro: [
-    shot('pro', 1, 2.0, { actions: [] }),
+    // "Everyone seemed to know what was best for me." Advice, and a real
+    // person asking for help, scrolled straight past. "Another life lesson,"
+    // a poll and an ad. "Another inspirational quote": the agent agrees.
+    shot('pro', 1, 1.7, { actions: [] }),
+    shot('pro', 2, 3.2, { actions: [] }),
+    shot('pro', 4, 4.6, { actions: [] }),
+    shot('pro', 3, 5.6, { actions: [] }),
     shot('pro', 5, undefined, { actions: [{ type: 'comment', text: 'Agree! 💡' }] }),
   ],
   // "It just wasn't fun anymore…" and then, with nobody talking, the feed
@@ -95,7 +101,7 @@ export const FILM_POSTS: Readonly<Record<FlowEraId, readonly FlowPost[]>> = {
  * Eras left out of the film. Their posts and narration stay in the data;
  * delete an id here to bring that era back.
  */
-export const HIDDEN_ERAS: readonly FlowEraId[] = ['slop'];
+export const HIDDEN_ERAS: readonly FlowEraId[] = ['slop', 'machine'];
 
 /** No consent modals or notification pile-ups interrupt the short scenes. */
 export const FILM_ERAS: readonly FlowEra[] = FLOW_ERAS.filter((era) => !HIDDEN_ERAS.includes(era.id)).map((era) => ({

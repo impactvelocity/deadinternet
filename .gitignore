@@ -20,6 +20,14 @@
 # production
 /build
 
+# film renders (npm run film → out/film/*.mp4); catches --out paths outside /out/ too
+*.parts/
+*.mp4
+*.mov
+*.webm
+*.wav
+!/public/**/*.mp4
+
 # misc
 .DS_Store
 *.pem

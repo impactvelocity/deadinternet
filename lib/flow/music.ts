@@ -46,10 +46,15 @@ const smooth = (x: number) => x * x * (3 - 2 * x);
 /** Linear gain at story position `s`. */
 export function musicGain(s: number, cues: MusicCues): number {
   const fade = smooth(clamp01(s / (MUSIC.fadeIn * PLAY_SPEED)));
+  return fade * musicSwell(s, cues);
+}
+
+/** The level at story position `s` without the opening fade: the bed, then the swell. */
+export function musicSwell(s: number, cues: MusicCues): number {
   const span = cues.swellTo - cues.swellFrom;
   const x = span > 0 ? clamp01((s - cues.swellFrom) / span) : s >= cues.swellTo ? 1 : 0;
   // Rise in decibels, not amplitude, so the swell sounds even all the way up.
-  return fade * MUSIC.soft * (MUSIC.loud / MUSIC.soft) ** smooth(x);
+  return MUSIC.soft * (MUSIC.loud / MUSIC.soft) ** smooth(x);
 }
 
 /**

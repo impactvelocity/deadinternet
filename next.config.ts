@@ -2,6 +2,8 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // No Next.js badge over the film in development (errors still show).
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   // The feed used to live at /flow while it was a lab; it is now the root.

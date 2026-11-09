@@ -120,6 +120,13 @@ export interface FlowMedia {
   count?: number;
   /** Real image under /public. Without one, a placeholder is drawn. */
   src?: string;
+  /**
+   * `contain` shows the whole image, centred, with `fill` around it, for
+   * images (like a document's slide) whose edges mustn't be cropped when the
+   * box isn't their shape. Otherwise it fills the box from the top.
+   */
+  fit?: 'contain';
+  fill?: string;
   /** Looping GIF displayed in place of the still image. */
   animatedSrc?: string;
   /** Playable video file; src remains its thumbnail. */

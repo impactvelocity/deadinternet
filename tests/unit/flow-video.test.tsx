@@ -1,69 +1,112 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PostVideo } from '@/components/flow/PostVideo';
-import { FLOW_POSTS } from '@/data/flow/posts';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { FilmVideo, PageHeader, ShareFilm, StartScreen, WindowToggle } from '@/components/flow/FlowPage';
+import { SITE } from '@/data/flow/site';
+import { youtubeEmbed } from '@/data/flow/video';
 
-afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+afterEach(cleanup);
 
-const props = { src: '/clip.mp4', poster: '/thumbnail.jpg', label: 'Ice bucket challenge', duration: 5 };
-
-describe('post video playback', () => {
-  it('ships the five-second challenge GIF without loading a video', () => {
-    const media = FLOW_POSTS.viral[0].media!;
-    expect(media.src).toBe('/assets/posts/viral-1.jpg');
-    expect(media.durationSeconds).toBe(5);
-    expect(media.videoSrc).toBeUndefined();
-    expect(media.animatedSrc).toBe('/assets/posts/viral-1.gif');
-    expect(existsSync(join(__dirname, '../../public', media.animatedSrc!))).toBe(true);
-  });
-  it('plays without player chrome and offers pause and replay on the video', async () => {
-    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
-    const { container } = render(<PostVideo {...props} />);
-    const video = container.querySelector('video')!;
-    expect(video.poster).toContain('/thumbnail.jpg');
-    expect(video.preload).toBe('none');
-    expect(play).not.toHaveBeenCalled();
-    expect(screen.getByText('0:05')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Play Ice bucket challenge' }));
-    expect(play).toHaveBeenCalledOnce();
-    expect(video.muted).toBe(false);
-    fireEvent.play(video);
-    expect(video.controls).toBe(false);
-    expect(screen.getByRole('button', { name: 'Pause Ice bucket challenge' })).toBeTruthy();
-    expect(screen.queryByText('0:05')).toBeNull();
-    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
-    Object.defineProperty(video, 'paused', { configurable: true, value: false });
-    fireEvent.click(screen.getByRole('button'));
-    expect(pause).toHaveBeenCalledOnce();
-    fireEvent.pause(video);
-    expect(screen.getByRole('button', { name: 'Play Ice bucket challenge' })).toBeTruthy();
-    fireEvent.play(video);
-    Object.defineProperty(video, 'ended', { configurable: true, value: true });
-    video.currentTime = 5;
-    fireEvent.ended(video);
-    fireEvent.click(screen.getByRole('button', { name: 'Play Ice bucket challenge' }));
-    expect(video.currentTime).toBe(0);
-    expect(play).toHaveBeenCalledTimes(2);
-    await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
+describe('watch as a video', () => {
+  it('turns any YouTube link into a privacy-friendly embed', () => {
+    const embed = 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&playsinline=1';
+    for (const link of [
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      'https://youtube.com/watch?v=dQw4w9WgXcQ&t=42s',
+      'https://youtu.be/dQw4w9WgXcQ?si=abc',
+      'https://m.youtube.com/watch?v=dQw4w9WgXcQ',
+      'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+      ' dQw4w9WgXcQ ',
+    ])
+      expect(youtubeEmbed(link), link).toBe(embed);
+    for (const link of ['', 'not a link', 'https://vimeo.com/123', 'https://youtube.com/watch?v=short', 'https://evil.example/watch?v=dQw4w9WgXcQ'])
+      expect(youtubeEmbed(link), link).toBeNull();
   });
 
-  it('plays scripted watch actions muted and pauses when the action ends', () => {
-    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
-    const pause = vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
-    const { container, rerender } = render(<PostVideo {...props} watching />);
-    expect(play).toHaveBeenCalledOnce();
-    expect(container.querySelector('video')!.muted).toBe(true);
-    rerender(<PostVideo {...props} watching={false} />);
-    expect(pause).toHaveBeenCalledOnce();
+  it('offers the video under the window, next to the line about pressing play', () => {
+    const onPlay = vi.fn();
+    const onWatchVideo = vi.fn();
+    render(<StartScreen visible above={100} below={500} center={{ x: 400, y: 300 }} onPlay={onPlay} onWatchVideo={onWatchVideo} />);
+    expect(screen.getByText('Press play to watch the scrolling film')).toBeTruthy();
+    expect(screen.queryByText('dead internet')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Watch as a Video' }));
+    expect(onWatchVideo).toHaveBeenCalledOnce();
+    expect(onPlay).not.toHaveBeenCalled();
   });
 
-  it('offers retry when the browser rejects playback', async () => {
-    vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(new Error('unavailable'));
-    render(<PostVideo {...props} />);
-    fireEvent.click(screen.getByRole('button'));
-    expect(await screen.findByRole('status')).toBeTruthy();
-    expect(screen.getByRole('button')).toBeTruthy();
+  it('only mounts the player while open, and says the video is coming until there is a link', () => {
+    const onClose = vi.fn();
+    const { container, rerender } = render(<FilmVideo open={false} onClose={onClose} />);
+    expect(container.querySelector('iframe')).toBeNull();
+    expect(container.textContent).not.toContain('on its way');
+    rerender(<FilmVideo open onClose={onClose} />);
+    expect(container.querySelector('dialog')!.open).toBe(true);
+    expect(container.textContent).toContain('The video version is on its way.');
+    fireEvent.click(container.querySelector('.fl-video-close')!);
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+});
+
+describe('share', () => {
+  it('opens from a Share button next to the credits', () => {
+    const onShare = vi.fn();
+    render(<PageHeader interactive onShare={onShare} />);
+    expect(screen.getByText('Kiroween')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Share' }));
+    expect(onShare).toHaveBeenCalledOnce();
+  });
+
+  it('shows a line about the film and its link, and copies the link', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const onClose = vi.fn();
+    const { container, rerender } = render(<ShareFilm open={false} onClose={onClose} />);
+    rerender(<ShareFilm open onClose={onClose} />);
+    expect(container.querySelector('dialog')!.open).toBe(true);
+    expect(screen.getByText(SITE.description)).toBeTruthy();
+    const link = screen.getByRole('textbox', { name: 'Link to the film' }) as HTMLInputElement;
+    expect(link.value).toBe(new URL('/', window.location.href).toString());
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Copy link' }));
+    });
+    expect(writeText).toHaveBeenCalledWith(link.value);
+    expect(screen.getByRole('button', { name: 'Copied' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+});
+
+describe('the window as a play/pause button', () => {
+  it('pauses on a click while playing, and carries on on the next', () => {
+    let playing = true;
+    const onToggle = vi.fn(() => {
+      playing = !playing;
+    });
+    const { rerender } = render(<WindowToggle playing started isPlaying={() => playing} onToggle={onToggle} />);
+    const button = screen.getByRole('button', { name: 'Pause the film' });
+    fireEvent.pointerDown(button);
+    fireEvent.click(button);
+    expect(onToggle).toHaveBeenCalledOnce();
+    expect(playing).toBe(false);
+    rerender(<WindowToggle playing={false} started isPlaying={() => playing} onToggle={onToggle} />);
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Play the film' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Play the film' }));
+    expect(onToggle).toHaveBeenCalledTimes(2);
+    expect(playing).toBe(true);
+  });
+
+  it('on a phone, where the touch itself already paused, the tap leaves it paused', () => {
+    let playing = true;
+    const onToggle = vi.fn(() => {
+      playing = !playing;
+    });
+    render(<WindowToggle playing started isPlaying={() => playing} onToggle={onToggle} />);
+    const button = screen.getByRole('button', { name: 'Pause the film' });
+    fireEvent.pointerDown(button);
+    // The page stops the film on touchstart, before the click arrives.
+    playing = false;
+    fireEvent.click(button);
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(playing).toBe(false);
   });
 });

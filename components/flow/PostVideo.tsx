@@ -59,8 +59,8 @@ export function PostVideo({ src, poster, label, duration, watching = false }: {
             void video.play().catch(() => setFailed(true));
           }}
         >
-          {!started && <span className="grid size-14 place-items-center rounded-full bg-black/35 text-white backdrop-blur-sm">
-            <Icon name="play" size={26} />
+          {!started && <span className="fl-play">
+            <Icon name="play" size={26} filled />
           </span>}
           {!started && duration !== undefined && (
             <span className="absolute bottom-2 right-2 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-semibold text-white">

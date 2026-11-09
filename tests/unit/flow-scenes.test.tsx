@@ -80,6 +80,21 @@ describe('film edit', () => {
     expect(fastest).toBeLessThan(2200);
   });
 
+  it('keeps the cursor out of the way, right of the feed, unless the agent is acting', () => {
+    const right = measure.viewport.x + measure.viewport.w;
+    for (const beat of timeline.beats) {
+      if (beat.kind === 'scroll') {
+        // By the end of any scroll the cursor waits in the gutter right of the feed.
+        expect(sampleTimeline(timeline, beat.s1 - 1e-6).cursor.x, `scroll at ${(beat.s0 / PLAY_SPEED).toFixed(2)}s`).toBeGreaterThan(right);
+      }
+      if (beat.kind === 'act' && timeline.beats[timeline.beats.indexOf(beat) - 1]?.kind === 'scroll') {
+        // ...and each action sets off from there.
+        expect(sampleTimeline(timeline, beat.s0 + 1e-6).cursor.x).toBeGreaterThan(right - 1);
+      }
+    }
+    expect(FILM_POSTS.pro.length).toBeGreaterThanOrEqual(5);
+  });
+
   it('enters every era already moving, with the new era on screen', () => {
     FILM_ERAS.forEach((era, k) => {
       const start = timeline.eraStarts[k];

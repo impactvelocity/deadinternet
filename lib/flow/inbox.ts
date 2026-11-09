@@ -2,9 +2,9 @@
  * Ashley's unread counts (the badges under her chip, top left).
  *
  * Every era starts from its own platform's counts and keeps climbing while it
- * plays: a few messages a second on MySpace, a firehose by the machine. When
- * the camera pulls back the counts explode: thousands, millions, billions,
- * because nobody is reading them. Like everything else, the counts are a pure
+ * plays: a few messages a second on MySpace, a firehose by the machine. In
+ * the rush just before "Behind the feed" the counts explode: thousands,
+ * millions, billions, because nobody is reading them. Like everything else, the counts are a pure
  * function of story position, so scrubbing backwards winds them back down.
  */
 import type { FlowEra } from '@/data/flow/types';
@@ -23,7 +23,7 @@ export const INBOX = {
   perCount: 0.05,
   /** Each later era is this much busier again. */
   perEra: 0.12,
-  /** At the reveal, counts grow by e every this many seconds. */
+  /** From the rush on, counts grow by e every this many seconds. */
   boomSeconds: 1,
   /** Head start for each kind's explosion (so an empty count explodes too). */
   boom: { messages: 4, requests: 1.5, alerts: 9 } as InboxCounts,
@@ -42,7 +42,7 @@ function arrivals(perSecond: number, seconds: number, seed: number): number {
 /** Counts within era k at story position `s`, starting from `carried` (nothing is ever read). */
 function eraCounts(eras: readonly FlowEra[], t: Timeline, k: number, s: number, carried: InboxCounts): InboxCounts {
   const era = eras[k];
-  const seconds = Math.max(0, Math.min(s, t.pullbackStart) - t.eraStarts[k]) / PLAY_SPEED;
+  const seconds = Math.max(0, Math.min(s, t.rushStart) - t.eraStarts[k]) / PLAY_SPEED;
   const busy = 1 + k * INBOX.perEra;
   const out = {} as InboxCounts;
   INBOX_KINDS.forEach((kind, i) => {
@@ -60,9 +60,9 @@ export function inboxCounts(eras: readonly FlowEra[], t: Timeline, s: number): I
   let carried: InboxCounts = { messages: 0, requests: 0, alerts: 0 };
   for (let j = 0; j < k; j++) carried = eraCounts(eras, t, j, t.eraStarts[j + 1], carried);
   const out = eraCounts(eras, t, k, s, carried);
-  if (s > t.pullbackStart) {
-    // Everything piles up once the camera pulls back: each kind multiplies by e every `boomSeconds`.
-    const boom = Math.exp((s - t.pullbackStart) / PLAY_SPEED / INBOX.boomSeconds);
+  if (s > t.rushStart) {
+    // Everything piles up from the rush on: each kind multiplies by e every `boomSeconds`.
+    const boom = Math.exp((s - t.rushStart) / PLAY_SPEED / INBOX.boomSeconds);
     for (const kind of INBOX_KINDS) out[kind] = Math.min(INBOX.cap, Math.floor((out[kind] + INBOX.boom[kind]) * boom - INBOX.boom[kind]));
   }
   return out;

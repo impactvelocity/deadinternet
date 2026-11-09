@@ -101,7 +101,6 @@
       "text": "So I stopped sharing my life... and started selling it. It was the only thing anyone wanted. And every time someone said YES... it almost felt like having friends again...",
       "src": "/assets/narration/ashley-dead-sad.mp3",
       "durationSeconds": 12.355875,
-      "pullbackAtSeconds": 4.66,
       "voice": "Ember - Energetic, Confident Protagonist",
       "stability": 0.17,
       "direction": "[tired] So I stopped sharing my life... [short pause] and started selling it. [sad] It was the only thing anyone wanted. [softly] And every time someone said YES... [wistful] it almost felt like having friends again..."
@@ -114,7 +113,7 @@
     "durationSeconds": 28.6,
     "sandboxDurationSeconds": 19.722438,
     "cues": {
-      "signal": 3.0
+      "signal": 7.0
     },
     "voice": "Ember - Energetic, Confident Protagonist",
     "direction": "[thoughtful] The internet used to be our sandbox... [sighs] A place to play, [wistful] to connect, to be ourselves. Now it\u2019s just a chat agent pretending to be us... [uneasy] pretending to be me... pretending to be you... but who are they speaking to? [thoughtful] ...Is there anyone here? [softy] can anyone hear me?",

@@ -79,6 +79,12 @@ const F1: Pt = { x: centerTile.x + G.tile.w / 2, y: centerTile.y + G.tile.h / 2 
 const z1 = Math.min(PAGE.w / G.tile.w, PAGE.h / G.tile.h) * 0.86;
 const z2 = Math.min(PAGE.w / GRID_SIZE.w, PAGE.h / GRID_SIZE.h) * 0.94;
 const z3 = z2 / 6;
+/**
+ * Share of the `signal` phase (about two seconds) over which the dots pack
+ * into their final screen; dots.ts settles their size over the same span.
+ */
+export const SIGNAL_SETTLE = 0.035;
+
 /** After the farm the camera drifts out a little over the rows of dots... */
 const DRIFT: Partial<Record<RevealPhase, [number, number]>> = {
   dots: [z3, z3 * 0.97],
@@ -88,7 +94,7 @@ const DRIFT: Partial<Record<RevealPhase, [number, number]>> = {
  * the screen: the dots pack tighter and the symbols they draw get sharper.
  * It keeps creeping out to the end.
  */
-const PUSH = { from: z3 * 0.97, to: z3 * 0.55, creep: 0.97, share: 0.12 };
+const PUSH = { from: z3 * 0.97, to: z3 * 0.55, creep: 0.97, share: SIGNAL_SETTLE };
 /** The farthest the camera ever gets: the end of the film. */
 const z4 = PUSH.to * PUSH.creep;
 
@@ -146,7 +152,7 @@ export function cameraAt(phase: RevealPhase, u: number): Camera {
     }
     case 'signal': {
       // A pull back over the first part of the phase, then a slow creep.
-      const t = 0.85 * ease(Math.min(1, u / PUSH.share)) + 0.15 * u;
+      const t = 0.92 * ease(Math.min(1, u / PUSH.share)) + 0.08 * u;
       return zoom(F1, PUSH.from, VIEW, F1, PUSH.to, VIEW, t);
     }
     case 'end':

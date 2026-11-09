@@ -9,7 +9,7 @@ import { type RefObject, useEffect, useRef } from 'react';
 import { createMusicGain, MUSIC, musicGain, type MusicCues } from '@/lib/flow/music';
 import { PLAY_SPEED } from '@/lib/flow/playback';
 
-export function FlowMusic({ playing, enabled, position, cues, total }: {
+export function FlowMusic({ playing, enabled, position, cues, total, level: levelAt }: {
   playing: boolean;
   enabled: boolean;
   /** Story position (scroll px); 0 is where the voice starts. */
@@ -18,6 +18,8 @@ export function FlowMusic({ playing, enabled, position, cues, total }: {
   cues: MusicCues | null;
   /** Story length; reaching it ends the film. */
   total: number;
+  /** Level at `position` instead of the story's (the movie starts the score under its titles). */
+  level?: (position: number) => number;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
   const gain = useRef<ReturnType<typeof createMusicGain>>(null);
@@ -73,7 +75,7 @@ export function FlowMusic({ playing, enabled, position, cues, total }: {
         player.pause();
         st.requested = false;
       }
-      const level = cues ? musicGain(s, cues) : 0;
+      const level = !cues ? 0 : levelAt ? levelAt(s) : musicGain(s, cues);
       if (gain.current) gain.current.set(level);
       // Only without Web Audio (until Play creates the graph, leave the element at full volume).
       else if (typeof AudioContext === 'undefined') player.volume = Math.min(1, level);
@@ -84,7 +86,7 @@ export function FlowMusic({ playing, enabled, position, cues, total }: {
     };
     loop();
     return () => cancelAnimationFrame(raf);
-  }, [playing, enabled, position, cues, total]);
+  }, [playing, enabled, position, cues, total, levelAt]);
 
   return <audio ref={audio} data-flow-music src={MUSIC.src} preload={enabled ? 'auto' : 'none'} aria-hidden />;
 }

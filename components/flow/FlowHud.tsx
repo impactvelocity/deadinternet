@@ -37,6 +37,8 @@ export interface FlowHudProps {
   onPlay: () => void;
   onSeek: (s: number) => void;
   onToggle: (key: 'guides' | 'wire' | 'cursor' | 'hud') => void;
+  /** Show the floating developer controls button (only with `?dev` in the URL). */
+  devTools?: boolean;
 }
 
 /** Who posts in each era, as fractions: the story arc at a glance. */
@@ -156,11 +158,13 @@ export const FlowHud = memo(function FlowHud(props: FlowHudProps) {
         </div>
       </div>
 
-      <button type="button" className="fl-dev-button" style={{ visibility: props.readingNotes ? 'hidden' : undefined }} aria-label="Developer controls" aria-expanded={devOpen} aria-controls="flow-dev-panel" onClick={() => setDevOpen((v) => !v)}>
-        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-14-2 18" />
-        </svg>
-      </button>
+      {props.devTools && (
+        <button type="button" className="fl-dev-button" style={{ visibility: props.readingNotes ? 'hidden' : undefined }} aria-label="Developer controls" aria-expanded={devOpen} aria-controls="flow-dev-panel" onClick={() => setDevOpen((v) => !v)}>
+          <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-14-2 18" />
+          </svg>
+        </button>
+      )}
       <div id="flow-dev-panel" className="fl-dev-panel" hidden={!devOpen || props.readingNotes}>
         <div className="mb-4 flex items-center justify-between text-[12px]">
           <span className="font-semibold text-white">Developer controls</span>

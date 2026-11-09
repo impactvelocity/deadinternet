@@ -2,7 +2,7 @@
 // a flicker on "selling it" and "anyone", a fault across "said yes", and
 // "having friends again" goes fully robotic.
 // Clip-time cues (ashley-dead-sad.mp3) make pause, seek and speed changes replay the same treatment.
-const ROBOT_CUES = [
+export const ROBOT_CUES = [
   [3.44, 3.56], [4.16, 4.6],
   [6.19, 6.32],
   [9.24, 9.98],
@@ -13,10 +13,13 @@ export function opportunityRobotAt(seconds: number): boolean {
   return ROBOT_CUES.some(([start, end]) => seconds >= start && seconds < end);
 }
 
-/** Live opportunity-voice processing. The original recording stays untouched. */
-export function createVoiceEffects(player: HTMLAudioElement) {
-  if (typeof AudioContext === 'undefined') return null;
-  const context = new AudioContext();
+/**
+ * The robot treatment on any audio context: `input` reaches `output` dry, and
+ * through a band-passed, ring-modulated, fluttering wet path that `set`
+ * blends in. Used live (createVoiceEffects) and for the rendered film's
+ * soundtrack (lib/flow/soundtrack.ts), so both sound the same.
+ */
+export function robotVoice(context: BaseAudioContext, input: AudioNode, output: AudioNode) {
   const dry = context.createGain();
   const wet = context.createGain();
   const filter = context.createBiquadFilter();
@@ -42,29 +45,45 @@ export function createVoiceEffects(player: HTMLAudioElement) {
   const gate = context.createGain();
   gate.gain.value = 0.9;
   flutter.connect(flutterDepth).connect(gate.gain);
-  filter.connect(robot).connect(gate).connect(wet).connect(context.destination);
-  dry.connect(context.destination);
-  const source = context.createMediaElementSource(player);
-  source.connect(dry);
-  source.connect(filter);
+  filter.connect(robot).connect(gate).connect(wet).connect(output);
+  dry.connect(output);
+  input.connect(dry);
+  input.connect(filter);
   dry.gain.value = 1;
   wet.gain.value = 0;
   carrier.start();
   flutter.start();
+
+  return {
+    /** Blend the robot in (or back out) from context time `at`. */
+    set(enabled: boolean, at: number) {
+      dry.gain.setTargetAtTime(enabled ? 0.35 : 1, at, 0.015);
+      wet.gain.setTargetAtTime(enabled ? 0.85 : 0, at, 0.015);
+    },
+    stop() {
+      carrier.stop();
+      flutter.stop();
+    },
+  };
+}
+
+/** Live opportunity-voice processing. The original recording stays untouched. */
+export function createVoiceEffects(player: HTMLAudioElement) {
+  if (typeof AudioContext === 'undefined') return null;
+  const context = new AudioContext();
+  const source = context.createMediaElementSource(player);
+  const robot = robotVoice(context, source, context.destination);
 
   let robotEnabled = false;
   return {
     setRobot(enabled: boolean) {
       if (enabled === robotEnabled) return;
       robotEnabled = enabled;
-      const now = context.currentTime;
-      dry.gain.setTargetAtTime(enabled ? 0.35 : 1, now, 0.015);
-      wet.gain.setTargetAtTime(enabled ? 0.85 : 0, now, 0.015);
+      robot.set(enabled, context.currentTime);
     },
     resume: () => context.resume(),
     dispose() {
-      carrier.stop();
-      flutter.stop();
+      robot.stop();
       source.disconnect();
       void context.close();
     },

@@ -96,12 +96,15 @@ function Frame({ title, ctx, children, tag }: { title?: string; ctx: ModuleCtx; 
   const label = machine ? (title ? `section[data-src="${title}"]` : tag) : title;
   return (
     <div className="w-full overflow-hidden" style={frameStyle(look, ctx.tokens)}>
+      {/* The frame morphs; what's in it fades in fresh at an era change (`.fl-frame-in`). */}
       {label && (
-        <div className="truncate" style={titleStyle(look, ctx.tokens, ctx.era)}>
+        <div className="fl-frame-in truncate" style={titleStyle(look, ctx.tokens, ctx.era)}>
           {label}
         </div>
       )}
-      <div style={{ padding: BODY_PAD[look] }}>{children}</div>
+      <div className="fl-frame-in" style={{ padding: BODY_PAD[look] }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -431,7 +434,7 @@ function OpportunityChats({ ctx, typing, revealing }: { ctx: ModuleCtx; typing?:
 }
 
 const INBOX_PEOPLE = ['Sarah Mitchell', 'Emma Johnson', 'Mike Chen', 'Olivia Brown', 'Jess Morgan', 'Rachel Kim', 'Priya Shah', 'Tom Bauer'];
-const INBOX_MESSAGES = ['I AM IN! Send me the details?', 'READY 🙋‍♀️ How do I start?', 'Can you send the training link?', 'Is there still a spot for me?', 'Okay, tell me more 👀', 'How does the business work?', 'Just watched it. What’s next?', 'Interested! Can we chat?'];
+const INBOX_MESSAGES = ['YES! Send me the details?', 'READY 🙋‍♀️ How do I start?', 'Can you send the training link?', 'Is there still a spot for me?', 'Okay, tell me more 👀', 'How does the business work?', 'Just watched it. What’s next?', 'Interested! Can we chat?'];
 
 /** The conversation closes into a rapidly filling inbox when automation is revealed. */
 function OpportunityInbox({ tick, wire }: { tick: number; wire: boolean }) {
@@ -634,7 +637,7 @@ export const ChromeBackground = memo(function ChromeBackground({ active, tokens 
   const t = tokens.get(era.id) ?? era.tokens;
   return (
     <div aria-hidden className="absolute inset-0">
-      <div className="absolute inset-0" style={{ backgroundColor: t.bg, transition: 'background-color .9s ease' }} />
+      <div className="absolute inset-0" style={{ backgroundColor: t.bg, transition: 'background-color 1.6s ease' }} />
       {FLOW_ERAS.map((e) => {
         const et = tokens.get(e.id) ?? e.tokens;
         if (!et.background) return null;
@@ -642,7 +645,7 @@ export const ChromeBackground = memo(function ChromeBackground({ active, tokens 
           <div
             key={e.id}
             className="absolute inset-0"
-            style={{ background: et.background, opacity: e.id === era.id ? 1 : 0, transition: 'opacity .9s ease' }}
+            style={{ background: et.background, opacity: e.id === era.id ? 1 : 0, transition: 'opacity 1.6s ease' }}
           />
         );
       })}
@@ -666,7 +669,7 @@ export const ChromeLayers = memo(function ChromeLayers({ active, tokens, wire, e
   const outreachToasts: Ping[] = revealing ? [0, 1, 2].map((i) => {
     const person = (inboxTick + INBOX_PEOPLE.length - i) % INBOX_PEOPLE.length;
     const name = INBOX_PEOPLE[person];
-    return { kind: i === 1 ? 'alert' : 'message', from: name, face: OPPORTUNITY_FACES[name], text: i === 1 ? 'commented: I AM IN 🙋‍♀️' : INBOX_MESSAGES[person], tone: 'friend' };
+    return { kind: i === 1 ? 'alert' : 'message', from: name, face: OPPORTUNITY_FACES[name], text: i === 1 ? 'commented: YES 🙋‍♀️' : INBOX_MESSAGES[person], tone: 'friend' };
   }) : toasts;
 
   return (

@@ -34,7 +34,7 @@ describe('flow reveal camera', () => {
   });
 
   it('keeps moving at the same speed from the session grid into the field', () => {
-    const dt = 0.1;
+    const dt = 0.01;
     const before = cameraAt('servers', 1 - dt / FLOW_TIMING.reveal.servers);
     const boundary = cameraAt('farm', 0);
     const after = cameraAt('farm', dt / FLOW_TIMING.reveal.farm);
