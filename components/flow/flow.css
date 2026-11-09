@@ -656,6 +656,10 @@
 .fl-credit-name { color: #393530; }
 /* Grey like the words around them. */
 .fl-kiro { flex-shrink: 0; color: inherit; opacity: .85; }
+/* The source, after the credits: just GitHub's mark, in the same greys. */
+.fl-github { display: inline-flex; align-items: center; margin-left: 3px; opacity: .85; transition: opacity .15s ease, color .9s ease; }
+.fl-github:hover { opacity: 1; }
+.fl-github svg { flex-shrink: 0; }
 /* Share, after the credits: a quiet pill in the same greys. */
 .fl-share-button {
   display: inline-flex;
@@ -1360,8 +1364,8 @@
 .fl-video-close:focus-visible { outline: 2px solid #d6d0dd; outline-offset: 2px; }
 
 /* ---------------------------------- Movie ---------------------------------- */
-/* /movie: three cards on black, one at a time, then just the frame. The lab
-   sets --intro-0..2 every frame (lib/flow/movie.ts). */
+/* /movie: two cards on black, one at a time, then just the frame. The lab
+   sets --intro-0..1 every frame (lib/flow/movie.ts). */
 .fl-movie-intro {
   position: absolute;
   inset: 0;
@@ -1425,3 +1429,30 @@
 [data-flow-root][data-movie='rolling'] { cursor: none; }
 /* The movie's end title is medium weight throughout, like its opening cards. */
 [data-flow-root][data-movie] .fl-end-title :is(h2, p, a) { font-weight: 500; }
+/* At the very end of the movie the title's lines leave, outside in (the lab
+   sets --exit-0..3, lib/flow/movie.ts movieEnding): each fades, softens and
+   drifts in toward the middle, where one dot is left (.fl-end-dot). */
+[data-flow-root][data-movie] .fl-end-title :is(.fl-end-mark, .fl-end-links) { --x: var(--exit-0, 0); --dy: 14px; }
+[data-flow-root][data-movie] .fl-end-date { --x: var(--exit-1, 0); --dy: -10px; }
+[data-flow-root][data-movie] .fl-end-credit { --x: var(--exit-2, 0); --dy: -10px; }
+[data-flow-root][data-movie] .fl-end-title h2 { --x: var(--exit-3, 0); --dy: 6px; }
+[data-flow-root][data-movie] .fl-end-title :is(.fl-end-mark, .fl-end-links, .fl-end-date, .fl-end-credit, h2) {
+  filter: blur(calc(var(--x) * 9px)) opacity(calc(1 - var(--x)));
+  translate: 0 calc(var(--x) * var(--dy));
+  scale: calc(1 - var(--x) * 0.08);
+}
+.fl-end-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 36;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: rgb(236 240 255);
+  box-shadow: 0 0 10px 2px rgb(205 214 255 / 45%), 0 0 34px 8px rgb(165 176 255 / 12%);
+  opacity: var(--end-dot, 0);
+  scale: calc(0.35 + 0.65 * var(--end-dot, 0));
+  pointer-events: none;
+}

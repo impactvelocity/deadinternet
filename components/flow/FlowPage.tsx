@@ -204,6 +204,18 @@ export function WindowToggle({ playing, started, isPlaying, onToggle }: {
   );
 }
 
+/** GitHub's mark, in the grey of the credits around it. */
+function GitHubIcon({ size }: { size: number }) {
+  return (
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24">
+      <path
+        fill="currentColor"
+        d="M12 .5C5.65.5.5 5.65.5 12.02c0 5.09 3.29 9.4 7.86 10.93.58.1.79-.25.79-.56v-1.97c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.53 11.53 0 0 0 23.5 12.02C23.5 5.65 18.35.5 12 .5Z"
+      />
+    </svg>
+  );
+}
+
 function ShareIcon({ size }: { size: number }) {
   return (
     <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -383,10 +395,9 @@ export function paintAmbience(el: HTMLElement, amb: Ambience, level: number, sec
 }
 
 /**
- * The movie's opening cards on black (/movie), one after another: the
- * dead-internet mark, who it was made for, and where to scroll the film
- * yourself. Their opacities are set every frame by the lab (`--intro-0..2`,
- * lib/flow/movie.ts). Watched live, a quiet hint says how to start it; the
+ * The movie's opening cards on black (/movie), one after the other: the
+ * dead-internet mark, then who it was made for. Their opacities are set
+ * every frame by the lab (`--intro-0..1`, lib/flow/movie.ts). Watched live, a quiet hint says how to start it; the
  * rendered video never shows it.
  */
 export function MovieIntro({ hint }: { hint: boolean }) {
@@ -398,12 +409,6 @@ export function MovieIntro({ hint }: { hint: boolean }) {
       </p>
       <p className="fl-movie-card fl-movie-line" style={{ opacity: 'var(--intro-1, 0)' }}>
         <span>A short film built for <strong>Kiroween</strong></span>
-      </p>
-      <p className="fl-movie-card fl-movie-line" style={{ opacity: 'var(--intro-2, 0)' }}>
-        <span>
-          <span className="block">Go to <strong>deadinternet.io</strong></span>
-          <span className="block">to see the film in the browser</span>
-        </span>
       </p>
       {hint && <p className="fl-movie-hint">Click or press Space to play</p>}
     </div>
@@ -443,6 +448,16 @@ export function PageHeader({ interactive, onShare }: { interactive: boolean; onS
         <a className="fl-credit" href="https://kiroween.devpost.com/" target="_blank" rel="noopener noreferrer">
           <KiroGhost size={15} />
           <span>built for <span className="fl-credit-name">Kiroween</span></span>
+        </a>
+        <a
+          className="fl-github"
+          href="https://github.com/impactvelocity/deadinternet"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Source on GitHub"
+          title="Source on GitHub"
+        >
+          <GitHubIcon size={16} />
         </a>
         <button type="button" className="fl-share-button" onClick={onShare} aria-haspopup="dialog">
           <ShareIcon size={14} />

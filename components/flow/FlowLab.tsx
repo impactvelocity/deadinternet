@@ -616,6 +616,9 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
         if (stageBackRef.current) stageBackRef.current.style.transform = tf;
         if (stageFrontRef.current) stageFrontRef.current.style.transform = tf;
         mv.cards.forEach((o, k) => rootRef.current?.style.setProperty(`--intro-${k}`, o.toFixed(3)));
+        // At the very end the title's lines leave, and one dot is left.
+        mv.exit.forEach((x, k) => rootRef.current?.style.setProperty(`--exit-${k}`, x.toFixed(3)));
+        rootRef.current?.style.setProperty('--end-dot', mv.dot.toFixed(3));
         // A faint glow in the era's colours behind the window.
         if (ambienceRef.current) {
           const px = grow * fit.scale;
@@ -1049,6 +1052,7 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
           </>
         )}
         <EndTitle />
+        {movie && <div aria-hidden className="fl-end-dot" />}
         <FlowNarration
           era={era.id}
           revealing={snap.behind}

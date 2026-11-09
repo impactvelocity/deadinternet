@@ -76,7 +76,7 @@ describe('the movie frame', () => {
   it('opens on black with the cards one at a time, then the window, then the story at 1×', () => {
     const first = movieFrame(t, 0);
     expect(first).toMatchObject({ s: 0, window: 0, rolling: false });
-    expect(first.cards).toEqual([0, 0, 0]);
+    expect(first.cards).toEqual(MOVIE.cards.map(() => 0));
     // Each card gets the screen to itself at the middle of its hold.
     let at = 0;
     MOVIE.cards.forEach((hold, k) => {
@@ -137,6 +137,33 @@ describe('the movie frame', () => {
     for (let x = 0; x <= cardsEnd; x += 0.1) expect(movieFrame(t, x).glow).toBe(0);
     expect(movieFrame(t, cardsEnd + MOVIE.arrive / 2).glow).toBeGreaterThan(0);
     expect(movieFrame(t, cardsEnd + MOVIE.ambienceIn).glow).toBe(1);
+  });
+
+  it('ends by taking the title away, outside in, and leaving one dot', () => {
+    const peak = intro + t.reveal.find((r) => r.phase === 'end')!.s0 / P;
+    // Nothing moves before the score's peak on the end title.
+    for (let x = intro; x <= peak; x += 0.5) {
+      const f = movieFrame(t, x);
+      expect(f.exit.every((e) => e === 0)).toBe(true);
+      expect(f.dot).toBe(0);
+    }
+    // The groups leave in order, the title itself last, and the dot comes as it goes.
+    const firstMove = (k: number) => {
+      let x = peak;
+      while (movieFrame(t, x).exit[k] === 0) x += 1 / 60;
+      return x;
+    };
+    const starts = Array.from({ length: MOVIE.exit.groups }, (_, k) => firstMove(k));
+    for (let k = 1; k < starts.length; k++) expect(starts[k]).toBeGreaterThan(starts[k - 1]);
+    let dotAt = peak;
+    while (movieFrame(t, dotAt).dot === 0) dotAt += 1 / 60;
+    expect(dotAt).toBeGreaterThan(starts.at(-1)!);
+    // All gone and the dot full well before the story ends, and the last frame is the dot alone.
+    const storyEnd = intro + t.total / P;
+    const done = movieFrame(t, storyEnd - 1);
+    expect(done.exit).toEqual(Array(MOVIE.exit.groups).fill(1));
+    expect(done.dot).toBe(1);
+    expect(movieFrame(t, movieDuration(t)).dot).toBe(1);
   });
 
   it('holds the last frame for the outro once the story ends', () => {

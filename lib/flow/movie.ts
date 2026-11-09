@@ -2,8 +2,8 @@
  * The film as a video (`/movie`, rendered by scripts/render-film.mjs): no
  * header, play bar or start screen, just the frame, on black.
  *
- * The score starts on the first frame, under three title cards: the
- * dead-internet mark, who it was made for, and where to scroll it yourself.
+ * The score starts on the first frame, under two title cards: the
+ * dead-internet mark, then who it was made for.
  * Then the browser window arrives at its small 2005 size and the story
  * starts: voice and scrolling exactly as the site plays them, the window
  * growing era by era until its screen fills the frame with `pad` px of black
@@ -11,8 +11,9 @@
  * it's there, a faint glow in each era's colours sits behind it
  * (`ambienceAt`); the cards stay on plain black. At the reveal the frame
  * eases out from the screen to the whole page, so the pull-back has the same
- * room it has on the site. The last frame holds for a moment after the score
- * ends.
+ * room it has on the site. Once the score has peaked on the end title, the
+ * title's lines leave one by one, from the edges in, and a single dot is
+ * left where it was; it holds alone for a moment after the score ends.
  *
  * Because the score starts under the titles, the story gets that much less
  * of it (`movieScoreSeconds`, compiled into the movie's timeline), so the
@@ -32,7 +33,7 @@ export const MOVIE = {
   /** Black left around the full-size screen, in viewport px. */
   pad: 30,
   /** The opening cards, in order: seconds each holds (each fades in and out on black before the next). */
-  cards: [1.8, 2, 3] as const,
+  cards: [1.8, 2] as const,
   /** Seconds each card takes to fade in, and again to fade out. */
   cardFade: 0.5,
   /** Seconds the window takes to arrive after the cards; the story starts as it lands. */
@@ -43,8 +44,16 @@ export const MOVIE = {
   ambienceFade: 2.6,
   /** Seconds the ambience takes to come up once the window starts to arrive (the cards stay on plain black). */
   ambienceIn: 2.2,
-  /** Seconds the last frame holds after the story ends. */
-  outro: 1.5,
+  /** Seconds the last frame (the dot alone) holds after the story ends. */
+  outro: 3,
+  /**
+   * The title leaving, in seconds after the score's peak (the end phase):
+   * its groups of lines go one after another, outside in (the mark and
+   * links, the date, the credit, then the title itself), each over `each`.
+   */
+  exit: { at: 1, stagger: 0.35, each: 1.3, groups: 4 },
+  /** The last dot fading up where the title was, in seconds after the score's peak. */
+  dot: { at: 2.6, in: 1.2 },
   /** Score level under the cards (linear gain); it settles to the bed under the voice as the window arrives. */
   introLevel: 0.5,
 } as const;
@@ -149,6 +158,10 @@ export interface MovieFrame {
   window: number;
   /** The story clock is running: the voice plays. */
   rolling: boolean;
+  /** How far each group of the end title's lines has left, outside in (0 = there, 1 = gone). */
+  exit: number[];
+  /** The last dot, 0..1. */
+  dot: number;
 }
 
 /**
@@ -171,7 +184,7 @@ export function movieWindowScale(t: Pick<Timeline, 'pullbackStart'>, seconds: nu
 }
 
 /** What the movie shows at `seconds`. */
-export function movieFrame(t: Pick<Timeline, 'total' | 'pullbackStart'>, seconds: number): MovieFrame {
+export function movieFrame(t: Pick<Timeline, 'total' | 'pullbackStart' | 'reveal'>, seconds: number): MovieFrame {
   const { starts, end } = cardStarts();
   const intro = end + MOVIE.arrive;
   const f = MOVIE.cardFade;
@@ -187,6 +200,21 @@ export function movieFrame(t: Pick<Timeline, 'total' | 'pullbackStart'>, seconds
     cards,
     window: smooth((seconds - end) / MOVIE.arrive),
     rolling: seconds >= intro && s < t.total,
+    ...movieEnding(t, seconds),
+  };
+}
+
+/**
+ * The end, from the score's peak on the end title (the start of the `end`
+ * phase): the title's lines leave, outside in, and one dot is left.
+ */
+export function movieEnding(t: Pick<Timeline, 'total' | 'reveal'>, seconds: number): Pick<MovieFrame, 'exit' | 'dot'> {
+  const peak = movieIntro() + (t.reveal.find((r) => r.phase === 'end')?.s0 ?? t.total) / PLAY_SPEED;
+  const x = seconds - peak;
+  const { at, stagger, each, groups } = MOVIE.exit;
+  return {
+    exit: Array.from({ length: groups }, (_, k) => smooth((x - at - k * stagger) / each)),
+    dot: smooth((x - MOVIE.dot.at) / MOVIE.dot.in),
   };
 }
 
