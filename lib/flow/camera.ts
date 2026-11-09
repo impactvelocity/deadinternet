@@ -27,13 +27,13 @@
  * sideways in a way the eye reads as panning, and every phase starts exactly
  * where the previous one ended.
  */
-import type { RevealPhase } from './timeline';
+import { FLOW_TIMING, type RevealPhase } from './timeline';
 
 /** The page, in design px. */
 export const PAGE = { w: 1600, h: 1020 } as const;
 
-/** The browser window: 76px of tabs + toolbar, then the 1280×800 site, edge to edge. */
-export const WINDOW = { w: 1280, h: 876, chrome: 76 } as const;
+/** The browser window: 42px of compact browser chrome, then the 1280×800 site, edge to edge. */
+export const WINDOW = { w: 1280, h: 842, chrome: 42 } as const;
 
 /** Where the browser window sits on the page. */
 export const PAGE_WINDOW = { x: (PAGE.w - WINDOW.w) / 2, y: 64 } as const;
@@ -76,7 +76,7 @@ const F0: Pt = { x: WINDOW_PLACEMENT.x + G.slot.w / 2, y: WINDOW_PLACEMENT.y + G
 const C0: Pt = { x: PAGE_WINDOW.x + WINDOW.w / 2, y: PAGE_WINDOW.y + WINDOW.h / 2 };
 /** Center of the live tile, which is also the center of the grid. */
 const F1: Pt = { x: centerTile.x + G.tile.w / 2, y: centerTile.y + G.tile.h / 2 };
-const z1 = Math.min(PAGE.w / G.tile.w, PAGE.h / G.tile.h);
+const z1 = Math.min(PAGE.w / G.tile.w, PAGE.h / G.tile.h) * 0.86;
 const z2 = Math.min(PAGE.w / GRID_SIZE.w, PAGE.h / GRID_SIZE.h) * 0.94;
 const z3 = z2 / 6;
 /** After the farm the camera keeps drifting out, a little per phase. */
@@ -134,9 +134,13 @@ export function cameraAt(phase: RevealPhase, u: number): Camera {
     case 'chat':
       return { z: z1, tx: VIEW.x - F1.x * z1, ty: VIEW.y - F1.y * z1 };
     case 'servers':
-      return zoom(F1, z1, VIEW, F1, z2, VIEW, ease(u));
-    case 'farm':
-      return zoom(F1, z2, VIEW, F1, z3, VIEW, ease(u));
+    case 'farm': {
+      // One continuous pullback through the grid and field. The phase boundary
+      // changes detail level, not the camera's velocity.
+      const { servers, farm } = FLOW_TIMING.reveal;
+      const t = phase === 'servers' ? u * servers : servers + u * farm;
+      return zoom(F1, z1, VIEW, F1, z3, VIEW, ease(t / (servers + farm)));
+    }
     default: {
       // Keep drifting out, slowly, so no frame is ever quite still.
       const [a, b] = DRIFT[phase] ?? [z4, z4 * 0.99];

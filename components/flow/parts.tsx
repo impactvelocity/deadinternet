@@ -6,6 +6,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { faceImage } from '@/data/flow/images';
 import type { EraTokens, FlowAuthor, FlowMedia } from '@/data/flow/types';
 import { Icon } from './icons';
+import { PostVideo } from './PostVideo';
 
 /* --------------------------------- Geometry -------------------------------- */
 
@@ -198,6 +199,7 @@ const KIND_LABEL: Record<NonNullable<FlowMedia['kind']>, string> = {
 };
 
 export interface MediaBoxProps {
+  watching?: boolean;
   media: FlowMedia;
   wire?: boolean;
   radius?: number | string;
@@ -223,14 +225,16 @@ function photoBackground(h: number): string {
  * the placeholder. With guides on, the art-direction note is printed inside,
  * so the feed doubles as a shot list.
  */
-export function MediaBox({ media, wire, radius = 0, className, style, target, views, children }: MediaBoxProps) {
+export function MediaBox({ media, wire, radius = 0, className, style, target, views, children, watching }: MediaBoxProps) {
   const kind = media.kind ?? 'photo';
   const h = hueOf(media.note);
-  const src = wire ? undefined : media.src;
+  const src = wire ? undefined : (media.animatedSrc ?? media.src);
+  const playable = !wire && !!media.videoSrc;
   let background: string;
   if (wire) background = 'repeating-linear-gradient(135deg, #e4e4e4 0 10px, #ececec 10px 20px)';
-  // An album shows its photo across the thumbnails instead of behind them.
-  else if (src && kind !== 'album') background = `url("${src}") center / cover no-repeat #e5e5e5`;
+  // Albums render their distinct previews below.
+  else if (kind === 'album') background = '#f7f7f7';
+  else if (src) background = `url("${src}") center / cover no-repeat #e5e5e5`;
   else if (kind === 'ai')
     background = `radial-gradient(circle at 30% 25%, hsl(${h} 90% 84%), transparent 55%), radial-gradient(circle at 75% 70%, hsl(${(h + 120) % 360} 85% 72%), transparent 60%), linear-gradient(135deg, hsl(${(h + 200) % 360} 70% 62%), hsl(${(h + 40) % 360} 80% 58%))`;
   else if (kind === 'meme') background = 'linear-gradient(#f7f7f7, #e2e2e2)';
@@ -251,21 +255,27 @@ export function MediaBox({ media, wire, radius = 0, className, style, target, vi
       style={{ aspectRatio: String(media.aspect), borderRadius: radius, background, ...style }}
     >
       {kind === 'album' && (
-        <div className="absolute inset-[6px] grid grid-cols-4 gap-[6px]">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              style={{
-                // With one photo, each thumbnail shows a different part of it.
-                background: wire
-                  ? '#d8d8d8'
-                  : src
-                    ? `url("${src}") ${i * 33}% center / cover no-repeat`
-                    : photoBackground((h + i * 47) % 360),
-              }}
-            />
-          ))}
-        </div>
+        <>
+          <div className="absolute inset-x-[5px] top-[5px] bottom-[39px] grid grid-cols-2 grid-rows-2 gap-[4px]">
+            {(media.photos ?? [{ src: media.src ?? '', alt: media.note }]).slice(0, 4).map((photo, i) => (
+              <div
+                key={photo.src || i}
+                role="img"
+                aria-label={photo.alt}
+                className="relative border border-white"
+                style={{ background: wire ? '#d8d8d8' : photo.src ? `url("${photo.src}") center / cover no-repeat` : photoBackground(h) }}
+              >
+                {i === 3 && !!media.count && media.count > 4 && (
+                  <span className="absolute bottom-1 right-1 bg-black/60 px-1.5 py-0.5 text-[11px] text-white">+{media.count - 4}</span>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="absolute inset-x-0 bottom-0 h-[36px] px-2 py-1 text-[11px] leading-[14px]">
+            <div className="font-bold" style={{ color: 'var(--f-accent)' }}>{media.title ?? 'Photo album'}</div>
+            <div style={{ color: 'var(--f-muted)' }}>{media.count ?? media.photos?.length ?? 1} photos</div>
+          </div>
+        </>
       )}
       {kind === 'meme' && !wire && !src && (
         <>
@@ -274,7 +284,7 @@ export function MediaBox({ media, wire, radius = 0, className, style, target, vi
           <div className="absolute inset-x-[14%] bottom-[8%] h-[8%] rounded-sm bg-black/85" />
         </>
       )}
-      {kind === 'document' && (
+      {kind === 'document' && !src && (
         <div className="absolute inset-[10%] flex flex-col justify-center gap-[6%]">
           <div className="h-[9%] w-[30%] rounded-sm" style={{ background: wire ? '#c8c8c8' : '#c2410c' }} />
           <div className="h-[13%] w-[88%] rounded-sm bg-black/80" />
@@ -290,14 +300,15 @@ export function MediaBox({ media, wire, radius = 0, className, style, target, vi
           </span>
         </div>
       )}
-      {(kind === 'video' || kind === 'reel') && (
-        <div className="absolute inset-0 grid place-items-center">
+      {playable && <PostVideo src={media.videoSrc!} poster={src} label={media.note} duration={media.durationSeconds} watching={watching} />}
+      {!playable && (media.animatedSrc || kind === 'video' || kind === 'reel') && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-items-center">
           <span className="grid size-14 place-items-center rounded-full bg-black/35 text-white backdrop-blur-sm">
             <Icon name="play" size={26} />
           </span>
         </div>
       )}
-      {kind === 'video' && (
+      {!playable && !media.animatedSrc && kind === 'video' && (
         <span className="absolute bottom-2 right-2 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-semibold text-white">0:42</span>
       )}
       {kind === 'reel' && (

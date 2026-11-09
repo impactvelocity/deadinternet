@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { FLOW_ERAS } from '@/data/flow/eras'
-import { FACE_IMAGES, faceImage, TAIL_IMAGES } from '@/data/flow/images'
+import { FACE_IMAGES, OPPORTUNITY_FACES, faceImage } from '@/data/flow/images'
 import { FLOW_POSTS, VIEWER } from '@/data/flow/posts'
 
 const PUBLIC = join(__dirname, '../../public')
@@ -18,6 +18,7 @@ function avatarKeys(): Set<string> {
   const keys = new Set<string>()
   for (const v of Object.values(VIEWER)) keys.add(v.face ?? v.name)
   for (const p of posts) {
+    if (p.chat) keys.add(OPPORTUNITY_FACES[p.chat.name] ?? p.chat.name)
     for (const a of [p.author, ...(p.comments ?? []).map((c) => c.author)]) keys.add(a.face ?? a.name)
   }
   const walk = (node: unknown): void => {
@@ -38,14 +39,15 @@ function avatarKeys(): Set<string> {
 function feedImageSrcs(): (readonly [string, string])[] {
   const out: (readonly [string, string])[] = []
   for (const p of posts) {
+    for (const photo of p.media?.photos ?? []) out.push([`${p.id}:album ${photo.alt}`, photo.src])
     if (p.media?.src) out.push([`${p.id}:media`, p.media.src])
+    if (p.media?.animatedSrc) out.push([`${p.id}:animation`, p.media.animatedSrc])
     if (p.link?.src) out.push([`${p.id}:link`, p.link.src])
     for (const r of p.reels?.items ?? []) if (r.src) out.push([`${p.id}:reel ${r.author}`, r.src])
   }
   for (const era of FLOW_ERAS) {
     if (era.platform.kind === 'ad' && era.platform.src) out.push([`${era.id}:ad`, era.platform.src])
   }
-  TAIL_IMAGES.forEach((src, i) => out.push([`tail-${i + 1}`, src]))
   return out
 }
 

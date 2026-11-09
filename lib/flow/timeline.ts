@@ -181,7 +181,7 @@ export const FLOW_TIMING = {
   /** Where "reading" happens, as a fraction of the feed viewport. Era changes key off this. */
   readingLine: 0.4,
   /** Where an action's target is parked before the agent acts on it. */
-  focusLine: 0.58,
+  focusLine: 0.5,
   /** Px left above a new era's section when the feed arrives at it. */
   arriveMargin: 12,
   /** Default pause when an era arrives. */
@@ -192,17 +192,17 @@ export const FLOW_TIMING = {
    * proportionally faster than short hops.
    */
   scrollRate: 1,
-  scrollBase: 70,
+  scrollBase: 90,
   scrollExp: 0.9,
   /** Landing overshoot: share of the distance, capped (px), scaled by agent style. */
   bounceShare: 0.05,
-  bounceMax: 18,
+  bounceMax: 10,
   bounciness: { human: 1, quick: 0.65, robot: 0 },
   /** Pause on each post the agent doesn't act on, scaled by agent pace. */
-  glance: 280,
+  glance: 600,
   travelBase: 90,
   travelPerPx: 0.32,
-  dwell: 90,
+  dwell: 110,
   press: 36,
   /** Pause after an action that changes nothing on the page (reading). */
   after: 110,
@@ -224,7 +224,7 @@ export const FLOW_TIMING = {
   hover: 220,
   typePerChar: 16,
   typePaste: 60,
-  read: 520,
+  read: 760,
   watch: 900,
   captchaWait: 420,
   lateOverlay: 320,
@@ -241,7 +241,7 @@ export const FLOW_TIMING = {
    * globe with waves of light, the globe collapses into one dot, it blinks;
    * end card.
    */
-  reveal: { sandbox: 2000, chat: 1800, servers: 2000, farm: 1800, dots: 1000, globe: 2400, collapse: 1300, blink: 900, end: 1600 } as Record<
+  reveal: { sandbox: 2400, chat: 3200, servers: 1900, farm: 1700, dots: 1600, globe: 2200, collapse: 1450, blink: 650, end: 1800 } as Record<
     RevealPhase,
     number
   >,
@@ -352,20 +352,22 @@ export function compileTimeline(
   let rate: number = T.scrollRate;
   let bounciness = 1;
 
-  const scrollTo = (target: number) => {
-    const to = clamp(target, offset, maxOffset);
-    const d = to - offset;
-    if (d < 1) return;
+  const scrollTo = (target: number, reframe = false) => {
+    const to = clamp(target, reframe ? 0 : offset, maxOffset);
+    const delta = to - offset;
+    const d = Math.abs(delta);
+    if (d < 1) return false;
     const len = rate * (T.scrollBase + d ** T.scrollExp);
     const bounce = Math.min(T.bounceMax, d * T.bounceShare) * bounciness;
-    beats.push({ kind: 'scroll', s0: s, s1: s + len, from: offset, to, bounce, cursor });
+    beats.push({ kind: 'scroll', s0: s, s1: s + len, from: offset, to, bounce: bounce * Math.sign(delta), cursor });
     s += len;
     offset = to;
+    return true;
   };
 
   /** Where to park a post: centred if it fits, otherwise its top near the top. */
   const frameOf = (box: { top: number; height: number }) =>
-    box.height < vh * 0.82 ? box.top + box.height / 2 - vh * 0.47 : box.top - 36;
+    box.height < vh * 0.82 ? box.top + box.height / 2 - vh * 0.5 : box.top - 36;
 
   const hold = (len: number, label: string) => {
     beats.push({ kind: 'hold', s0: s, s1: s + len, offset, cursor, label });
@@ -394,21 +396,24 @@ export function compileTimeline(
     }
     hold(holdLen, `${era.year} · ${era.label}`);
 
-    const pace = T.pace[era.agent];
-    const landPace = T.landPace[era.agent];
-    const curve = T.curve[era.agent];
-    const human = era.agent !== 'robot';
-    const aim: Pt = human ? { x: 0.42, y: 0.56 } : { x: 0.5, y: 0.5 };
     let bend = 1;
-
     for (const post of posts[era.id] ?? []) {
+      const agent = post.agent ?? era.agent;
+      const tempo = post.tempo ?? 1;
+      const pace = T.pace[agent] * tempo;
+      const landPace = T.landPace[agent] * tempo;
+      const curve = T.curve[agent];
+      const human = agent !== 'robot';
+      const aim: Pt = human ? { x: 0.42, y: 0.56 } : { x: 0.5, y: 0.5 };
+      rate = T.scrollRate * era.scrollRate * tempo;
+      bounciness = T.bounciness[agent];
       const box = m.posts[post.id];
-      // Posts the agent doesn't touch are still focus stops: glide to frame
-      // the post, settle, glance, move on.
-      if (!post.actions?.length && box) {
+      // Establish the post before interacting. Explicit reading/watching beats
+      // already provide that pause; don't make the viewer sit through it twice.
+      const firstAction = post.actions?.[0];
+      if (box && firstAction?.type !== 'read' && firstAction?.type !== 'watch' && firstAction?.type !== 'publish') {
         scrollTo(frameOf(box));
-        hold(T.glance * pace * (post.media || post.reels ? 1.25 : 1), `glance · ${post.author.name}`);
-        continue;
+        hold(T.glance * pace * (post.media || post.reels ? 1.25 : 1), `${firstAction ? 'preview' : 'glance'} · ${post.author.name}`);
       }
       for (const action of post.actions ?? []) {
         const id = (part: string) => `${post.id}:${part}`;
@@ -418,6 +423,12 @@ export function compileTimeline(
         // Target ids this action touches, in order.
         let ids: string[];
         switch (action.type) {
+          case 'publish':
+            ids = [id('publish'), id('publish-submit')];
+            break;
+          case 'message':
+            ids = [id('message')];
+            break;
           case 'read':
             ids = [id('body')];
             break;
@@ -460,17 +471,28 @@ export function compileTimeline(
           continue;
         }
 
-        // Park the first feed target at the focus line, keeping the post top
-        // in view when possible and every feed target on screen.
+        if (action.type === 'publish') events.push({ s, type: 'focus', key: `${post.id}:publish` });
+
+        // Reading frames the post; interactions frame the exact target.
+        // A local upward adjustment is intentional (older layouts put Like
+        // above the photo). Never drag the post header along with its controls.
         const feedRects = rects.filter((r) => r.space === 'feed');
         if (feedRects.length) {
           const first = feedRects[0];
-          let want = first.y + first.h / 2 - vh * T.focusLine;
-          if (box) want = Math.min(want, box.top - 16);
-          for (const r of feedRects) want = Math.max(want, r.y + r.h + 32 - vh);
-          scrollTo(want);
+          let want = action.type === 'read' && box
+            ? frameOf(box)
+            : first.y + first.h / 2 - vh * T.focusLine;
+          const top = Math.min(...feedRects.map((r) => r.y));
+          const bottom = Math.max(...feedRects.map((r) => r.y + r.h));
+          // Keep companion targets (reaction palette / submit) in view. A
+          // taller-than-screen image is framed at its top instead of cropped
+          // on both ends; ordinary controls still land exactly at center.
+          want = bottom - top <= vh - 64
+            ? clamp(want, bottom + 32 - vh, top - 32)
+            : top - 32;
+          if (scrollTo(want, true)) hold(100 * landPace, `settle · ${action.type}`);
           for (const r of feedRects) {
-            if (r.y - offset < 0 || r.y + r.h - offset > vh) warnings.push(`${post.id}: ${action.type} target off screen`);
+            if (r.h <= vh - 64 && (r.y - offset < 0 || r.y + r.h - offset > vh)) warnings.push(`${post.id}: ${action.type} target off screen`);
           }
         }
 
@@ -519,6 +541,29 @@ export function compileTimeline(
         }
 
         switch (action.type) {
+          case 'publish':
+          case 'message': {
+            const key = `${post.id}:${action.type}`;
+            if (action.type === 'message') {
+              events.push({ s: at, type: 'focus', key });
+              dwell(650 * tempo);
+            }
+            move(point(0));
+            events.push({ s: press(), type: 'focus', key });
+            const len = human ? Array.from(action.text).length * T.typePerChar * tempo : T.typePaste;
+            const ts = at;
+            dwell(len);
+            typing = { s0: ts, s1: at, end: 0, text: action.text, postId: key, paste: !human };
+            if (action.type === 'publish') move(point(1));
+            const sent = press();
+            typing.end = sent;
+            events.push({ s: sent, type: 'post', key, value: action.text });
+            // Publication has its own reading pause; don't stack the comment
+            // landing pause on top of it.
+            if (action.type === 'publish') land((post.publishHold ?? 800) / landPace);
+            else land(T.land.comment);
+            break;
+          }
           case 'read':
             move(point(0));
             dwell(T.read * pace);
@@ -558,7 +603,7 @@ export function compileTimeline(
             dwell(T.dwell * pace);
             events.push({ s: press(), type: 'focus', key: post.id });
             const chars = Array.from(action.text);
-            const len = human ? chars.length * T.typePerChar * (era.agent === 'quick' ? 0.8 : 1) : T.typePaste;
+            const len = human ? chars.length * T.typePerChar * (agent === 'quick' ? 0.8 : 1) * tempo : T.typePaste;
             const ts = at + 30;
             dwell(len + 30);
             typing = { s0: ts, s1: ts + len, end: 0, text: action.text, postId: post.id, paste: !human };
@@ -586,7 +631,7 @@ export function compileTimeline(
           case 'watch':
             move(point(0));
             events.push({ s: at, type: 'watch', key: post.id });
-            dwell(T.watch * pace);
+            dwell(action.holdPx !== undefined ? action.holdPx * pace : post.media?.videoSrc && post.media.durationSeconds ? post.media.durationSeconds * 1000 : T.watch * pace);
             events.push({ s: at, type: 'watched', key: post.id });
             land(T.land.watch);
             break;
@@ -628,10 +673,14 @@ export function compileTimeline(
     }
   });
 
-  // Run out the feed, then pull back. The feed keeps creeping through the
-  // endless tail during the reveal: the agent never stops scrolling.
-  scrollTo(feedEndOffset);
-  hold(T.tail, 'end of the real feed');
+  // Run out the feed, then pull back. The long repeating tail keeps the
+  // browser racing through outreach while the camera reveals its operator.
+  const lastEra = eras.at(-1);
+  const revealOnPost = lastEra && posts[lastEra.id]?.at(-1)?.revealAfterPublish;
+  if (!revealOnPost) {
+    scrollTo(feedEndOffset);
+    hold(T.tail, 'end of the real feed');
+  }
   const revealStart = s;
   const phases = REVEAL_PHASES;
   const revealLen = phases.reduce((n, p) => n + T.reveal[p], 0);
@@ -679,7 +728,7 @@ export function compileTimeline(
     const step = Math.max(1, (end - start) / n);
     const life = Math.min(T.pingLife, step * 1.35);
     era.pings.forEach((_, i) => {
-      const s0 = start + step * (i + 0.15);
+      const s0 = start + (end - start) * (era.id === 'dead' ? ((i + 0.15) / n) ** 0.45 : (i + 0.15) / n);
       pings.push({ s0, s1: Math.min(end, s0 + life), era: k, index: i });
     });
   });

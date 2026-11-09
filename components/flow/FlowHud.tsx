@@ -9,7 +9,7 @@
  * Under each era, a thin bar shows who is posting in it: people, brands and
  * pages, bots. That bar is the story arc; tune it in `data/flow/posts.ts`.
  */
-import { memo, type Ref } from 'react';
+import { memo, useState, type Ref } from 'react';
 import { FLOW_ERAS } from '@/data/flow/eras';
 import { composition, FLOW_POSTS } from '@/data/flow/posts';
 import type { Timeline } from '@/lib/flow/timeline';
@@ -17,10 +17,14 @@ import type { Timeline } from '@/lib/flow/timeline';
 export const HUD_HEIGHT = 56;
 
 export interface FlowHudProps {
+  browserWidth: number;
+  readingNotes: boolean;
   timeline: Timeline | null;
   era: number;
   beatLabel: string;
   playing: boolean;
+  voiceEnabled: boolean;
+  onToggleVoice: () => void;
   speed: number;
   guides: boolean;
   wire: boolean;
@@ -58,6 +62,7 @@ function Toggle({ on, label, k, onClick }: { on: boolean; label: string; k: stri
       type="button"
       onClick={onClick}
       title={`${label} (${k})`}
+      aria-pressed={on}
       className={`rounded px-2 py-1 transition-colors ${on ? 'bg-white/90 text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
     >
       {label}
@@ -67,27 +72,104 @@ function Toggle({ on, label, k, onClick }: { on: boolean; label: string; k: stri
 
 export const FlowHud = memo(function FlowHud(props: FlowHudProps) {
   const { timeline: t, era, beatLabel, playing, speed, guides, wire, cursor, playheadRef, readoutRef, onPlay, onSpeed, onSeek, onToggle } = props;
+  const [devOpen, setDevOpen] = useState(false);
   const total = t?.total ?? 1;
   const pct = (s: number) => `${(s / total) * 100}%`;
   const current = FLOW_ERAS[era];
+  const revealing = beatLabel.includes('reveal:');
 
   return (
-    <div
-      className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-white/10 bg-[#141416]/85 px-3 font-mono text-[11px] text-white/80 shadow-[0_12px_40px_rgba(0,0,0,.35)] backdrop-blur-xl"
-      style={{ height: HUD_HEIGHT, width: 'min(1040px, calc(100vw - 32px))' }}
-    >
-      <button
-        type="button"
-        onClick={onPlay}
-        title="Play / pause (space)"
-        className="grid size-8 shrink-0 place-items-center rounded-full bg-white text-[12px] text-black"
-      >
-        {playing ? '❚❚' : '▶'}
-      </button>
-      <button type="button" onClick={onSpeed} title="Autoplay speed" className="w-9 shrink-0 rounded bg-white/5 py-1 text-center hover:bg-white/10">
-        {speed}×
-      </button>
+    <>
+      <div className="fl-player" style={{ height: HUD_HEIGHT, width: props.browserWidth }}>
+        <button type="button" onClick={onPlay} className="fl-player-play" aria-label={playing ? 'Pause' : 'Play'} title="Play / pause (space)">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            {playing ? <path d="M4 3h3v10H4zm5 0h3v10H9z" /> : <path d="M5 2.5 13 8l-8 5.5z" />}
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="fl-player-voice"
+          aria-label="Ashley narration"
+          aria-pressed={props.voiceEnabled}
+          title={props.voiceEnabled ? 'Turn narration off' : 'Turn narration on'}
+          onClick={props.onToggleVoice}
+        >
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+            {props.voiceEnabled ? <><path d="M15 8a6 6 0 0 1 0 8" /><path d="M18 5a10 10 0 0 1 0 14" /></> : <path d="m16 9 6 6m0-6-6 6" />}
+          </svg>
+        </button>
+        <div className="fl-player-story">
+          <div className="fl-player-caption">
+            <span>{revealing ? 'Behind the feed' : current.label}</span>
+            <span className="fl-player-year">{revealing || current.id === 'machine' ? '—' : current.year}</span>
+          </div>
+          <div
+            className="fl-player-track"
+            role="slider"
+            aria-label="Story progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={0}
+            tabIndex={0}
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              const r = e.currentTarget.getBoundingClientRect();
+              onSeek(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * total);
+            }}
+            onPointerMove={(e) => {
+              if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+              const r = e.currentTarget.getBoundingClientRect();
+              onSeek(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * total);
+            }}
+            onKeyDown={(e) => {
+              if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+              e.preventDefault();
+              e.stopPropagation();
+              const value = Number(e.currentTarget.getAttribute('aria-valuenow') ?? 0) / 100;
+              onSeek((e.key === 'Home' ? 0 : e.key === 'End' ? 1 : Math.max(0, Math.min(1, value + (e.key === 'ArrowRight' ? .01 : -.01)))) * total);
+            }}
+          >
+            <div className="fl-player-rail">
+              {t && [...FLOW_ERAS.map((e, k) => ({
+                id: e.id,
+                label: `${e.year} · ${e.label}`,
+                start: t.eraStarts[k],
+                end: t.eraStarts[k + 1] ?? t.revealStart,
+                active: !revealing && k === era,
+              })), {
+                id: 'reveal', label: 'Behind the feed',
+                start: t.revealStart, end: t.total, active: revealing,
+              }].map((segment, index, segments) => (
+                <span
+                  key={segment.id}
+                  className="fl-player-segment"
+                  data-active={segment.active}
+                  style={{ left: pct(segment.start), width: pct(segment.end - segment.start) }}
+                >
+                  <span className="fl-player-segment-fill" />
+                  <span className="fl-player-tooltip" style={index === 0 ? { left: 0, transform: 'none' } : index === segments.length - 1 ? { left: 'auto', right: 0, transform: 'none' } : undefined}>
+                    {segment.label}
+                  </span>
+                </span>
+              ))}
+              <div ref={playheadRef} className="fl-player-head" style={{ left: 0 }} />
+            </div>
+          </div>
+        </div>
+        <button type="button" onClick={onSpeed} title="Playback speed" aria-label={`Playback speed: ${speed} times. Change speed`} className="fl-player-speed">{speed}×</button>
+      </div>
 
+      <button type="button" className="fl-dev-button" style={{ visibility: props.readingNotes ? 'hidden' : undefined }} aria-label="Developer controls" aria-expanded={devOpen} aria-controls="flow-dev-panel" onClick={() => setDevOpen((v) => !v)}>
+        <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-14-2 18" />
+        </svg>
+      </button>
+      <div id="flow-dev-panel" className="fl-dev-panel" hidden={!devOpen || props.readingNotes}>
+        <div className="mb-4 flex items-center justify-between text-[12px]">
+          <span className="font-semibold text-white">Developer controls</span>
+          <button type="button" aria-label="Close developer controls" onClick={() => setDevOpen(false)} className="px-2 py-1 text-white/60">✕</button>
+        </div>
       {/* Timeline */}
       <div
         className="relative h-[30px] min-w-0 flex-1 cursor-pointer select-none"
@@ -154,27 +236,21 @@ export const FlowHud = memo(function FlowHud(props: FlowHudProps) {
             />
           ) : null,
         )}
-        <div ref={playheadRef} className="pointer-events-none absolute -top-[2px] bottom-0 w-[2px] bg-white shadow-[0_0_6px_white]" style={{ left: 0 }} />
+        <div  className="pointer-events-none absolute -top-[2px] bottom-0 w-[2px] bg-white shadow-[0_0_6px_white]" style={{ display: 'none' }} />
       </div>
 
-      <div className="w-[300px] shrink-0 leading-tight">
-        <div className="truncate text-white">
-          {current.year} · {current.label} <span className="text-white/40">— {current.reference}</span>
-        </div>
-        <div className="flex gap-2 truncate text-white/50">
-          <span ref={readoutRef} className="w-[54px] shrink-0 tabular-nums" />
+        <div className="my-4 flex gap-2 text-[11px] text-white/60">
+          <span ref={readoutRef} className="tabular-nums" />
           <span className="truncate">{beatLabel}</span>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Toggle on={guides} label="Guides" k="G" onClick={() => onToggle('guides')} />
+          <Toggle on={wire} label="Wireframe" k="W" onClick={() => onToggle('wire')} />
+          <Toggle on={cursor} label="Cursor" k="C" onClick={() => onToggle('cursor')} />
+          <button type="button" onClick={() => onToggle('hud')} className="px-2 py-1 text-white/60">Hide controls</button>
+        </div>
+        <p className="mt-4 text-[11px] text-white/65">[ / ] era · , / . action · H show / hide controls</p>
       </div>
-
-      <div className="flex shrink-0 items-center gap-1">
-        <Toggle on={guides} label="Guides" k="G" onClick={() => onToggle('guides')} />
-        <Toggle on={wire} label="Wire" k="W" onClick={() => onToggle('wire')} />
-        <Toggle on={cursor} label="Cursor" k="C" onClick={() => onToggle('cursor')} />
-        <button type="button" title="Hide lab bar (H)" onClick={() => onToggle('hud')} className="rounded px-2 py-1 text-white/50 hover:bg-white/10">
-          ⌄
-        </button>
-      </div>
-    </div>
+    </>
   );
 });

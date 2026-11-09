@@ -1,0 +1,87 @@
+{
+  "voice": "Ella - Soft Soothing Female Voice",
+  "model": "eleven_v4",
+  "provider": "ElevenLabs",
+  "stability": 0.46,
+  "similarity": 0.6,
+  "chunks": [
+    {
+      "era": "profile",
+      "text": "Hi, I'm Ashley - It all started as a space of my own, me and my top 5.",
+      "src": "/assets/narration/ashley-profile-siren-intro.mp3",
+      "durationSeconds": 5.8775,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "wall",
+      "text": "Then it was about our faces, posting to the wall and making new friends.",
+      "src": "/assets/narration/ashley-wall-siren-updated.mp3",
+      "durationSeconds": 4.440813,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "cards",
+      "text": "It became a part of our lives, where we share, and express ourselves.",
+      "src": "/assets/narration/ashley-cards-siren.mp3",
+      "durationSeconds": 4.440813,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "viral",
+      "text": "It started to become less about us, and more about something else.",
+      "src": "/assets/narration/ashley-viral-siren-updated.mp3",
+      "durationSeconds": 4.75425,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "algorithm",
+      "text": "Something more divisive. More bitter. More angry. And the more we reacted, the more it gave us.",
+      "src": "/assets/narration/ashley-algorithm-siren.mp3",
+      "durationSeconds": 7.706063,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "stories",
+      "text": "The people became more polished. More perfect. And I started wondering why my life didn\u2019t look like theirs.",
+      "src": "/assets/narration/ashley-stories-siren.mp3",
+      "durationSeconds": 7.392625,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "reels",
+      "text": "Then came an endless stream posts and videos - I started to miss my friends.",
+      "src": "/assets/narration/ashley-reels-siren.mp3",
+      "durationSeconds": 5.564063,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "slop",
+      "text": "Then it got a little weird.",
+      "src": "/assets/narration/ashley-slop-siren.mp3",
+      "durationSeconds": 2.272625,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "pro",
+      "text": "Everyone had advice, and every little moment became a lesson to share.",
+      "src": "/assets/narration/ashley-pro-siren.mp3",
+      "durationSeconds": 4.5975,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "machine",
+      "text": "It wasn't fun anymore.",
+      "src": "/assets/narration/ashley-machine-siren.mp3",
+      "durationSeconds": 1.880813,
+      "voice": "Siren - Natural realistic conversational voice"
+    },
+    {
+      "era": "dead",
+      "text": "Then I realized\u2014these are my people. I had something to sell, money to make, and a chance to share what\u2019s working for me. AI changed my life, and it can change yours too. Comment YES if you\u2019re ready to step into your next chapter!",
+      "src": "/assets/narration/ashley-dead-jessica.mp3",
+      "durationSeconds": 14.8375,
+      "voice": "Jessica - Playful, Bright, Warm"
+    }
+  ],
+  "voiceId": "MX0URTwXZSc0YLXuD9IN"
+}

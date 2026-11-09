@@ -1,0 +1,57 @@
+{
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "name": "ashley-daybreak",
+      "ref": "ashley-2023.jpg",
+      "prompt": "Use case: identity-preserve. Reference is the existing fictional Ashley Parker avatar. Create a new square social profile photo of this SAME woman two years later, around 38, preserving her distinctive face, brown eyes, shoulder-length dark brown hair, realistic skin and warm slightly asymmetrical smile. She is launching a dubious digital-business opportunity named Daybreak in a narrative website. Casual cream blazer over a muted lilac top, airy ordinary home office, confident friendly self-shot portrait, not a fashion model. Centered head and shoulders with generous room for circular cropping. Natural window light, ordinary smartphone quality, subtle beauty filter but real skin. No text, logos, collage or watermark.",
+      "generated": "/Users/dylanjones/.codex/generated_images/01a1bd3e-999a-7cc2-bf96-14bdf4f0b82d/exec-6d1122d8-70e0-45f2-87b1-5a86433e0a12.png",
+      "saved": "/Users/dylanjones/apps/deadinternet/public/assets/avatars/ashley-daybreak.jpg"
+    },
+    {
+      "name": "daybreak-launch",
+      "ref": "ashley-2023.jpg",
+      "prompt": "Use case: identity-preserve / photorealistic-natural. Use the reference as identity reference for the SAME fictional Ashley Parker, brunette woman around 38 with a warm slightly asymmetrical smile. Single landscape 3:2 smartphone lifestyle photo for her first social post announcing a new digital business. Ashley sits at a modest kitchen table with an open unbranded silver laptop, phone, pale lavender notebook and coffee mug. Cream cardigan, small gold necklace, pleased hopeful smile looking toward camera. Real lived-in apartment, soft morning window light, houseplant and kitchen in background. Aspirational but attainable, authentic friend-took-this photo rather than luxury stock. Show her face clearly and enough of the laptop/table to understand working from home. No text, no logos, no watermark.",
+      "generated": "/Users/dylanjones/.codex/generated_images/01a1bd3e-999a-7cc2-bf96-14bdf4f0b82d/exec-91597643-18b0-4943-9ab6-b007635c45be.png",
+      "saved": "/Users/dylanjones/apps/deadinternet/public/assets/posts/daybreak-launch.jpg"
+    },
+    {
+      "name": "daybreak-invitation",
+      "prompt": "Use case: ads-marketing. One landscape 3:2 social media promotional graphic for fictional Daybreak digital-business opportunity, used as a prop in a satirical narrative. Believable slightly overconfident Canva social-selling design, not polished tech SaaS. Warm ivory background, deep plum typography, lilac rounded arch, small gold sun motif. Right third: photorealistic phone on a table beside iced coffee, sunglasses, soft sunlight. Left two thirds large highly readable type. Exact text only: 'DAYBREAK' small at top, 'Your phone.\\nYour freedom.' very large headline, 'Comment I AM IN' in a solid plum capsule below, '5 spots · Let’s build together' small at bottom. Clean, generous spacing, no fake app UI, no watermark. All text readable at small feed size.",
+      "generated": "/Users/dylanjones/.codex/generated_images/01a1bd3e-999a-7cc2-bf96-14bdf4f0b82d/exec-02741eb4-1081-4770-b54d-893fa3378e8f.png",
+      "saved": "/Users/dylanjones/apps/deadinternet/public/assets/posts/daybreak-invitation.jpg"
+    },
+    {
+      "name": "daybreak-training",
+      "ref": "ashley-2023.jpg",
+      "prompt": "Use case: identity-preserve / ads-marketing. Landscape 3:2 webinar cover image for the fictional Daybreak opportunity in a satirical social media story. Use reference as identity for the same fictional Ashley Parker, brunette woman around38, warm friendly smile, realistic face. Right half shows Ashley chest-up in cream blazer over a lilac top in a bright modest home office, looking to camera as if hosting a webinar. Left half warm ivory panel with deep plum typography, subtle lilac arc and tiny gold sun motif. Exact readable text only: 'DAYBREAK', 'The starter session', 'Build your digital business', 'Free training · Start here'. Large hierarchy, believable social seller Canva design, no other people, no watermark, no extra decorative charts.",
+      "generated": "/Users/dylanjones/.codex/generated_images/01a1bd3e-999a-7cc2-bf96-14bdf4f0b82d/exec-ecf32448-2a21-4894-a36c-c8031455e638.png",
+      "saved": "/Users/dylanjones/apps/deadinternet/public/assets/posts/daybreak-training.jpg"
+    },
+    {
+      "name": "sarah-mitchell-2025",
+      "prompt": "Use case: photorealistic-natural. Square social media avatar photograph of a fictional woman Sarah Mitchell, 37, Black American, shoulder-length loose natural curls, brown eyes, oval face, warm easy smile, small gold hoop earrings and a casual sage green top. A candid phone photo outside a cafe in soft daylight. Centered head and shoulders, face large and readable in a small circular crop, ordinary friendly person, realistic skin texture, not a glossy stock model. No text, no watermark, one person.",
+      "generated": "/Users/dylanjones/.codex/generated_images/01a1bd3e-999a-7cc2-bf96-14bdf4f0b82d/exec-12a0e86d-c5a0-4d85-a98d-f6fb2780bfe2.png",
+      "saved": "/Users/dylanjones/apps/deadinternet/public/assets/avatars/sarah-mitchell-2025.jpg"
+    },
+    {
+      "name": "emma-johnson-2025",
+      "prompt": "Use case: photorealistic-natural. Square social media avatar photograph of a fictional woman Emma Johnson, 34, white American, pale skin with a few freckles, light brown hair pulled into a loose bun, hazel eyes, rounded face and enthusiastic open smile. Navy denim jacket, park greenery softly blurred behind her, casual smartphone portrait. Centered head and shoulders with room for circular crop. Ordinary real-life friend, natural skin, not a model, no text or watermark.",
+      "generated": "/Users/dylanjones/.codex/generated_images/01a1bd3e-999a-7cc2-bf96-14bdf4f0b82d/exec-f6fd13f2-5010-4a73-b904-fbffd4eb1d3d.png",
+      "saved": "/Users/dylanjones/apps/deadinternet/public/assets/avatars/emma-johnson-2025.jpg"
+    },
+    {
+      "name": "olivia-brown-2025",
+      "prompt": "Use case: photorealistic-natural. Square social media avatar photograph of a fictional woman Olivia Brown, 40, Latina, medium warm skin, dark straight shoulder-length hair, thin tortoiseshell glasses, thoughtful slight smile, burgundy knit top. Soft window daylight, bookshelf apartment background, casual phone portrait, centered head and shoulders. Distinct natural features readable in a tiny circular crop, realistic skin, no beauty campaign look, no text or watermark.",
+      "generated": "/Users/dylanjones/.codex/generated_images/01a1bd3e-999a-7cc2-bf96-14bdf4f0b82d/exec-d89417e7-f972-4045-a530-1cdeb4eff6c6.png",
+      "saved": "/Users/dylanjones/apps/deadinternet/public/assets/avatars/olivia-brown-2025.jpg"
+    },
+    {
+      "name": "mike-chen-2025",
+      "ref": "mike-chen.jpg",
+      "prompt": "Use case: identity-preserve. Reference is fictional Mike Chen at about21 in2008. Create a square social profile photo of the SAME East Asian man in2025 at age38, keeping his recognizable face and big warm smile but with plausible natural aging. No sunglasses, neat short black hair, subtle smile lines, casual dark blue shirt, relaxed candid phone portrait outdoors at a neighborhood barbecue. Centered head and shoulders suitable for circular crop. Ordinary friendly adult, realistic texture and natural daylight, no text or watermark.",
+      "generated": "/Users/dylanjones/.codex/generated_images/01a1bd3e-999a-7cc2-bf96-14bdf4f0b82d/exec-b58878d2-4a63-4a32-adf0-e1d868e040b1.png",
+      "saved": "/Users/dylanjones/apps/deadinternet/public/assets/avatars/mike-chen-2025.jpg"
+    }
+  ]
+}

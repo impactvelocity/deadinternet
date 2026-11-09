@@ -21,9 +21,13 @@ import { memo, type CSSProperties, type ReactNode } from 'react';
 import { viewerFor } from '@/data/flow/posts';
 import type { ActionSlot, EraTokens, FlowAuthor, FlowComment, FlowEra, FlowPost as Post } from '@/data/flow/types';
 import { Icon } from './icons';
+import { OpportunityReactions } from './OpportunityUi';
 import { Avatar, compact, full, MediaBox, Verified } from './parts';
 
 export interface PostFx {
+  published?: boolean;
+  publishingActive?: boolean;
+  publishing?: string;
   liked: boolean;
   heart: boolean;
   palette: boolean;
@@ -56,17 +60,17 @@ const DEFAULT_REACTIONS: [string, string][] = [
 ];
 
 const REACTION_COLOR: Record<string, string> = {
-  '😡': '#e9710f',
-  '😆': '#f7b125',
-  '😮': '#f7b125',
-  '😢': '#f7b125',
-  '❤️': '#f33e58',
+  '😡': '#a54b00',
+  '😆': '#8a5700',
+  '😮': '#8a5700',
+  '😢': '#8a5700',
+  '❤️': '#bd2142',
   '👏': '#44712e',
   '💡': '#915907',
 };
 
-const SMALL: CSSProperties = { fontSize: 'calc(var(--f-size) - 1px)' };
-const TINY: CSSProperties = { fontSize: 'calc(var(--f-size) - 2px)' };
+const SMALL: CSSProperties = { fontSize: 'max(12px, calc(var(--f-size) - 1px))' };
+const TINY: CSSProperties = { fontSize: 'max(11px, calc(var(--f-size) - 2px))' };
 const MUTED: CSSProperties = { color: 'var(--f-muted)' };
 const NAME: CSSProperties = { color: 'var(--f-name)', fontWeight: 700 };
 const LINK: CSSProperties = { color: 'var(--f-accent)' };
@@ -113,6 +117,9 @@ function Media({ c, radius = 0, className, style }: { c: Ctx; radius?: number | 
   const { post, wire } = c;
   if (!post.media) return null;
   const moving = post.media.kind === 'video' || post.media.kind === 'reel';
+  const uploading = post.actions?.some((action) => action.type === 'publish') && !c.published;
+  // Drive uploads from story progress so pausing and scrubbing stay reversible.
+  const uploadProgress = Math.min(1, (c.publishing?.length ?? 0) / Math.max(1, post.body.length * .72));
   const box = (
     <MediaBox
       media={post.media}
@@ -122,9 +129,22 @@ function Media({ c, radius = 0, className, style }: { c: Ctx; radius?: number | 
       style={style}
       target={`${post.id}:media`}
       views={post.stats?.views}
+      watching={c.watching && !c.watched}
     >
+      {uploading && (
+        <div className="fl-photo-upload" data-ready={uploadProgress === 1}>
+          {uploadProgress < 1 ? (
+            <div className="fl-photo-upload-status" role="status" aria-label={`Uploading photo: ${Math.round(uploadProgress * 100)} percent`}>
+              <span className="fl-photo-upload-icon"><Icon name="image" size={25} /></span>
+              <strong>Uploading photo…</strong>
+              <span className="fl-photo-upload-track"><span style={{ transform: `scaleX(${uploadProgress})` }} /></span>
+              <span>{Math.round(uploadProgress * 100)}%</span>
+            </div>
+          ) : <span className="fl-photo-ready"><Icon name="check" size={14} /> Photo ready</span>}
+        </div>
+      )}
       {c.heart && <span className="fl-heart-pop absolute inset-0 grid place-items-center text-[88px] text-white drop-shadow-lg">♥</span>}
-      {moving && (
+      {moving && ((!post.media.videoSrc && !post.media.animatedSrc) || wire) && (
         <span className="absolute inset-x-0 bottom-0 h-[3px] bg-white/30">
           <span
             className="block h-full bg-white"
@@ -138,10 +158,25 @@ function Media({ c, radius = 0, className, style }: { c: Ctx; radius?: number | 
     </MediaBox>
   );
   if (post.media.kind !== 'reel') return box;
-  // Reels sit centred in a soft frame, like a phone video in a desktop feed.
+  // Extend the still behind the reel so its colors fill the desktop frame.
   return (
-    <div className="flex justify-center py-3" style={{ background: 'var(--f-soft)' }}>
-      <div className="w-[292px] overflow-hidden rounded-xl shadow-sm">{box}</div>
+    <div className="relative isolate flex justify-center overflow-hidden py-3" style={{ background: 'var(--f-soft)' }}>
+      {!wire && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute -inset-6 bg-cover bg-center"
+            style={{
+              backgroundImage: post.media.src ? `url("${post.media.src}")` : undefined,
+              filter: 'blur(18px) saturate(1.3)',
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--f-accent) 24%, transparent), transparent 50%, rgb(20 12 36 / 45%)), linear-gradient(180deg, rgb(255 255 255 / 12%), rgb(0 0 0 / 22%))' }}
+          />
+        </div>
+      )}
+      <div className="relative w-[292px] max-w-full overflow-hidden rounded-xl shadow-lg">{box}</div>
     </div>
   );
 }
@@ -485,7 +520,7 @@ function Palette({ c }: { c: Ctx }) {
             key={emoji}
             data-t={`${c.post.id}:react:${emoji}`}
             className="fl-pick text-[24px] leading-none"
-            style={{ transform: picked ? 'translateY(-5px) scale(1.45)' : 'none', opacity: c.picked && !picked ? 0.45 : 1 }}
+            style={{ transform: picked ? 'translateY(-2px) scale(1.12)' : 'none', opacity: c.picked && !picked ? 0.45 : 1 }}
           >
             {emoji}
           </span>
@@ -539,7 +574,7 @@ function ActionBar({ c }: { c: Ctx }) {
               className="flex items-center gap-1.5 rounded-md px-3 py-2 font-semibold"
               style={{
                 ...SMALL,
-                color: reaction ? (REACTION_COLOR[reaction] ?? 'var(--f-accent)') : active ? 'var(--f-accent)' : 'var(--f-muted)',
+                color: reaction ? (REACTION_COLOR[reaction] ?? 'var(--f-accent)') : active ? 'var(--f-accent)' : c.era.id === 'dead' ? '#59616d' : 'var(--f-muted)',
                 transition: 'color .15s',
               }}
             >
@@ -575,7 +610,7 @@ function ActionIcons({ c }: { c: Ctx }) {
             style={{
               color: hot ? (c.wire ? '#333' : '#ed4956') : 'var(--f-text)',
               transition: 'color .15s, transform .15s',
-              transform: hot ? 'scale(1.12)' : 'scale(1)',
+              transform: hot ? 'scale(1.04)' : 'scale(1)',
             }}
           >
             {icon && (
@@ -592,6 +627,7 @@ function ActionIcons({ c }: { c: Ctx }) {
 
 function Summary({ c }: { c: Ctx }) {
   const stats = c.post.stats ?? {};
+  if (c.era.id === 'dead') return <OpportunityReactions likes={c.likes} comments={c.comments} shares={stats.shares} liked={c.liked} />;
   const icons = [...(stats.reactions ?? ['👍'])];
   if (c.reaction && !icons.includes(c.reaction)) icons.unshift(c.reaction);
   const others = stats.likes ?? 0;
@@ -599,18 +635,19 @@ function Summary({ c }: { c: Ctx }) {
   return (
     <div className="mx-[var(--f-pad)] flex items-center justify-between py-2" style={{ ...SMALL, ...MUTED }}>
       <span className="flex items-center gap-1.5">
-        <span className="flex">
-          {icons.slice(0, 3).map((e, i) => (
+        <span className="flex" aria-hidden>
+          {!others && !c.liked && <Icon name="like" size={16} />}
+          {(others || c.liked ? icons.slice(0, 3) : []).map((e, i) => (
             <span
               key={e}
-              className={`grid size-[19px] place-items-center rounded-full text-[11px] ${e === c.reaction ? 'fl-pop' : ''}`}
+              className={`grid size-[22px] place-items-center rounded-full text-[14px] ${e === c.reaction ? 'fl-pop' : ''}`}
               style={{ background: 'var(--f-surface)', boxShadow: '0 0 0 2px var(--f-surface)', marginLeft: i ? -5 : 0 }}
             >
               {e}
             </span>
           ))}
         </span>
-        {c.liked ? `You and ${compact(others)} others` : compact(others)}
+        {c.liked ? (others ? `You and ${compact(others)} others` : 'You') : others ? compact(others) : 'No reactions yet'}
       </span>
       <span>
         {c.comments > 0 && `${compact(c.comments)} comments`}
@@ -684,7 +721,7 @@ function Wall({ c }: { c: Ctx }) {
           )}{' '}
           {post.body}
         </Body>
-        {post.media && <Media c={c} className="mt-1.5 w-[300px]" />}
+        {post.media && <Media c={c} className={`mt-1.5 ${post.media.kind === 'album' ? 'w-[360px] max-w-full' : 'w-[300px]'}`} />}
         <div className="mt-1">
           <ActionLinks
             c={c}
@@ -726,7 +763,7 @@ function ClassicHeader({ c }: { c: Ctx }) {
         )}
         <div className="mt-0.5 flex items-center gap-1" style={{ ...TINY, ...MUTED }}>
           {post.label && post.label !== post.meta && <span>{post.label} ·</span>}
-          <span>{post.meta}</span>
+          <span>{post.actions?.some((action) => action.type === 'publish') && !c.published ? 'Draft · Public' : post.meta}</span>
         </div>
       </div>
       {pro ? (
@@ -745,12 +782,15 @@ function ClassicHeader({ c }: { c: Ctx }) {
 function Classic({ c }: { c: Ctx }) {
   const { post, era, tokens } = c;
   const links = era.post.actionBar === 'links';
+  const drafting = !!post.actions?.some((action) => action.type === 'publish') && !c.published;
   const card: CSSProperties = {
-    background: 'var(--f-surface)',
-    border: tokens.shadow ? '1px solid transparent' : '1px solid var(--f-line)',
+    background: drafting ? 'transparent' : 'var(--f-surface)',
+    border: tokens.shadow || drafting ? '1px solid transparent' : '1px solid var(--f-line)',
     borderRadius: 'var(--f-radius)',
-    boxShadow: tokens.shadow ? '0 1px 2px rgba(0,0,0,.1), 0 4px 16px rgba(0,0,0,.04)' : 'none',
+    boxShadow: tokens.shadow && !drafting ? '0 1px 2px rgba(0,0,0,.1), 0 4px 16px rgba(0,0,0,.04)' : 'none',
+    overflow: drafting ? 'visible' : undefined,
     marginBottom: 'var(--f-gap)',
+    opacity: post.actions?.some((a) => a.type === 'publish') && post.id !== 'dead-1' && !c.published && !c.publishingActive ? 0 : 1,
   };
   if (post.kind === 'reels') {
     return (
@@ -761,9 +801,19 @@ function Classic({ c }: { c: Ctx }) {
   }
   return (
     <article data-flow-post={post.id} className="overflow-hidden" style={card}>
-      <div className="p-[var(--f-pad)] pb-2.5">
+      <div className="relative isolate p-[var(--f-pad)] pb-2.5">
+        {drafting && <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: 'var(--f-surface)', borderRadius: 'var(--f-radius) var(--f-radius) 0 0' }} />}
         <ClassicHeader c={c} />
-        <Body c={c} />
+        {post.actions?.some((a) => a.type === 'publish') ? (
+          <div className="relative">
+            {/* Published text defines the geometry. Draft controls overlay it,
+                so publishing never leaves an empty composer-sized space. */}
+            <div style={{ visibility: c.published ? 'visible' : 'hidden' }} aria-hidden={!c.published}><Body c={c} className="p-2" /></div>
+            <div data-t={`${post.id}:publish`} aria-hidden={c.published} className="absolute inset-0 whitespace-pre-line rounded-md p-2" style={{ visibility: c.published ? 'hidden' : 'visible', background: 'var(--f-soft)' }}>
+              {c.publishing ?? <span style={MUTED}>What’s on your mind, Ashley?</span>}
+            </div>
+          </div>
+        ) : <Body c={c} />}
         {links && (
           <div className="mt-2.5">
             <ActionLinks c={c} />
@@ -775,6 +825,13 @@ function Classic({ c }: { c: Ctx }) {
       {post.media && <Media c={c} className="w-full" />}
       <LinkCard c={c} />
       <Cta c={c} look="button" />
+      <div className="relative">
+        {post.actions?.some((action) => action.type === 'publish') && (
+          <div aria-hidden={!drafting} className="absolute inset-x-0 top-0 p-3" style={{ visibility: drafting ? 'visible' : 'hidden', background: 'var(--f-surface)', borderRadius: '0 0 var(--f-radius) var(--f-radius)' }}>
+            <div data-t={`${post.id}:publish-submit`} className="rounded-lg px-4 py-2 text-center text-[13px] font-semibold" style={{ background: 'var(--f-accent)', color: '#fff' }}>Post</div>
+          </div>
+        )}
+      <div style={{ opacity: drafting ? 0 : 1 }}>
       {era.post.counts === 'summary' && <Summary c={c} />}
       {!links && <ActionBar c={c} />}
       <div
@@ -786,6 +843,8 @@ function Classic({ c }: { c: Ctx }) {
           <Comments c={c} look="bubble" />
           <Composer c={c} look={tokens.radius >= 6 ? 'pill' : 'row'} />
         </div>
+      </div>
+      </div>
       </div>
     </article>
   );

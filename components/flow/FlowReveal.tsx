@@ -12,7 +12,7 @@
  *   status LEDs blinking in perfect sync.
  *
  * `RevealOverlay` is drawn in screen space on top: vignette, session counter
- * and the end card. All copy here is placeholder story text to rewrite.
+ * and the end card.
  *
  * Progress comes in as the reveal phase plus a step `k` (0..24) within it, so
  * scrolling backwards un-streams everything.
@@ -56,24 +56,24 @@ const FUTURE: ToolCall[] = [
   { tool: 'screenshot', args: '' },
   { tool: 'scroll', args: '(down, 412px)' },
   { tool: 'screenshot', args: '' },
-  { tool: 'left_click', args: '(684, 431)', note: 'like Grateful Hearts' },
+  { tool: 'left_click', args: '(684, 431)', note: 'publish opportunity post' },
   { tool: 'screenshot', args: '' },
   { tool: 'left_click', args: '(512, 588)', note: 'comment box' },
-  { tool: 'type', args: '"Love this energy! 🙌"' },
+  { tool: 'type', args: '"I AM IN? Here’s your link: join.daybreak.example/ashley 💛"' },
   { tool: 'key', args: '"Return"' },
   { tool: 'scroll', args: '(down, 388px)' },
   { tool: 'screenshot', args: '' },
-  { tool: 'left_click', args: '(684, 512)', note: 'like Emma Johnson' },
+  { tool: 'left_click', args: '(684, 512)', note: 'send invite link' },
   { tool: 'scroll', args: '(down, 440px)' },
   { tool: 'screenshot', args: '' },
-  { tool: 'left_click', args: '(684, 470)', note: 'like Nature Is Amazing' },
+  { tool: 'left_click', args: '(684, 470)', note: 'reply to next lead' },
   { tool: 'scroll', args: '(down, 396px)' },
   { tool: 'screenshot', args: '' },
 ];
 
-const ASK = 'Continue Ashley’s session. Keep scrolling, like posts, and leave a comment now and then so the account looks active.';
-const REPLY_1 = 'On it. Continuing as Ashley.';
-const REPLY_2 = 'Session healthy. Today: 1,204 likes, 87 comments, 0 flags. Continuing.';
+const ASK = 'Run Ashley’s Daybreak business. Sell the opportunity. Post “Comment I AM IN”, reply to every lead, and send her invite link. Call it a digital business, not an MLM. Keep going.';
+const REPLY_1 = 'Continuing as Ashley. Publishing pitches and messaging leads.';
+const REPLY_2 = 'Today: 128 posts. 1,204 replies. 387 invite links sent. Continuing outreach.';
 
 /** Overall reveal step: phase index × 25 + k, or -1 before the reveal. */
 function stepOf(phase: RevealPhase | null, k: number): number {
@@ -84,53 +84,34 @@ function stepOf(phase: RevealPhase | null, k: number): number {
 
 /** Dark, minimal chatbot palette. The browser inside stays light: it is the site. */
 const D = {
-  bg: '#0e0e10',
-  raised: '#1d1d22',
-  card: '#141417',
-  line: '#26262c',
-  text: '#ececf1',
-  dim: '#9a9aa3',
-  faint: '#66666f',
-  amber: '#e0a663',
+  bg: '#050507',
+  raised: '#17171c',
+  card: '#101014',
+  line: '#25252d',
+  text: '#f0f1f5',
+  dim: '#b0b4c0',
+  faint: '#858b9b',
+  amber: '#bcb1ed',
 };
 
 function Mark({ size = 28 }: { size?: number }) {
   return (
-    <span
-      className="grid shrink-0 place-items-center rounded-full bg-white font-bold text-black"
-      style={{ width: size, height: size, fontSize: size * 0.46 }}
-    >
-      ✦
+    <span className="grid shrink-0 place-items-center rounded-lg" style={{ width: size, height: size, background: '#18181f', color: '#ddd7fa' }}>
+      <svg width={size * .65} height={size * .65} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M5.6 18.4 18.4 5.6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
     </span>
   );
 }
 
 function UserBubble({ text, time, automated, persona }: { text: string; time: string; automated: boolean; persona?: string }) {
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      <div className="flex items-end gap-2.5">
-        <div
-          className="max-w-[320px] rounded-[22px] rounded-br-md px-4 py-2.5 text-[13.5px] leading-snug"
-          style={{ background: D.raised, color: D.text }}
-        >
-          {persona ? text.replace('Ashley', persona.split(' ')[0]) : text}
-        </div>
-        <span
-          className="grid size-7 shrink-0 place-items-center rounded-full text-[12px] font-semibold transition-colors duration-500"
-          style={{
-            background: automated ? '#3a2a17' : '#2a2a30',
-            color: automated ? D.amber : '#c9c9d1',
-          }}
-        >
-          {automated ? '⚙' : 'O'}
-        </span>
+    <div className="flex flex-col items-end gap-2">
+      <div className="max-w-[354px] rounded-[18px] rounded-br-md px-4 py-3.5 text-[15px] leading-[1.55]" style={{ background: D.raised, color: D.text }}>
+        {persona ? text.replace('Ashley', persona.split(' ')[0]) : text}
       </div>
-      <div className="pr-10 font-mono text-[10px]" style={{ color: D.faint }}>
-        {time}
-        <span className="transition-opacity duration-700" style={{ color: D.amber, opacity: automated ? 1 : 0 }}>
-          {' '}
-          · sent by scheduler persona-farm-07 · every 5 min
-        </span>
+      <div className="flex items-center gap-2 text-[11px]" style={{ color: D.faint }}>
+        {automated ? <><span style={{ color: D.amber }}>Scheduled task</span><span>· Every 5 minutes</span></> : <span>{time}</span>}
       </div>
     </div>
   );
@@ -142,7 +123,7 @@ function AssistantText({ text, shown }: { text: string; shown: number }) {
   return (
     <div className="flex items-start gap-3">
       <Mark size={24} />
-      <div className="pt-0.5 text-[14px] leading-relaxed" style={{ color: '#d9d9e0' }}>
+      <div className="text-[15px] leading-relaxed" style={{ color: D.text }}>
         {visible}
         {visible.length < text.length && <span className="fl-caret" />}
       </div>
@@ -151,51 +132,12 @@ function AssistantText({ text, shown }: { text: string; shown: number }) {
 }
 
 function CallRow({ call, running }: { call: ToolCall; running?: boolean }) {
-  const shot = call.tool === 'screenshot';
+  const label = call.note ?? ({ screenshot: 'Viewed browser', scroll: 'Scrolled the feed', type: 'Wrote a reply', key: 'Submitted reply', left_click: 'Clicked in browser' }[call.tool] ?? call.tool);
   return (
-    <div
-      className="fl-call flex items-center gap-2 rounded-xl px-3 py-1.5 font-mono text-[11px]"
-      style={{
-        background: D.card,
-        border: `1px solid ${D.line}`,
-        color: D.dim,
-      }}
-    >
-      <span style={{ color: D.faint }}>computer</span>
-      <span className="font-semibold" style={{ color: D.text }}>
-        {call.tool}
-      </span>
-      {shot ? (
-        <span className="h-[18px] w-[30px] rounded-[3px] bg-gradient-to-b from-[#eceef1] to-[#d8ccf5] opacity-90" />
-      ) : (
-        <span className="truncate">{call.args}</span>
-      )}
-      {call.note && (
-        <span className="ml-auto shrink-0 truncate pl-2 font-sans text-[10px]" style={{ color: D.faint }}>
-          {call.note}
-        </span>
-      )}
-      {running && <span className="fl-spin ml-auto size-3 shrink-0 rounded-full border-2 border-[#3a3a40] border-t-white" />}
-    </div>
-  );
-}
-
-function Header({ persona, id, live }: { persona: string; id: string; live: boolean }) {
-  return (
-    <div className="flex h-[56px] items-center gap-3 px-6 text-[14px]" style={{ color: D.text, borderBottom: `1px solid ${D.line}` }}>
-      <Mark />
-      <span className="font-medium">Browse feed as {persona}</span>
-      <span className="rounded-md px-2 py-0.5 font-mono text-[11px]" style={{ background: D.raised, color: D.faint }}>
-        session {id}
-      </span>
-      <span className="flex-1" />
-      <span className="rounded-full px-2.5 py-1 text-[11px]" style={{ border: `1px solid ${D.line}`, color: D.dim }}>
-        agent · computer use
-      </span>
-      <span className="font-mono text-[11px]" style={{ color: D.faint }}>
-        {live ? 'running 6h 14m' : 'running'}
-      </span>
-      <span className="fl-led size-[10px] rounded-full bg-[#2fbf5b] shadow-[0_0_8px_#2fbf5b]" />
+    <div className="flex h-8 items-center gap-3 text-[12px]" style={{ color: running ? D.text : D.dim }}>
+      {running ? <span className="fl-spin size-3 shrink-0 rounded-full border border-[#525866] border-t-[#d8d0ff]" /> : <span className="w-3 text-center text-[#939ba9]">✓</span>}
+      <span className="truncate first-letter:uppercase">{label}</span>
+      <span className="ml-auto text-[10px]" style={{ color: D.faint }}>{running ? 'Working' : 'Done'}</span>
     </div>
   );
 }
@@ -210,18 +152,17 @@ function MiniWindow() {
   const s = G.slot;
   return (
     <div
-      className="absolute origin-top-left overflow-hidden rounded-[12px]"
+      className="fl-mini-window absolute origin-top-left"
       style={{
         left: s.x,
         top: s.y,
         width: WINDOW.w,
         height: WINDOW.h,
         transform: `scale(${s.w / WINDOW.w})`,
-        boxShadow: WINDOW_SHADOW,
       }}
     >
-      <WindowChrome title="(99+) Home" url="https://feed.example/" />
-      <div className="absolute overflow-hidden bg-[#eceef1]" style={{ left: 0, top: WINDOW.chrome, width: 1280, height: 800 }}>
+      <WindowChrome narration="And the space we made our own kept going… without us." />
+      <div className="absolute overflow-hidden rounded-[12px] bg-[#eceef1]" style={{ left: 0, top: WINDOW.chrome, width: 1280, height: 800, boxShadow: WINDOW_SHADOW }}>
         <div className="fl-minifeed">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
             <div key={i} className="mx-auto mt-5 w-[600px] rounded-2xl bg-white p-4 shadow-sm">
@@ -231,7 +172,7 @@ function MiniWindow() {
               </div>
               <div className="mt-3 h-2.5 w-full rounded bg-[#e2e4e8]" />
               <div className="mt-2 h-2.5 w-2/3 rounded bg-[#e2e4e8]" />
-              {i % 2 === 0 && <div className="mt-3 h-[260px] rounded-xl bg-gradient-to-br from-[#c4b5fd] via-[#f9a8d4] to-[#fcd34d]" />}
+              {i % 2 === 0 && <div className="mt-3 h-[260px] rounded-xl bg-[#e4e7ed]" />}
             </div>
           ))}
         </div>
@@ -244,66 +185,21 @@ function ComputerPanel({ id, live }: { id: string; live: boolean }) {
   const s = G.slot;
   return (
     <>
-      <div className="absolute flex items-center gap-2 text-[12px]" style={{ left: s.x, top: s.y - 30, color: D.dim }}>
-        <span className="font-medium" style={{ color: D.text }}>
-          Computer
-        </span>
-        <span className="font-mono" style={{ color: D.faint }}>
-          sandbox-{id}
-        </span>
-        <span className="flex items-center gap-1 text-[#ff5a52]">
-          <span className="fl-led size-2 rounded-full bg-[#ff5a52]" /> live
-        </span>
+      <div className="absolute flex items-center gap-2 text-[11px]" style={{ left: s.x, top: s.y - 24, color: D.faint }}>
+        <span className="fl-led size-1.5 rounded-full bg-[#bcb1ed]" />
+        <span>Sandbox {id}</span>
+        <span style={{ color: D.dim }}>· Agent active</span>
       </div>
-      {live ? (
-        <div
-          className="absolute rounded-[12px]"
-          style={{
-            left: s.x,
-            top: s.y,
-            width: s.w,
-            height: s.h,
-            background: '#18181b',
-          }}
-        />
-      ) : (
-        <MiniWindow />
-      )}
-      <div className="absolute flex items-center gap-3 text-[12px]" style={{ left: s.x, top: s.y + s.h + 16, width: s.w }}>
-        <span className="flex items-center gap-2 rounded-full px-3 py-1.5" style={{ background: D.raised, color: D.text }}>
-          <span className="fl-led size-1.5 rounded-full bg-[#9b84ff]" /> Agent is controlling this browser
-        </span>
-        <span className="rounded-full px-3 py-1.5" style={{ border: `1px solid ${D.line}`, color: D.faint }}>
-          Take over
-        </span>
-      </div>
+      {!live && <MiniWindow />}
     </>
   );
 }
 
-function ChatShell({ children, persona, id, live }: { children: ReactNode; persona: string; id: string; live: boolean }) {
+function ChatShell({ children, id, live }: { children: ReactNode; id: string; live: boolean }) {
   return (
-    <div className="absolute inset-0 overflow-hidden" style={{ fontFamily: FONT, background: D.bg }}>
-      <Header persona={persona} id={id} live={live} />
-      <div
-        className="absolute bottom-[92px] left-0 top-[56px] flex w-[444px] flex-col justify-end gap-3.5 overflow-hidden px-6 pb-3"
-        style={{ borderRight: `1px solid ${D.line}` }}
-      >
+    <div className="absolute inset-0" style={{ fontFamily: FONT }}>
+      <div className="absolute left-0 top-[112px] flex w-[424px] flex-col gap-5 px-6">
         {children}
-      </div>
-      <div
-        className="absolute bottom-6 left-6 flex h-[52px] w-[396px] items-center gap-2 rounded-[26px] pl-5 pr-2 text-[14px]"
-        style={{
-          background: '#17171b',
-          border: `1px solid ${D.line}`,
-          color: D.faint,
-        }}
-      >
-        <span className="flex-1">Ask anything</span>
-        <span className="text-[11px]" style={{ color: D.dim }}>
-          agent ⌄
-        </span>
-        <span className="grid size-9 place-items-center rounded-full bg-white text-[10px] text-black">■</span>
       </div>
       <ComputerPanel id={id} live={live} />
     </div>
@@ -314,21 +210,20 @@ function ChatShell({ children, persona, id, live }: { children: ReactNode; perso
 
 function LiveSession({ step, calls }: { step: number; calls: ToolCall[] }) {
   const chatAt = STEPS; // start of the `chat` phase
-  const future = FUTURE.slice(0, Math.max(0, Math.min(FUTURE.length, Math.floor((step + 2) / 2))));
-  const log = [...calls, ...future].slice(-7);
-  const streaming = step < chatAt * 2;
-  const automated = step >= chatAt + 11;
+  const tick = Math.max(0, step) * 3;
+  const log = step < 1 ? calls.slice(-4) : Array.from({ length: 4 }, (_, i) => FUTURE[(tick + i) % FUTURE.length]);
+  const automated = step >= chatAt + 8;
   return (
-    <ChatShell persona="Ashley Parker" id="0412" live>
+    <ChatShell id="0412" live>
       <UserBubble text={ASK} time="3:09 AM" automated={automated} />
-      <AssistantText text={REPLY_1} shown={step * 3 + 8} />
-      <div className="flex flex-col gap-1.5">
+      <AssistantText text={REPLY_1} shown={REPLY_1.length} />
+      <div className="ml-9 pl-3" style={{ borderLeft: `1px solid ${D.line}` }}>
+        <div className="mb-1 flex items-center gap-2 text-[12px] font-medium" style={{ color: D.text }}>Using computer <span className="ml-auto text-[10px] font-normal" style={{ color: D.faint }}>Live activity</span></div>
         {log.map((c, i) => (
-          <CallRow key={`${i}-${c.tool}-${c.args}`} call={c} running={streaming && i === log.length - 1} />
+          <CallRow key={`${i}-${c.tool}-${c.args}`} call={c} running={i === log.length - 1} />
         ))}
       </div>
-      {step >= chatAt + 5 && <UserBubble text={ASK} time="3:14 AM" automated={automated} />}
-      <AssistantText text={REPLY_2} shown={(step - (chatAt + 14)) * 5} />
+      <div style={{ opacity: step >= chatAt + 8 ? 1 : 0 }} className="text-[12px] leading-relaxed"><span style={{ color: D.amber }}>↻ Task repeated automatically</span><div className="mt-2" style={{ color: D.dim }}>{step >= chatAt + 14 ? REPLY_2 : "Keep going. Reply to every new lead."}</div></div>
     </ChatShell>
   );
 }
@@ -337,7 +232,7 @@ const MiniSession = memo(function MiniSession({ persona, index }: { persona: str
   const id = String(400 + index).padStart(4, '0');
   const calls = FUTURE.slice(index % 5, (index % 5) + 5);
   return (
-    <ChatShell persona={persona} id={id} live={false}>
+    <ChatShell id={id} live={false}>
       <UserBubble text={ASK} time="3:09 AM" automated persona={persona} />
       <AssistantText text={`On it. Continuing as ${persona.split(' ')[0]}.`} shown={99} />
       <div className="flex flex-col gap-1.5">
@@ -359,25 +254,15 @@ const svg = (body: string) =>
 
 /** One far-away session tile, drawn as a few flat shapes. */
 const TILE_PATTERN = svg(
-  "<defs><linearGradient id='m' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#c4b5fd'/><stop offset='.5' stop-color='#f9a8d4'/><stop offset='1' stop-color='#fcd34d'/></linearGradient></defs>" +
-    "<rect x='.5' y='.5' width='1279' height='799' rx='18' fill='#0e0e10' stroke='#1f1f24'/>" +
-    "<rect x='0' y='55' width='1280' height='1' fill='#26262c'/>" +
-    "<rect x='444' y='56' width='1' height='744' fill='#26262c'/>" +
-    "<rect x='96' y='120' width='300' height='70' rx='22' fill='#1d1d22'/>" +
-    "<rect x='24' y='214' width='396' height='30' rx='10' fill='#141417'/>" +
-    "<rect x='24' y='254' width='396' height='30' rx='10' fill='#141417'/>" +
-    "<rect x='24' y='294' width='396' height='30' rx='10' fill='#141417'/>" +
-    "<rect x='24' y='334' width='396' height='30' rx='10' fill='#141417'/>" +
-    "<rect x='96' y='400' width='300' height='70' rx='22' fill='#1d1d22'/>" +
-    "<rect x='24' y='724' width='396' height='52' rx='26' fill='#17171b'/>" +
-    "<rect x='460' y='112' width='800' height='548' rx='12' fill='#ffffff'/>" +
-    "<rect x='460' y='112' width='800' height='48' rx='12' fill='#dee1e6'/>" +
-    "<rect x='461' y='160' width='798' height='499' fill='#eceef1'/>" +
-    "<rect x='700' y='190' width='340' height='110' rx='12' fill='#ffffff'/>" +
-    "<rect x='700' y='318' width='340' height='200' rx='12' fill='url(#m)'/>" +
-    "<rect x='700' y='536' width='340' height='110' rx='12' fill='#ffffff'/>",
+  "<rect x='70' y='112' width='330' height='160' rx='18' fill='#17171c'/>" +
+  "<path d='M90 140h270m-270 20h250m-250 20h270m-270 20h190m-190 20h240' stroke='#77727f' stroke-width='5' opacity='.35'/>" +
+  "<path d='M60 320h310m-310 24h250m-240 55h220m-220 28h245m-245 28h200' stroke='#76717e' stroke-width='5' opacity='.35'/>" +
+  "<rect x='460' y='138' width='800' height='500' rx='12' fill='#eceef1'/>" +
+  "<rect x='700' y='158' width='340' height='118' rx='10' fill='#fff'/>" +
+  "<rect x='700' y='290' width='340' height='118' rx='10' fill='#fff'/>" +
+  "<rect x='700' y='422' width='340' height='118' rx='10' fill='#fff'/>" +
+  "<path d='M725 188h190m-190 22h280m-280 25h240m-240 85h190m-190 22h280m-280 25h240m-240 85h190m-190 22h280m-280 25h240' stroke='#c8cbd3' stroke-width='7'/>"
 );
-const LED_PATTERN = svg("<circle cx='1236' cy='28' r='26' fill='#2fbf5b'/>");
 
 function Field() {
   const ox = ((-FIELD.x % FIELD.pitch.x) + FIELD.pitch.x) % FIELD.pitch.x;
@@ -391,20 +276,12 @@ function Field() {
   };
   return (
     <>
-      <div className="absolute" style={{ ...common, background: '#060607' }} />
+      <div className="absolute" style={{ ...common, background: '#050507' }} />
       <div
         className="absolute"
         style={{
           ...common,
           backgroundImage: TILE_PATTERN,
-          backgroundPosition: `${ox}px ${oy}px`,
-        }}
-      />
-      <div
-        className="fl-led absolute"
-        style={{
-          ...common,
-          backgroundImage: LED_PATTERN,
           backgroundPosition: `${ox}px ${oy}px`,
         }}
       />
@@ -424,6 +301,7 @@ export interface FlowRevealProps {
 
 export const FlowReveal = memo(function FlowReveal({ visible, phase, k, calls }: FlowRevealProps) {
   const step = stepOf(phase, k);
+  const neighbors = phase === 'servers' ? 'clamp(0, var(--reveal-u, 0) * 5, 1)' : !phase || phase === 'sandbox' || phase === 'chat' ? 0 : 1;
   const tiles: { col: number; row: number; index: number }[] = [];
   for (let row = 0; row < G.rows; row++) for (let col = 0; col < G.cols; col++) tiles.push({ col, row, index: row * G.cols + col });
 
@@ -437,26 +315,28 @@ export const FlowReveal = memo(function FlowReveal({ visible, phase, k, calls }:
         visibility: visible ? 'visible' : 'hidden',
       }}
     >
-      <Field />
+      <div style={{ opacity: neighbors }}><Field /></div>
       {/* Far enough out, the built tiles hand over to the identical pattern
           underneath them, so the block doesn't stand out from the field. */}
       <div
-        className="absolute inset-0 transition-opacity duration-[1200ms]"
-        style={{ opacity: phase && REVEAL_PHASES.indexOf(phase) >= REVEAL_PHASES.indexOf('farm') ? 0 : 1 }}
+        className="absolute inset-0"
+        style={{ opacity: phase === 'farm' ? 'clamp(0, 1 - var(--reveal-u, 0) * 2.5, 1)' : phase && REVEAL_PHASES.indexOf(phase) > REVEAL_PHASES.indexOf('farm') ? 0 : 1 }}
       >
+        {/* Occlude the lightweight pattern beneath the transparent sessions. */}
+        <div className="absolute inset-0" style={{ background: D.bg }} />
         {tiles.map(({ col, row, index }) => {
           const o = tileOrigin(col, row);
           const live = col === G.center.col && row === G.center.row;
           return (
             <div
               key={index}
-              className="absolute overflow-hidden rounded-[18px]"
+              className="absolute"
               style={{
                 left: o.x,
                 top: o.y,
                 width: G.tile.w,
                 height: G.tile.h,
-                boxShadow: '0 0 0 1px #1f1f24',
+                opacity: live ? 1 : neighbors,
               }}
             >
               {live ? <LiveSession step={step} calls={calls} /> : <MiniSession persona={PERSONAS[index % PERSONAS.length]} index={index} />}
@@ -487,45 +367,28 @@ const group = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 export function RevealOverlay({ phase, k }: { phase: RevealPhase | null; k: number }) {
   const idx = phase ? REVEAL_PHASES.indexOf(phase) : -1;
   const wide = idx >= REVEAL_PHASES.indexOf('servers');
-  const far = phase === 'farm';
-  /** The counter stays up through the dots and the globe, and goes as it collapses. */
-  const counting = wide && idx < REVEAL_PHASES.indexOf('collapse');
-  const card = phase === 'end' && k >= 2;
+  const counting = wide && idx <= REVEAL_PHASES.indexOf('collapse');
+  const counterOpacity = phase === 'servers' ? 'clamp(0, var(--reveal-u, 0) * 5, 1)' : phase === 'collapse' ? 'clamp(0, 1 - var(--reveal-u, 0) * 4, 1)' : counting ? 1 : 0;
+  const cardOpacity = phase === 'end' ? 'clamp(0, (var(--reveal-u, 0) - .18) * 2.5, 1)' : 0;
   return (
     <div aria-hidden={!phase} className="pointer-events-none absolute inset-0 z-10" style={{ fontFamily: FONT }}>
-      <div
-        className="absolute inset-0 transition-opacity duration-1000"
-        style={{
-          // Depth for the wall and the farm; off once the dots take over, so the
-          // night is one flat colour edge to edge.
-          opacity: wide && idx < REVEAL_PHASES.indexOf('dots') ? 1 : 0,
-          background: 'radial-gradient(ellipse 70% 70% at 50% 50%, transparent 40%, rgba(5,5,8,.7))',
-        }}
-      />
-      {/* A server room at 3am: the far field dims down. */}
-      <div className="absolute inset-0 bg-[#05050a] transition-opacity duration-[1600ms]" style={{ opacity: far ? 0.3 : 0 }} />
-      <div
-        className="absolute left-6 top-6 flex items-center gap-3 rounded-full bg-black/55 px-4 py-2 font-mono text-[12px] text-white/85 backdrop-blur transition-opacity duration-700"
-        style={{ opacity: counting && !card ? 1 : 0 }}
-      >
-        <span className="fl-led size-2 rounded-full bg-[#2fbf5b] shadow-[0_0_8px_#2fbf5b]" />
-        <span className="tabular-nums">{group(sessionsAt(phase, k))} sessions running</span>
-        <span className="text-white/40">·</span>
-        <span>0 people</span>
+      <div className="absolute inset-0" style={{
+        opacity: phase === 'servers' ? 'var(--reveal-u, 0)' : phase === 'farm' ? 1 : phase === 'dots' ? 'clamp(0, 1 - var(--reveal-u, 0) * 2, 1)' : 0,
+        background: 'radial-gradient(ellipse 75% 75% at 50% 50%, transparent 35%, rgba(5,5,7,.65))',
+      }} />
+      <div className="absolute inset-x-0 bottom-[72px] flex justify-center" style={{ opacity: counterOpacity }}>
+        <div className="flex items-center gap-3 rounded-full px-5 py-2.5 text-[14px]" style={{ background: '#050507e6', border: '1px solid #ffffff14', color: '#dfe2eb' }}>
+          <span className="size-1.5 rounded-full bg-[#bcb1ed]" />
+          <span className="tabular-nums">{group(sessionsAt(phase, k))} sessions running</span>
+          <span className="h-3 w-px bg-white/20" />
+          <span className="text-white/75">0 people</span>
+        </div>
       </div>
-      <div
-        className="absolute inset-0 grid place-items-center transition-opacity duration-[1400ms]"
-        style={{
-          opacity: card ? 1 : 0,
-          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(5,5,8,.82), rgba(5,5,8,.35))',
-        }}
-      >
-        <div className="text-center text-white">
-          <div className="text-[40px] font-semibold leading-tight tracking-tight">Every account in that feed was a bot.</div>
-          <div className="mt-2 text-[40px] font-semibold leading-tight tracking-tight text-white/60">So was the one scrolling it.</div>
-          <div className="mt-6 font-mono text-[12px] tracking-wide text-white/45">
-            and the one asking it to · {group(48213)} sessions · 0 people
-          </div>
+      <div className="absolute inset-0 grid place-items-center" style={{ opacity: cardOpacity, transform: phase === 'end' ? 'translateY(calc((1 - var(--reveal-u, 0)) * 14px))' : undefined }}>
+        <div className="text-center text-[#edeef3]">
+          <div className="text-[44px] font-medium leading-[1.2] tracking-[-1.5px]">Ashley wasn’t running a business.</div>
+          <div className="mt-2 text-[44px] font-medium leading-[1.2] tracking-[-1.5px] text-[#c8cddb]">An agent was running Ashley.</div>
+          <div className="mt-7 text-[14px] text-[#b0b6c4]">One opportunity. {group(48213)} sessions. No one on the other side.</div>
         </div>
       </div>
     </div>

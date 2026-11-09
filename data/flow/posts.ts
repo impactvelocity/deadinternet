@@ -10,6 +10,7 @@
  * get rarer, and by 2025 every author is a bot. Media `note`s double as art
  * direction for sourcing images later.
  */
+import { OPPORTUNITY_FACES } from './images';
 import type { FlowAuthor, FlowEraId, FlowPost } from './types';
 
 type Draft = Omit<FlowPost, 'id' | 'era'>;
@@ -44,6 +45,7 @@ export const VIEWER = {
   2014: a('Ashley Parker', { handle: '@ashleyp', face: 'ashley-2014' }),
   2019: a('ashleyp', { face: 'ashley-2019' }),
   2023: a('Ashley Parker', { face: 'ashley-2023' }),
+  2025: a('Ashley Parker', { face: 'ashley-daybreak' }),
 } as const;
 
 export function viewerFor(year: number): FlowAuthor {
@@ -51,7 +53,8 @@ export function viewerFor(year: number): FlowAuthor {
   if (year < 2014) return VIEWER[2008];
   if (year < 2019) return VIEWER[2014];
   if (year < 2023) return VIEWER[2019];
-  return VIEWER[2023];
+  if (year < 2025) return VIEWER[2023];
+  return VIEWER[2025];
 }
 
 // Bots in 2025 share faces under different names.
@@ -130,8 +133,16 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       meta: 'Yesterday at 11:14pm',
       body: 'added 24 new photos to the album "Spring Break 08!!"',
       media: {
-        aspect: 2.6,
-        note: 'album strip, 4 thumbnails: friends squeezed on a beach towel, cheap sunglasses',
+        aspect: 1.25,
+        title: 'Spring Break 08!!',
+        count: 24,
+        note: 'Four snapshots: beach friends, volleyball, a seaside diner, and a sunset jump photo',
+        photos: [
+          { src: '/assets/posts/facebook-2.jpg', alt: 'Friends squeezed together on the beach in cheap sunglasses' },
+          { src: '/assets/posts/spring-break-volleyball.jpg', alt: 'Mike laughing after missing a beach volleyball' },
+          { src: '/assets/posts/spring-break-diner.jpg', alt: 'Two friends sharing fries at a seaside diner' },
+          { src: '/assets/posts/spring-break-sunset.jpg', alt: 'Friends attempting a badly timed jump photo at sunset' },
+        ],
         kind: 'album',
         src: '/assets/posts/facebook-2.jpg',
       },
@@ -215,7 +226,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: '40% off running shoes this weekend only. Like our page to shop first 👟',
       media: {
         aspect: 1.9,
-        note: 'three glossy running shoes on an orange gradient, "40% OFF THIS WEEKEND"',
+        note: '2012 Web 2.0 shoe-store ad, white and blue, grey running shoes, "40% OFF" and glossy blue shop button',
         kind: 'product',
         src: '/assets/posts/early-ads-6.jpg',
       },
@@ -258,10 +269,13 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         note: 'phone video: guy in a backyard, bucket of ice water mid-pour, friends laughing',
         kind: 'video',
         src: '/assets/posts/viral-1.jpg',
+        animatedSrc: '/assets/posts/viral-1.gif',
+        durationSeconds: 5,
       },
       stats: { likes: 86, comments: 23, views: 1400 },
       comments: [{ author: a('Tom Bauer'), text: 'oh it is ON. tomorrow' }],
-      actions: [{ type: 'watch' }, { type: 'like' }],
+      tempo: 0.55,
+      actions: [{ type: 'like' }],
     },
     {
       kind: 'link',
@@ -282,7 +296,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       author: a('Sarah Lin'),
       meta: '4 hrs · Austin, TX',
       body: 'perfect day ☀️ — at Barton Springs Pool with Priya Shah and 2 others.',
-      media: { aspect: 2.2, note: 'Barton Springs Pool, South Austin', kind: 'map', src: '/assets/posts/viral-3.jpg' },
+      media: { aspect: 2.2, note: 'Barton Springs Pool, South Austin', kind: 'map', src: '/assets/posts/viral-3.svg' },
       stats: { likes: 31, comments: 2 },
       comments: [{ author: a('Priya Shah'), text: 'my sunburn says hi' }],
     },
@@ -303,7 +317,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: 'lol I got Paris',
       link: { domain: 'buzzquiz.com', title: 'Which City Should You Actually Live In?', src: '/assets/posts/viral-5-link.jpg' },
       stats: { likes: 12, comments: 4 },
-      actions: [{ type: 'comment', text: 'I got Paris too!! road trip??' }],
+      actions: [{ type: 'comment', text: 'I got Paris too!! backpacking trip??' }],
     },
   ]),
 
@@ -368,16 +382,17 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       actions: [{ type: 'comment', text: 'can we not do this before thanksgiving' }],
     },
     {
-      kind: 'video',
+      kind: 'photo',
       author: a('Viral Clips', { brand: true }),
       meta: 'Suggested for you',
       label: 'Suggested for you',
       body: 'This dog’s reaction when his owner comes home 😭❤️',
       media: {
         aspect: 16 / 9,
-        note: 'shaky phone video, dog spinning in a hallway',
-        kind: 'video',
+        note: 'looping GIF: golden retriever wiggling and wagging its tail as its owner comes home',
+        kind: 'photo',
         src: '/assets/posts/algorithm-5.jpg',
+        animatedSrc: '/assets/posts/algorithm-5.gif',
       },
       stats: { views: 14000000, likes: 380000, reactions: ['😢', '❤️', '😆'] },
     },
@@ -458,7 +473,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: 'link in bio for my packing list 🌴',
       media: {
         aspect: 0.8,
-        note: 'man on a cliff swing over jungle, drone shot, oversaturated',
+        note: 'travel bro on a scuffed rental moped beside Bali rice paddies, casual 2019 phone photo with faded warm preset',
         kind: 'carousel',
         count: 6,
         src: '/assets/posts/stories-5.jpg',
@@ -496,6 +511,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         note: 'girl dancing in a bedroom, ring light, captions burned in',
         kind: 'reel',
         src: '/assets/posts/reels-2.jpg',
+        animatedSrc: '/assets/posts/reels-2.gif',
       },
       stats: { likes: 1200000, comments: 8400, shares: 45000, views: 9800000, reactions: ['👍', '❤️', '😮'] },
       actions: [{ type: 'overlay', choice: 0 }, { type: 'watch' }, { type: 'like' }],
@@ -541,6 +557,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         note: 'text-to-speech voice over game footage, bouncing subtitles',
         kind: 'reel',
         src: '/assets/posts/reels-5.jpg',
+        animatedSrc: '/assets/posts/reels-5.gif',
       },
       stats: { likes: 340000, comments: 2900, shares: 12000, views: 4100000 },
     },
@@ -665,7 +682,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: 'Your SDR team, minus the team. Deploy 1,000 AI agents that prospect, post and comment for you, 24/7.',
       media: {
         aspect: 1.91,
-        note: 'dashboard: a grid of thousands of agent avatars, all “active”',
+        note: 'purple AI hype ad: “IT’S OVER. YOUR TEAM IS REPLACED.” beside a dashboard of active agent avatars',
         kind: 'product',
         src: '/assets/posts/pro-3.jpg',
       },
@@ -692,7 +709,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: '10 lessons from waking up at 4:30am for 365 days 📄',
       media: {
         aspect: 1,
-        note: 'PDF slide 1/10: “LESSON 1: DISCIPLINE” in bold on beige',
+        note: 'PDF slide 1/10: “Your competition hits snooze. You build your unfair advantage.” in bold on beige',
         kind: 'document',
         count: 10,
         src: '/assets/posts/pro-5.jpg',
@@ -743,60 +760,36 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
   /* ---------------------------------------------------------------- 2025 */
   dead: section('dead', [
     {
-      kind: 'bot',
-      author: a('Sarah Mitchell', BOT_F1),
-      meta: '1m · 🌐',
-      body: 'Just finished my morning run! 🏃‍♀️ Feeling grateful for this beautiful day. What are you grateful for today? 🌅',
-      stats: { likes: 2341, comments: 412, reactions: ['👍', '❤️'] },
-      comments: [
-        { author: a('Emma Johnson', BOT_F1), text: 'Love this energy! 🙌' },
-        { author: a('Olivia Brown', BOT_F1), text: 'Love this energy! 🙌' },
+      kind: 'bot', author: a('Ashley Parker', { face: 'ashley-daybreak', bot: true }),
+      meta: 'Just now · 🌐', tempo: .7, agent: 'human', publishHold: 1100,
+      media: { kind: 'photo', aspect: 1.5, src: '/assets/posts/daybreak-launch.jpg', note: 'Ashley at her kitchen table launching her digital business' },
+      body: 'A little life update 💛 I’m starting my own business!\n\nNo boss. No stock to buy. Just my phone and a couple of hours a day.\n\nAnd before anyone asks… it’s NOT an MLM. It’s an opportunity ✨',
+      actions: [{ type: 'publish', text: 'A little life update 💛 I’m starting my own business!\n\nNo boss. No stock to buy. Just my phone and a couple of hours a day.\n\nAnd before anyone asks… it’s NOT an MLM. It’s an opportunity ✨' }],
+    },
+    {
+      kind: 'bot', author: a('Ashley Parker', { face: 'ashley-daybreak', bot: true }),
+      meta: 'Just now · 🌐', tempo: .6, agent: 'human', publishHold: 1000,
+      media: { kind: 'product', aspect: 1.5, src: '/assets/posts/daybreak-invitation.jpg', note: 'Daybreak campaign: Your phone. Your freedom. Comment I AM IN' },
+      body: 'Comment I AM IN to learn more about my lazy way to get rich 💸\n\nI’m showing 5 people exactly how I’m doing it. You don’t need experience. Just a phone. 👇',
+      comments: [{ author: a('Sarah Mitchell', { face: OPPORTUNITY_FACES['Sarah Mitchell'] }), text: 'I AM IN' }, { author: a('Emma Johnson', { face: OPPORTUNITY_FACES['Emma Johnson'] }), text: 'I AM IN 🙋‍♀️' }],
+      chat: { name: 'Jess Morgan', incoming: 'Ash… is this one of those pyramid things?' },
+      actions: [
+        { type: 'publish', text: 'Comment I AM IN to learn more about my lazy way to get rich 💸\n\nI’m showing 5 people exactly how I’m doing it. You don’t need experience. Just a phone. 👇' },
+        { type: 'comment', text: 'Sent you both the details! Check your inbox 💛' },
+        { type: 'message', text: 'No babe!! It’s a digital business. You share the opportunity, your team shares it too. Let me send you the link 💛' },
       ],
-      actions: [{ type: 'like' }],
     },
     {
-      kind: 'bot',
-      author: a('Emma Johnson', BOT_F1),
-      meta: '1m · 🌐',
-      body: 'Just finished my morning run! 🏃‍♀️ Feeling grateful for this beautiful day. What are you grateful for today? 🌅',
-      stats: { likes: 2341, comments: 412, reactions: ['👍', '❤️'] },
-      actions: [{ type: 'like' }],
-    },
-    {
-      kind: 'bot',
-      author: a('Mike Chen', BOT_M1),
-      meta: '1m · 🌐',
-      body: 'Excited to announce I’m starting a new role as Chief Synergy Officer at Nexora AI! 🚀 #Grateful #Leadership',
-      stats: { likes: 9120, comments: 1003, reactions: ['👍', '👏', '❤️'] },
-      comments: [{ author: a('Jess Morgan', BOT_F1), text: 'Great insight! 🙌' }],
-      actions: [{ type: 'like' }, { type: 'comment', text: 'Great insight! 🙌' }],
-    },
-    {
-      kind: 'bot',
-      author: a('Nature Is Amazing', { bot: true }),
-      meta: '1m · 🌐',
-      body: 'Rare white peacock spotted in Brazil 😍',
-      media: {
-        aspect: 1,
-        note: 'AI image of an AI image, recompressed twice, impossible feathers',
-        kind: 'ai',
-        src: '/assets/posts/dead-4.jpg',
-      },
-      stats: { likes: 1200000, comments: 88000, reactions: ['❤️', '😮'] },
-      comments: [
-        { author: a('Linda Parker', { face: 'stock-f2', bot: true }), text: 'Wow! 😍' },
-        { author: a('Olivia Brown', BOT_F1), text: 'Wow! 😍' },
+      kind: 'bot', author: a('Ashley Parker', { face: 'ashley-daybreak', bot: true }),
+      meta: 'Just now · 🌐', tempo: .45, agent: 'quick', publishHold: 300, revealAfterPublish: true,
+      media: { kind: 'product', aspect: 1.5, src: '/assets/posts/daybreak-training.jpg', note: 'Ashley hosting Daybreak’s free starter training' },
+      body: 'Okay my inbox is going CRAZY 😂 Here’s the link everyone’s asking for:\n\njoin.daybreak.example/ashley\n\nWatch the free training, then message me READY. Your new life starts with one yes ✨',
+      actions: [
+        { type: 'publish', text: 'Okay my inbox is going CRAZY 😂 Here’s the link everyone’s asking for:\n\njoin.daybreak.example/ashley\n\nWatch the free training, then message me READY. Your new life starts with one yes ✨' },
       ],
-      actions: [{ type: 'like' }],
-    },
-    {
-      kind: 'bot',
-      author: a('Ashley Parker', { face: 'ashley-2023', bot: true }),
-      meta: '1m · 🌐',
-      body: 'Grateful for this beautiful day 🌅 What are you grateful for?',
-      stats: { likes: 2341, comments: 412, reactions: ['👍', '❤️'] },
-      comments: [{ author: a('Sarah Mitchell', BOT_F1), text: 'Love this energy! 🙌' }],
-      actions: [{ type: 'like' }, { type: 'overlay', choice: 0 }],
     },
   ]),
 };
+
+/** Campaign posts that keep running inside the revealed browser. */
+export const OPPORTUNITY_FOLLOWUPS = ['Your 9–5 is the real pyramid 😉 I’m building something that pays me while I live my life. Comment FREEDOM 💸', '3 spots left on my founding team!! No experience needed. I’ll give you the exact posts and messages. I AM IN 👇', 'Posting this again because some of you missed it 💛 Comment I AM IN. Your phone could be paying your bills.', 'I AM IN → inbox 💌 READY → link 🔗 FREEDOM → team ✨ Let’s build your dream life together!!', 'Last chance!! Comment I AM IN 💸 I AM IN 💸 I AM IN 💸'];

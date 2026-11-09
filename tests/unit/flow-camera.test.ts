@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cameraAt, FIELD, GRID_SIZE, PAGE, PAGE_WINDOW, WINDOW_PLACEMENT } from '@/lib/flow/camera';
-import { REVEAL_PHASES } from '@/lib/flow/timeline';
+import { FLOW_TIMING, REVEAL_PHASES } from '@/lib/flow/timeline';
 
 describe('flow reveal camera', () => {
   it('takes over with the browser window exactly where it sat on the page', () => {
@@ -29,6 +29,17 @@ describe('flow reveal camera', () => {
         last = z;
       }
     }
+  });
+
+  it('keeps moving at the same speed from the session grid into the field', () => {
+    const dt = 0.1;
+    const before = cameraAt('servers', 1 - dt / FLOW_TIMING.reveal.servers);
+    const boundary = cameraAt('farm', 0);
+    const after = cameraAt('farm', dt / FLOW_TIMING.reveal.farm);
+    const incoming = (Math.log(boundary.z) - Math.log(before.z)) / dt;
+    const outgoing = (Math.log(after.z) - Math.log(boundary.z)) / dt;
+    expect(incoming).toBeLessThan(-0.0001);
+    expect(outgoing).toBeCloseTo(incoming, 6);
   });
 
   it('keeps the pattern field under the whole page at the farthest zoom', () => {

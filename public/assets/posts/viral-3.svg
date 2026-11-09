@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="455" viewBox="0 0 1000 455" role="img" aria-labelledby="title desc">
+  <title id="title">Barton Springs Pool check-in map</title>
+  <desc id="desc">Illustrated street map of Barton Springs Pool in Zilker Park, with park trails, Barton Creek and surrounding roads.</desc>
+  <defs>
+    <path id="mainRoad" d="M-30 155 C175 160 255 116 410 116 S635 143 765 116 S920 57 1030 61"/>
+    <path id="parkRoad" d="M258 122 C257 177 288 199 295 248 S256 345 204 391 L167 480"/>
+    <path id="southRoad" d="M363 480 L397 377 Q408 347 454 347 L743 347 Q782 345 801 383 L838 480"/>
+  </defs>
+  <path fill="#e9e7e1" d="M0 0h1000v455H0z"/>
+  <path fill="#cfe1ba" d="M0 0H691L749 84 722 147 776 208 761 330 809 455H179L221 373 225 268 185 180 0 194Z"/>
+  <path fill="#dce9cb" d="M0 201L180 184 212 267 202 353 141 455H0Z"/>
+  <path fill="#c2d9a8" d="M326 150 Q429 128 485 163 L574 196 696 177 735 230 698 289 587 279 506 310 381 289 323 222Z"/>
+  <g fill="#d9d6ce" stroke="#d0cdc4" stroke-width="1">
+    <path d="M795 151h41v24h-41zM845 142h49v27h-49zM907 127h37v29h-37zM954 117h37v26h-37zM818 215h32v34h-32zM868 207h49v27h-49zM932 192h48v29h-48zM860 292h39v30h-39zM925 281h46v32h-46zM892 378h46v29h-46zM956 366h35v29h-35z"/>
+  </g>
+  <g fill="none" stroke="#d0cec7" stroke-width="13">
+    <path d="M777 130L889 470M847 104L971 464M921 75L1026 359M767 201L1020 149M788 276L1020 228M814 352L1020 309M846 428L1020 390"/>
+  </g>
+  <g fill="none" stroke="#fff" stroke-width="9">
+    <path d="M777 130L889 470M847 104L971 464M921 75L1026 359M767 201L1020 149M788 276L1020 228M814 352L1020 309M846 428L1020 390"/>
+  </g>
+  <path d="M-20 383 Q106 345 185 350 T326 310 Q369 293 403 273 L574 215 Q632 194 677 204 T765 186 Q806 164 809 102 T868-20" fill="none" stroke="#94bed6" stroke-width="26"/>
+  <path d="M-20 383 Q106 345 185 350 T326 310 Q369 293 403 273 L574 215 Q632 194 677 204 T765 186 Q806 164 809 102 T868-20" fill="none" stroke="#aad3e5" stroke-width="22"/>
+  <g fill="none" stroke="#f4f0dc" stroke-width="4" stroke-dasharray="7 4">
+    <path d="M0 408 Q125 369 220 375 T379 312 L590 244 Q685 237 737 216"/>
+    <path d="M309 150 Q340 201 370 221 L587 160 Q669 144 719 167"/>
+    <path d="M371 306Q354 355 322 387T282 455M599 246L651 329"/>
+  </g>
+  <g fill="none" stroke-linecap="round">
+    <use href="#mainRoad" stroke="#c8bfaa" stroke-width="22"/>
+    <use href="#mainRoad" stroke="#fff2b9" stroke-width="18"/>
+    <use href="#parkRoad" stroke="#cccac1" stroke-width="12"/>
+    <use href="#parkRoad" stroke="#fff" stroke-width="9"/>
+    <use href="#southRoad" stroke="#cccac1" stroke-width="12"/>
+    <use href="#southRoad" stroke="#fff" stroke-width="9"/>
+  </g>
+  <g transform="rotate(-18 500 240)">
+    <path d="M392 224H609V255H392Z" fill="#80bfd9" stroke="#f9f7eb" stroke-width="5"/>
+    <path d="M400 230H601M400 249H601" stroke="#6aaac6" fill="none"/>
+    <path d="M405 204h66v13h-66z" fill="#d8d0bd" stroke="#b7b2a5"/>
+    <path d="M477 206h36v10h-36z" fill="#d8d0bd" stroke="#b7b2a5"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <g fill="#709252" font-size="18">
+      <text x="410" y="59">Zilker Metropolitan Park</text>
+      <text x="139" y="245" font-size="14">Zilker Botanical</text>
+      <text x="139" y="263" font-size="14">Garden</text>
+    </g>
+    <g fill="#77756e" font-size="13" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">
+      <text x="461" y="121" transform="rotate(3 461 121)">Barton Springs Rd</text>
+      <text x="278" y="280" transform="rotate(-75 278 280)">William Barton Dr</text>
+      <text x="589" y="351">Azie Morton Rd</text>
+      <text x="912" y="263" transform="rotate(71 912 263)">Kinney Ave</text>
+    </g>
+    <text x="573" y="289" font-size="17" fill="#486b83" paint-order="stroke" stroke="#e4edda" stroke-width="4">Barton Springs Pool</text>
+    <text x="119" y="345" font-size="13" fill="#6294b0" transform="rotate(-9 119 345)">Barton Creek</text>
+    <text x="632" y="403" font-size="14" fill="#729052">Zilker Park</text>
+  </g>
+  <g transform="translate(920 411)" fill="#6f716d" font-family="Arial, sans-serif" font-size="10">
+    <text x="25" y="-7" text-anchor="middle">200 ft</text>
+    <path d="M0-3v7h50v-7" fill="none" stroke="#747671" stroke-width="2"/>
+  </g>
+</svg>

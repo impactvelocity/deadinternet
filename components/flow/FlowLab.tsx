@@ -40,6 +40,7 @@ import {
   deriveEffects,
   FLOW_TIMING,
   NO_EFFECTS,
+  REVEAL_PHASES,
   sampleTimeline,
   type PingSlot,
   type RevealPhase,
@@ -48,6 +49,7 @@ import {
 import { ChromeBackground, ChromeLayers, Guides } from './FlowChrome';
 import { FlowFeed } from './FlowFeed';
 import { FlowHud, HUD_HEIGHT } from './FlowHud';
+import { FlowNarration } from './FlowNarration';
 import { EraDrawer, HEADER_H, PageBackdrop, PageHeader } from './FlowPage';
 
 /** Least room kept above and below the browser window, in page units. */
@@ -126,7 +128,7 @@ function toolCalls(t: Timeline): ToolCall[] {
     if (b.kind === 'scroll') out.push({ tool: 'scroll', args: `(down, ${Math.round(b.to - b.from)}px)` });
     if (b.kind !== 'act') continue;
     const at = `(${Math.round(b.cursorEnd.x)}, ${Math.round(b.cursorEnd.y)})`;
-    if (b.action.type === 'comment') {
+    if (b.action.type === 'comment' || b.action.type === 'publish' || b.action.type === 'message') {
       out.push({ tool: 'type', args: JSON.stringify(b.action.text) });
       out.push({ tool: 'key', args: '"Return"' });
     } else {
@@ -165,6 +167,8 @@ export function FlowLab() {
   const [cursorOn, setCursorOn] = useState(true);
   const [hud, setHud] = useState(true);
   const [playing, setPlaying] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [speedIndex, setSpeedIndex] = useState(1);
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [snap, setSnap] = useState<Snap>(INITIAL_SNAP);
@@ -237,6 +241,11 @@ export function FlowLab() {
     setPlaying(false);
   }, []);
 
+  const toggleDrawer = useCallback(() => {
+    stopPlay();
+    setDrawer((open) => !open);
+  }, [stopPlay]);
+
   const togglePlay = useCallback(() => {
     const t = timelineRef.current;
     if (!t) return;
@@ -252,6 +261,7 @@ export function FlowLab() {
     }
     autoRef.current = from;
     playRef.current = true;
+    setHasStarted(true);
     setPlaying(true);
   }, [stopPlay]);
 
@@ -319,6 +329,23 @@ export function FlowLab() {
     };
   }, [wire]);
 
+  // The story uses document scroll as its playhead; always open at the start.
+  useEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    const resetPlayhead = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      shownRef.current = 0;
+      autoRef.current = 0;
+    };
+    resetPlayhead();
+    window.addEventListener('load', resetPlayhead, { once: true });
+    return () => {
+      window.removeEventListener('load', resetPlayhead);
+      window.history.scrollRestoration = previousRestoration;
+    };
+  }, []);
+
   /* ------------------------------- Frame loop ------------------------------ */
 
   useEffect(() => {
@@ -364,7 +391,10 @@ export function FlowLab() {
         cursor.style.transform = `translate(${f.cursor.x}px, ${f.cursor.y}px)`;
         cursor.dataset.pressed = f.pressed ? 'true' : 'false';
       }
-      if (playheadRef.current) playheadRef.current.style.left = `${(f.s / t.total) * 100}%`;
+      if (playheadRef.current) {
+        playheadRef.current.style.left = `${(f.s / t.total) * 100}%`;
+        playheadRef.current.closest('[role="slider"]')?.setAttribute('aria-valuenow', String(Math.round((f.s / t.total) * 100)));
+      }
       if (readoutRef.current) readoutRef.current.textContent = `${Math.round(f.s)}`;
 
       const back = worldBackRef.current;
@@ -378,10 +408,19 @@ export function FlowLab() {
         const dotsOn = !!f.reveal && DOT_PHASES.includes(f.reveal.phase);
         if (canvas) canvas.style.display = dotsOn ? 'block' : 'none';
         // Once every session is a dot, nothing behind the canvas needs drawing.
-        const night = dotsOn && !(f.reveal?.phase === 'dots' && f.reveal.u < 0.5);
+        const night = dotsOn && !(f.reveal?.phase === 'dots' && f.reveal.u < 0.6);
         back.style.visibility = night ? 'hidden' : '';
         front.style.visibility = night ? 'hidden' : '';
+        const dissolve = f.reveal?.phase === 'dots' ? Math.min(1, f.reveal.u / 0.55) : dotsOn ? 1 : 0;
+        // Descendants explicitly set visibility, so fade the whole layer too.
+        // This also carries the field's soft edges cleanly into the canvas.
+        back.style.opacity = String(1 - dissolve * dissolve * (3 - 2 * dissolve));
         if (f.reveal) {
+          root.style.setProperty('--reveal-u', String(f.reveal.u));
+          // Match the live browser's handoff to the lighter field rendering.
+          front.style.opacity = f.reveal.phase === 'farm' ? String(1 - Math.min(1, f.reveal.u * 2.5)) : dotsOn ? '0' : '1';
+          const edge = f.reveal.phase === 'servers' ? Math.min(1, f.reveal.u * 2) : f.reveal.phase === 'sandbox' || f.reveal.phase === 'chat' ? 0 : 1;
+          root.style.setProperty('--field-edge', String(1 - edge * edge * (3 - 2 * edge)));
           // Hand-off: the camera starts with the window's slot exactly where
           // the window sat on the page, so nothing jumps.
           const cam = cameraAt(f.reveal.phase, f.reveal.u);
@@ -401,9 +440,11 @@ export function FlowLab() {
           back.style.transform = tf;
           front.style.transform = tf;
           win.style.transform = `translate(${WINDOW_PLACEMENT.x}px, ${WINDOW_PLACEMENT.y}px) scale(${WINDOW_PLACEMENT.scale})`;
-          const u = f.reveal.phase === 'sandbox' ? Math.min(1, f.reveal.u / 0.22) : 1;
+          const u = f.reveal.phase === 'sandbox' ? Math.min(1, f.reveal.u / 0.6) : 1;
           pageOpacity = 1 - u * u * (3 - 2 * u);
         } else {
+          front.style.opacity = '1';
+          root.style.setProperty('--field-edge', '1');
           back.style.transform = '';
           front.style.transform = '';
           win.style.transform = `translate(${PAGE_WINDOW.x}px, ${PAGE_WINDOW.y}px)`;
@@ -466,6 +507,8 @@ export function FlowLab() {
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      // Native controls own Space/Enter; the page shortcuts apply elsewhere.
+      if ((e.key === ' ' || e.key === 'Enter') && e.target instanceof Element && e.target.closest('button, a, input, textarea, select, [role="slider"]')) return;
       const t = timelineRef.current;
       switch (e.key) {
         case ' ':
@@ -485,7 +528,7 @@ export function FlowLab() {
           toggle('hud');
           return;
         case 'e':
-          setDrawer((v) => !v);
+          toggleDrawer();
           return;
         case 'Escape':
           setDrawer(false);
@@ -515,7 +558,7 @@ export function FlowLab() {
       window.removeEventListener('wheel', onUser);
       window.removeEventListener('touchstart', onUser);
     };
-  }, [seek, stopPlay, toggle, togglePlay]);
+  }, [seek, stopPlay, toggle, togglePlay, toggleDrawer]);
 
   /* -------------------------------- Render --------------------------------- */
 
@@ -528,11 +571,11 @@ export function FlowLab() {
   };
 
   return (
-    <div ref={rootRef} data-flow-root="" className="bg-[#101014]" style={{ overflowAnchor: 'none' }}>
+    <div ref={rootRef} data-flow-root="" className="bg-[#050507]" style={{ overflowAnchor: 'none' }}>
       <div aria-hidden style={{ height: timeline ? timeline.total + vh : vh * 30 }} />
 
-      <div className="fixed inset-0 overflow-hidden bg-[#101014]">
-        <div className="absolute left-0 top-0 origin-top-left overflow-hidden" style={stageStyle}>
+      <div className="fixed inset-0 overflow-hidden bg-[#050507]">
+        <div className="absolute left-0 top-0 origin-top-left overflow-hidden" style={{ ...stageStyle, maskImage: 'linear-gradient(to bottom, rgb(0 0 0 / var(--field-edge, 1)), #000 16%, #000 84%, rgb(0 0 0 / var(--field-edge, 1)))' }}>
           <div ref={worldBackRef} className="absolute left-0 top-0 origin-top-left">
             <FlowReveal visible={revealOn} phase={snap.phase} k={snap.revealK} calls={calls} />
           </div>
@@ -547,21 +590,20 @@ export function FlowLab() {
               ref={windowRef}
               data-flow-window=""
               data-agent="off"
-              className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-[12px]"
+              className="absolute left-0 top-0 origin-top-left"
               style={{
                 width: WINDOW.w,
                 height: WINDOW.h,
                 transform: `translate(${PAGE_WINDOW.x}px, ${PAGE_WINDOW.y}px)`,
-                boxShadow: WINDOW_SHADOW,
               }}
             >
-              <WindowChrome title={era.tab.title} url={era.tab.url} />
+              <WindowChrome narration={hasStarted ? era.narration : ''} />
               <div
                 ref={screenRef}
                 data-flow-screen=""
                 data-flow-guides={guides ? 'on' : 'off'}
-                className="absolute overflow-hidden"
-                style={{ left: 0, top: WINDOW.chrome, width: SCREEN.w, height: SCREEN.h }}
+                className="absolute overflow-hidden rounded-[12px]"
+                style={{ left: 0, top: WINDOW.chrome, width: SCREEN.w, height: SCREEN.h, boxShadow: WINDOW_SHADOW }}
               >
                 <ChromeBackground active={snap.era} tokens={tokens} />
                 <div ref={viewportRef} data-flow-viewport="" className="overflow-hidden" style={box(SLOTS.feed)}>
@@ -569,9 +611,11 @@ export function FlowLab() {
                 </div>
                 <ChromeLayers
                   active={snap.era}
+                  revealStep={snap.phase ? REVEAL_PHASES.indexOf(snap.phase) * 25 + snap.revealK : -1}
                   tokens={tokens}
                   wire={wire}
                   effects={effects}
+                  typing={typing}
                   pings={timeline?.pings ?? NO_PINGS}
                   activePings={activePings}
                   pingsSeen={snap.pingsSeen}
@@ -592,21 +636,26 @@ export function FlowLab() {
             ref={dotsRef}
             aria-hidden
             className="pointer-events-none absolute"
-            style={{ left: -DOT_BLEED, top: -DOT_BLEED, width: PAGE.w + 2 * DOT_BLEED, height: PAGE.h + 2 * DOT_BLEED, display: 'none' }}
+            style={{ left: -DOT_BLEED, top: -DOT_BLEED, width: PAGE.w + 2 * DOT_BLEED, height: PAGE.h + 2 * DOT_BLEED, display: 'none', maskImage: 'linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent)' }}
           />
           <RevealOverlay phase={snap.phase} k={snap.revealK} />
         </div>
 
-        <PageHeader era={era} drawerOpen={drawerOpen} onToggleDrawer={() => setDrawer((v) => !v)} interactive={!revealOn} />
+        <PageHeader era={era} drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer} interactive={!revealOn} />
+        <FlowNarration era={era.id} revealing={revealOn} playing={playing} enabled={voiceEnabled} />
         <EraDrawer era={era} index={snap.era} open={drawerOpen} onClose={() => setDrawer(false)} onJump={jumpToEra} />
       </div>
 
       {hud ? (
         <FlowHud
+          browserWidth={WINDOW.w * scale}
+          readingNotes={drawerOpen}
           timeline={timeline}
           era={snap.era}
           beatLabel={beatLabel}
           playing={playing}
+          voiceEnabled={voiceEnabled}
+          onToggleVoice={() => setVoiceEnabled((enabled) => !enabled)}
           speed={SPEEDS[speedIndex]}
           guides={guides}
           wire={wire}
@@ -624,7 +673,7 @@ export function FlowLab() {
           onClick={() => setHud(true)}
           className="fixed bottom-3 right-3 z-50 rounded-full bg-black/70 px-3 py-1.5 font-mono text-[11px] text-white/80"
         >
-          lab ⌃
+          Show player
         </button>
       )}
       <h1 className="sr-only">Dead Internet: feed flow lab</h1>

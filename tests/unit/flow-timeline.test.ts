@@ -32,6 +32,9 @@ function fakeMeasure(): FlowMeasure {
       const part = (name: string, dy: number) => {
         targets[`${post.id}:${name}`] = { space: 'feed', x: 40, y: y + dy, w: 80, h: 24 };
       };
+      part('publish', 60);
+      part('publish-submit', 240);
+      targets[`${post.id}:message`] = { space: 'screen', x: 1040, y: 550, w: 200, h: 30 };
       part('body', 60);
       part('media', 140);
       part('like', 300);
@@ -81,14 +84,42 @@ describe('flow timeline', () => {
     expect(t.beats.at(-1)!.s1).toBeCloseTo(t.total, 6);
   });
 
-  it('only ever scrolls forward, apart from a small landing bounce', () => {
-    let last = -1;
+  it('keeps reframing bounded and lands before an action', () => {
     for (let s = 0; s <= t.total; s += 23) {
       const f = sampleTimeline(t, s);
-      expect(f.settled).toBeGreaterThanOrEqual(last - 1e-6);
+      expect(f.settled).toBeGreaterThanOrEqual(0);
+      expect(f.settled).toBeLessThanOrEqual(m.contentHeight - m.viewport.h);
       expect(Math.abs(f.offset - f.settled)).toBeLessThanOrEqual(FLOW_TIMING.bounceMax + 1e-6);
-      last = f.settled;
     }
+    for (let i = 0; i < t.beats.length; i++) {
+      const beat = t.beats[i];
+      if (beat.kind !== 'scroll' || beat.to >= beat.from) continue;
+      expect(t.beats[i + 1].kind).toBe('hold');
+      expect(t.beats[i + 2].kind).toBe('act');
+    }
+  });
+
+  it('centers likes, reactions and comment boxes independently of the post header', () => {
+    for (const beat of t.beats) {
+      if (beat.kind !== 'act') continue;
+      const action = beat.action;
+      const part = action.type === 'comment' ? 'composer'
+        : action.type === 'react' ? 'like'
+        : action.type === 'like' ? (action.via === 'doubletap' ? 'media' : 'like') : null;
+      if (!part) continue;
+      const target = m.targets[`${beat.postId}:${part}`];
+      const expected = Math.max(0, target.y + target.h / 2 - m.viewport.h / 2);
+      expect(beat.offset, `${beat.postId}:${part}`).toBeCloseTo(expected, 6);
+    }
+  });
+
+  it('gives interactive posts context before jumping to their controls', () => {
+    const previews = t.beats.filter((b) => b.kind === 'hold' && b.label.startsWith('preview'));
+    const expected = Object.values(FLOW_POSTS).flat().filter((p) => {
+      const first = p.actions?.[0];
+      return first && first.type !== 'read' && first.type !== 'watch' && first.type !== 'publish';
+    });
+    expect(previews).toHaveLength(expected.length);
   });
 
   it('glides: quick in the middle of a move, slow as it lands', () => {
@@ -113,7 +144,7 @@ describe('flow timeline', () => {
   });
 
   it('robots land dead on: no bounce in robot eras', () => {
-    const robotTops = FLOW_ERAS.map((e, k) => (e.agent === 'robot' ? k : -1)).filter((k) => k >= 0);
+    const robotTops = FLOW_ERAS.map((e, k) => (e.agent === 'robot' && !FLOW_POSTS[e.id].some((p) => p.agent && p.agent !== 'robot') ? k : -1)).filter((k) => k >= 0);
     for (const b of t.beats) {
       if (b.kind !== 'scroll') continue;
       const k = sampleTimeline(t, b.s1).era;
@@ -176,7 +207,9 @@ describe('flow timeline', () => {
     const last = arc[arc.length - 1];
     expect(first.brand + first.bot).toBe(0);
     expect(last.person + last.brand).toBe(0);
-    for (let k = 1; k < arc.length; k++) {
+    // The final era is a shorter, entirely automated vignette before the reveal.
+    expect(last.bot).toBe(FLOW_POSTS[FLOW_ERAS.at(-1)!.id].length);
+    for (let k = 1; k < arc.length - 1; k++) {
       expect(arc[k].person, FLOW_ERAS[k].id).toBeLessThanOrEqual(arc[k - 1].person);
       expect(arc[k].bot, FLOW_ERAS[k].id).toBeGreaterThanOrEqual(arc[k - 1].bot);
     }
@@ -230,7 +263,8 @@ describe('flow timeline', () => {
       if (!landing.has(e.type)) continue;
       const act = acts.find((b) => b.s0 <= e.s && e.s <= b.s1);
       if (!act) continue; // overlays can be dismissed outside an act
-      expect(act.s1 - e.s).toBeGreaterThanOrEqual(minLand - 1e-6);
+      const post = Object.values(FLOW_POSTS).flat().find((p) => act.kind === 'act' && p.id === act.postId);
+      expect(act.s1 - e.s).toBeGreaterThanOrEqual(minLand * (post?.tempo ?? 1) - 1e-6);
       checked++;
     }
     expect(checked).toBeGreaterThan(10);
@@ -256,4 +290,28 @@ describe('flow timeline', () => {
     expect(landed.reactions.get(pick.key)).toBe(pick.value);
     expect(landed.palettes.has(pick.key)).toBe(false);
   });
+  it('reveals the sandbox immediately after the inbox announcement is published', () => {
+    const publications = t.beats.filter((b) => b.kind === 'act' && b.action.type === 'publish');
+    expect(publications).toHaveLength(3);
+    const openingDuration = publications[0].s1 - publications[0].s0;
+    expect(openingDuration).toBeGreaterThan(2500);
+    expect(openingDuration).toBeLessThan(4000);
+    const firstPublished = t.events.find((e) => e.key === 'dead-1:publish' && e.type === 'post')!;
+    expect(publications[0].s1 - firstPublished.s).toBeLessThan(1200);
+    const last = publications.at(-1)!;
+    expect(last.kind === 'act' && last.postId).toBe('dead-3');
+    expect(last.s1).toBe(t.revealStart);
+    const announcement = t.events.find((e) => e.key === 'dead-3:publish' && e.type === 'post')!;
+    expect(t.revealStart - announcement.s).toBeLessThan(400);
+    expect(sampleTimeline(t, t.revealStart).settled).toBeCloseTo(sampleTimeline(t, t.revealStart - 1).settled, 6);
+    for (const post of FLOW_POSTS.dead) {
+      const published = t.events.find((e) => e.key === `${post.id}:publish` && e.type === 'post')!;
+      expect(deriveEffects(t.events, firedAt(t.events, published.s - 1)).posted.has(published.key)).toBe(false);
+      expect(deriveEffects(t.events, firedAt(t.events, published.s)).posted.get(published.key)).toBe(post.body);
+      if (!post.chat) continue;
+      const message = t.events.find((e) => e.key === `${post.id}:message` && e.type === 'post')!;
+      expect(message.s).toBeGreaterThan(published.s);
+    }
+  });
+
 });

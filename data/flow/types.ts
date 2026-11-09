@@ -108,6 +108,9 @@ export interface FlowComment {
 }
 
 export interface FlowMedia {
+  /** Distinct previews for a photo album. */
+  photos?: readonly { src: string; alt: string }[];
+  title?: string;
   /** width / height */
   aspect: number;
   /** Art direction note (shown with guides on). */
@@ -117,6 +120,11 @@ export interface FlowMedia {
   count?: number;
   /** Real image under /public. Without one, a placeholder is drawn. */
   src?: string;
+  /** Looping GIF displayed in place of the still image. */
+  animatedSrc?: string;
+  /** Playable video file; src remains its thumbnail. */
+  videoSrc?: string;
+  durationSeconds?: number;
 }
 
 export type PostKind =
@@ -138,18 +146,28 @@ export type PostKind =
  */
 export type AgentAction =
   | { type: 'read' }
+  | { type: 'publish'; text: string }
+  | { type: 'message'; text: string }
   | { type: 'like'; via?: 'button' | 'doubletap' }
   | { type: 'react'; emoji: string }
   | { type: 'comment'; text: string }
   | { type: 'share' }
   | { type: 'cta' }
-  | { type: 'watch' }
+  | { type: 'watch'; holdPx?: number }
   /** Click a button in this era's top-right piece (follow, poke back…). */
   | { type: 'chrome'; target: string }
   /** Click a button on this era's overlay (by index). */
   | { type: 'overlay'; choice: number };
 
 export interface FlowPost {
+  /** Scripted business finale: slow setup, then accelerating automation. */
+  tempo?: number;
+  agent?: AgentStyle;
+  publishHold?: number;
+  /** The final scripted post hands directly to the sandbox after publication. */
+  revealAfterPublish?: boolean;
+  chat?: { name: string; incoming: string };
+
   id: string;
   era: FlowEraId;
   kind: PostKind;
@@ -277,6 +295,8 @@ export interface FlowEra {
   beat: string;
   /** Date and time under the era name in the page header. */
   date: { day: string; time: string };
+  /** The story line shown above the feed as this era arrives. */
+  narration: string;
   /** The browser tab and address bar. One fictional domain throughout. */
   tab: { title: string; url: string };
   /** The page around the browser window: a subtle gradient in this era's colours. */

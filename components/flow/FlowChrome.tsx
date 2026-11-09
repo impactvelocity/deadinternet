@@ -17,16 +17,17 @@
  * Cursor targets: `chrome:<era>:<id>` for top-right buttons,
  * `overlay:<id>:<n>` for pop-up buttons.
  */
+import { OPPORTUNITY_FACES } from '@/data/flow/images';
 import { memo, type CSSProperties, type ReactNode } from 'react';
 import { FLOW_ERAS } from '@/data/flow/eras';
-import { viewerFor } from '@/data/flow/posts';
+import { FLOW_POSTS, viewerFor } from '@/data/flow/posts';
 import type { CornerModule, DockSpec, EraTokens, FlowEra, FlowEraId, OverlaySpec, Ping, PingKind } from '@/data/flow/types';
 import type { FlowEffects, PingSlot } from '@/lib/flow/timeline';
 import { Icon, type IconName } from './icons';
 import { Avatar, box, eraStyle, MediaBox, SCREEN, SLOTS, type SlotId } from './parts';
 
-const SMALL: CSSProperties = { fontSize: 'calc(var(--f-size) - 1px)' };
-const TINY: CSSProperties = { fontSize: 'calc(var(--f-size) - 2px)' };
+const SMALL: CSSProperties = { fontSize: 'max(12px, calc(var(--f-size) - 1px))' };
+const TINY: CSSProperties = { fontSize: 'max(11px, calc(var(--f-size) - 2px))' };
 const MUTED: CSSProperties = { color: 'var(--f-muted)' };
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
 
@@ -180,7 +181,7 @@ function PlatformCard({ ctx }: { ctx: ModuleCtx }) {
     <div style={box(SLOTS.platform)} className="flex flex-col">
       <Frame ctx={ctx} title={title}>
         {sub && (
-          <div className="mb-1.5" style={grid ? { ...TINY, fontWeight: 700, color: '#ff6600' } : { ...TINY, ...MUTED }}>
+          <div className="mb-1.5" style={grid ? { ...TINY, fontWeight: 700, color: '#ad4300' } : { ...TINY, ...MUTED }}>
             {sub}
           </div>
         )}
@@ -209,6 +210,7 @@ function PlatformCard({ ctx }: { ctx: ModuleCtx }) {
                       {r.name}
                     </span>
                   )}
+                  {era.id === 'dead' && r.key === '0' && <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#f8ede1] text-[22px] text-[#c79848]" aria-hidden>☀</span>}
                   {r.avatar && (
                     <span className="relative">
                       <Avatar author={{ name: r.name, face: r.face, brand: r.brand }} size={grid ? 52 : r.online ? 28 : 32} shape={grid ? 'square' : shape} wire={wire} />
@@ -332,7 +334,7 @@ function YouChip({ ctx, counts, toasts }: { ctx: ModuleCtx; counts: { messages: 
         <Frame ctx={ctx} tag="div.you">
           <div className="flex items-center gap-2.5 pr-2">
             <span className="relative shrink-0">
-              <Avatar author={viewerFor(era.year)} size={44} shape={tokens.avatarShape} wire={wire} />
+              <Avatar author={viewerFor(era.year)} size={72} shape={tokens.avatarShape} wire={wire} />
               <span className="fl-m-img absolute inset-0" style={{ opacity: machine ? 1 : 0, transition: 'opacity .6s' }} />
             </span>
             <div className="min-w-0 leading-snug">
@@ -345,7 +347,7 @@ function YouChip({ ctx, counts, toasts }: { ctx: ModuleCtx; counts: { messages: 
                 </div>
               ))}
               {era.you.badge && (
-                <div className="font-bold italic" style={{ ...TINY, color: '#ff9900' }}>
+                <div className="font-bold italic" style={{ ...TINY, color: '#a35a00' }}>
                   ● {era.you.badge}
                 </div>
               )}
@@ -363,6 +365,87 @@ function YouChip({ ctx, counts, toasts }: { ctx: ModuleCtx; counts: { messages: 
           <Toast key={`${p.from}-${p.text}`} ping={p} ctx={ctx} />
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Measured, reversible conversations; every send is driven by the story timeline. */
+function OpportunityChats({ ctx, typing, revealing }: { ctx: ModuleCtx; typing?: { postId: string; text: string } | null; revealing: boolean }) {
+  const chats = FLOW_POSTS.dead.filter((post) => post.chat);
+  let active = -1;
+  chats.forEach((post, i) => {
+    if (ctx.effects.focused.has(`${post.id}:message`) || ctx.effects.posted.has(`${post.id}:message`)) active = i;
+  });
+  return <>
+    {chats.map((post, i) => {
+      const key = `${post.id}:message`;
+      const sent = ctx.effects.posted.get(key);
+      const text = typing?.postId === key ? typing.text : '';
+      const visible = ctx.era.id === 'dead' && active === i && !revealing;
+      const reply = post.actions?.find((action) => action.type === 'message');
+      const fullReply = reply?.type === 'message' ? reply.text : '';
+      const hasLink = fullReply.includes('join.daybreak.example');
+      return (
+        <div key={key} aria-hidden={!visible} className="fl-opportunity-chat"
+          style={{ left: SLOTS.platform.x - 32, top: 180, width: SLOTS.platform.w + 32, visibility: visible ? 'visible' : 'hidden', opacity: visible ? 1 : 0 }}>
+          <div className="fl-chat-header">
+            <span className="relative">
+              <Avatar author={{ name: post.chat!.name, face: OPPORTUNITY_FACES[post.chat!.name] }} size={32} shape="circle" wire={ctx.wire} />
+              <span className="fl-chat-online" />
+            </span>
+            <div className="min-w-0 flex-1"><div className="truncate text-[13px] font-semibold">{post.chat!.name}</div><div className="mt-0.5 text-[10px] text-[#656b75]">Active now</div></div>
+            <span className="fl-chat-header-tools"><Icon name="phone" size={15} /><Icon name="video" size={17} /><Icon name="close" size={16} /></span>
+          </div>
+          <div className="fl-chat-messages">
+            <div className="fl-chat-timestamp">TODAY · 2:41 PM</div>
+            <div className="fl-chat-incoming">
+              <Avatar author={{ name: post.chat!.name, face: OPPORTUNITY_FACES[post.chat!.name] }} size={22} shape="circle" wire={ctx.wire} />
+              <div>{post.chat!.incoming}</div>
+            </div>
+            <div className="fl-chat-outgoing" style={{ visibility: sent ? 'visible' : 'hidden' }}>{fullReply}</div>
+            {hasLink && <div className="ml-8 overflow-hidden rounded-lg border border-black/10" style={{ visibility: sent ? 'visible' : 'hidden' }}>
+              <MediaBox media={{ kind: 'photo', aspect: 1.5, src: '/assets/posts/daybreak-training.jpg', note: 'Daybreak starter session invitation' }} wire={ctx.wire} />
+              <div className="bg-[#faf8f5] px-2 py-1.5"><div className="text-[11px] font-semibold text-[#4b183d]">Daybreak · Free training</div><div className="text-[10px] text-[#626a78]">join.daybreak.example/ashley</div></div>
+            </div>}
+            <div className="fl-chat-delivered" style={{ visibility: sent ? 'visible' : 'hidden' }}><Icon name="check" size={11} /> Delivered</div>
+          </div>
+          <div className="fl-chat-composer">
+            {/* The initial click stays fixed while the real input grows upward. */}
+            <span data-t={key} aria-hidden className="fl-chat-input-target" />
+            <div className="fl-chat-input" data-typing={!!text && !sent}>
+              <div>{!sent && text ? <>{text}<span className="fl-caret" /></> : <span className="text-[#626a78]">Aa</span>}</div>
+              <span className="fl-chat-emoji"><Icon name="smile" size={19} /></span>
+            </div>
+            <div className="fl-chat-compose-tools"><span><Icon name="plus" size={17} /><Icon name="image" size={18} /><span className="text-[10px] font-bold">GIF</span></span><span className="fl-chat-send"><Icon name={text && !sent ? 'send' : 'like'} size={17} filled={!!sent} /></span></div>
+          </div>
+        </div>
+      );
+    })}
+  </>;
+}
+
+const INBOX_PEOPLE = ['Sarah Mitchell', 'Emma Johnson', 'Mike Chen', 'Olivia Brown', 'Jess Morgan', 'Rachel Kim', 'Priya Shah', 'Tom Bauer'];
+const INBOX_MESSAGES = ['I AM IN! Send me the details?', 'READY 🙋‍♀️ How do I start?', 'Can you send the training link?', 'Is there still a spot for me?', 'Okay, tell me more 👀', 'How does the business work?', 'Just watched it. What’s next?', 'Interested! Can we chat?'];
+
+/** The conversation closes into a rapidly filling inbox when automation is revealed. */
+function OpportunityInbox({ tick, wire }: { tick: number; wire: boolean }) {
+  const rows = Array.from({ length: Math.min(7, tick + 3) }, (_, i) => tick + 2 - i);
+  return (
+    <div className="fl-opportunity-chat fl-outreach-inbox" style={{ left: SLOTS.platform.x - 32, top: 180, width: SLOTS.platform.w + 32 }}>
+      <header className="fl-inbox-header"><div><strong>Inbox</strong><span className="fl-inbox-live"><i /> Active now</span></div><span className="fl-inbox-unread">{12 + tick * 2}</span></header>
+      <div className="fl-inbox-tabs"><span>Messages <b>{12 + tick * 2}</b></span><span>Requests</span></div>
+      <div className="fl-inbox-list" role="list" aria-label="Business conversations">
+        {rows.map((event, i) => {
+          const person = event % INBOX_PEOPLE.length;
+          const name = INBOX_PEOPLE[person];
+          return <div key={event} role="listitem" className="fl-inbox-row" data-new={i === 0}>
+            <span className="relative"><Avatar author={{ name, face: OPPORTUNITY_FACES[name] }} size={34} shape="circle" wire={wire} /><span className="fl-chat-online" /></span>
+            <div className="min-w-0 flex-1"><div className="fl-inbox-name"><strong>{name}</strong><span>{i < 2 ? 'now' : `${i}s`}</span></div><div className="fl-inbox-preview" data-replying={i === 1}>{i === 0 ? INBOX_MESSAGES[person] : i === 1 ? 'Replying…' : i % 2 ? 'You: You’re in! Check your inbox 💛' : 'You: Here’s your training link 🔗'}</div></div>
+            {i === 0 ? <span className="fl-inbox-dot" /> : <Icon name={i === 1 ? 'more' : 'check'} size={12} />}
+          </div>;
+        })}
+      </div>
+      <footer className="fl-inbox-footer"><Icon name="send" size={14} /><span><strong>{38 + tick * 3} replies sent</strong><span>Sending invites · {8 + tick} new leads</span></span></footer>
     </div>
   );
 }
@@ -524,6 +607,8 @@ function Overlay({ spec, ctx }: { spec: OverlaySpec; ctx: ModuleCtx }) {
 /* --------------------------------- Layers --------------------------------- */
 
 export interface ChromeProps {
+  revealStep: number;
+  typing?: { postId: string; text: string } | null;
   active: number;
   tokens: ReadonlyMap<FlowEraId, EraTokens>;
   wire: boolean;
@@ -562,10 +647,12 @@ export const ChromeBackground = memo(function ChromeBackground({ active, tokens 
 });
 
 /** Date pill, you chip, top-right card and dock (one of each), plus each era's pop-up. */
-export const ChromeLayers = memo(function ChromeLayers({ active, tokens, wire, effects, pings, activePings, pingsSeen }: ChromeProps) {
+export const ChromeLayers = memo(function ChromeLayers({ active, tokens, wire, effects, pings, activePings, pingsSeen, typing, revealStep }: ChromeProps) {
   const era = FLOW_ERAS[active];
   const t = tokens.get(era.id) ?? era.tokens;
   const ctx: ModuleCtx = { era, tokens: t, wire, effects };
+  const revealing = era.id === 'dead' && revealStep >= 0;
+  const inboxTick = Math.max(0, Math.floor(revealStep / 2));
 
   const seen = { request: 0, message: 0, alert: 0 };
   for (let n = 0; n < pingsSeen; n++) {
@@ -573,22 +660,29 @@ export const ChromeLayers = memo(function ChromeLayers({ active, tokens, wire, e
     if (p?.era === active) seen[era.pings[p.index].kind]++;
   }
   const counts = {
-    messages: era.you.inbox.messages + seen.message,
+    messages: era.you.inbox.messages + seen.message + (revealing ? inboxTick * 2 : 0),
     requests: era.you.inbox.requests + seen.request,
-    alerts: era.you.inbox.alerts + seen.alert,
+    alerts: era.you.inbox.alerts + seen.alert + (revealing ? inboxTick : 0),
   };
   const toasts = activePings
     .map((n) => pings[n])
     .filter((p) => p?.era === active)
     .map((p) => era.pings[p.index])
     .reverse();
+  const outreachToasts: Ping[] = revealing ? [0, 1, 2].map((i) => {
+    const person = (inboxTick + INBOX_PEOPLE.length - i) % INBOX_PEOPLE.length;
+    const name = INBOX_PEOPLE[person];
+    return { kind: i === 1 ? 'alert' : 'message', from: name, face: OPPORTUNITY_FACES[name], text: i === 1 ? 'commented: I AM IN 🙋‍♀️' : INBOX_MESSAGES[person], tone: 'friend' };
+  }) : toasts;
 
   return (
     <>
       <div data-flow-chrome="" data-era={era.id} className="fl-era fl-morph pointer-events-none absolute inset-0" style={eraStyle(t)}>
-        <YouChip ctx={ctx} counts={counts} toasts={toasts} />
+        <YouChip ctx={ctx} counts={counts} toasts={outreachToasts} />
         <PlatformCard ctx={ctx} />
         <Dock spec={era.dock} ctx={ctx} />
+        <OpportunityChats ctx={ctx} typing={typing} revealing={revealing} />
+        {revealing && <OpportunityInbox tick={inboxTick} wire={wire} />}
       </div>
 
       {/* Measuring ghosts: every era's top-right card, invisible, so the

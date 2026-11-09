@@ -28,12 +28,17 @@ const AV = '/assets/avatars';
 const img = (file: string, position?: string): FaceImage => ({ src: `${AV}/${file}`, position });
 
 export const FACE_IMAGES: Readonly<Record<string, FaceImage>> = {
-  /* Ashley, the viewer, as she ages. `ashley-2023` is also the bot posing as her in 2025. */
+  /* Ashley, the viewer, as she ages and adopts her Daybreak business profile. */
   'ashley-2005': { src: '/assets/myspace/profile.jpg', position: 'center 30%' },
   'ashley-2008': img('ashley-2010.jpg'),
   'ashley-2014': img('ashley-2014.jpg'),
   'ashley-2019': img('ashley-2020.jpg'),
   'ashley-2023': img('ashley-2023.jpg'),
+  'ashley-daybreak': img('ashley-daybreak.jpg'),
+  'sarah-mitchell-2025': img('sarah-mitchell-2025.jpg'),
+  'emma-johnson-2025': img('emma-johnson-2025.jpg'),
+  'olivia-brown-2025': img('olivia-brown-2025.jpg'),
+  'mike-chen-2025': img('mike-chen-2025.jpg'),
 
   /* 2005 · MySpace friends */
   'jess ✿': img('jess-2005.jpg'),
@@ -91,7 +96,6 @@ export const FACE_IMAGES: Readonly<Record<string, FaceImage>> = {
   /* Bot faces, reused under different names */
   'amen-bot': img('amen-bot.jpg'),
   'stock-f1': img('bot-emma-hart.jpg'),
-  'stock-f2': img('bot-grace-miller.jpg'),
   'stock-m1': img('stock-m1.jpg'),
   'stock-m2': img('stock-m2.jpg'),
   'Thought Leader Daily': img('thought-leader.jpg'),
@@ -122,9 +126,16 @@ export const FACE_IMAGES: Readonly<Record<string, FaceImage>> = {
   'Nature Is Amazing': img('page-nature-amazing.jpg'),
 };
 
-/** AI images on every other card of the endless bot feed after 2025. */
-export const TAIL_IMAGES = ['/assets/posts/dead-internet-1.jpg', '/assets/posts/tail-2.jpg', '/assets/posts/tail-3.jpg'] as const;
-
 export function faceImage(author: FlowAuthor): FaceImage | undefined {
   return FACE_IMAGES[author.face ?? author.name];
 }
+
+/** Keep each business-inbox participant consistent across comments and alerts. */
+export const OPPORTUNITY_FACES: Readonly<Record<string, string>> = {
+  'Ashley Parker': 'ashley-daybreak',
+  'Sarah Mitchell': 'sarah-mitchell-2025',
+  'Emma Johnson': 'emma-johnson-2025',
+  'Olivia Brown': 'olivia-brown-2025',
+  'Mike Chen': 'mike-chen-2025',
+  'Jess Morgan': 'jess-morgan-2021',
+};

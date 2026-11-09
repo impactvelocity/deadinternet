@@ -30,10 +30,10 @@ const PITCH = { x: G.tile.w + G.gap, y: G.tile.h + G.gap };
 const TILE_C = { x: G.tile.w / 2, y: G.tile.h / 2 };
 const SLOT_C = { x: G.slot.x + G.slot.w / 2, y: G.slot.y + G.slot.h / 2 };
 /** Share of the dots phase spent shrinking sessions into dots. */
-const MORPH = 0.3;
+const MORPH = 0.55;
 const DOT_RGB = '226, 233, 255';
 /** Matches the stage background, so the field fades into the same night. */
-const NIGHT = '16, 16, 20';
+const NIGHT = '5, 5, 7';
 
 /** Globe size and pose. */
 const GLOBE_R = 330;
@@ -42,7 +42,7 @@ const TILT = (-18 * Math.PI) / 180;
 /** Turned so the Atlantic faces the viewer first. */
 const SPIN0 = 0.6;
 /** How far the last dot rises above the headline in `end`. */
-const RISE = 150;
+const RISE = 170;
 
 const D2R = Math.PI / 180;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -57,10 +57,11 @@ function noise(n: number): number {
   return x - Math.floor(x);
 }
 
-/** On/off blink, each dot on its own clock. */
+/** Slow variations in light, interpolated so the field never strobes. */
 function twinkle(seed: number, now: number): number {
-  const slot = Math.floor(now / 170 + noise(seed) * 11);
-  return noise(seed * 7.31 + slot * 1.7) > 0.42 ? 1 : 0.2;
+  const clock = now / 1100 + noise(seed) * 11;
+  const slot = Math.floor(clock);
+  return 0.35 + 0.55 * lerp(noise(seed * 7.31 + slot * 1.7), noise(seed * 7.31 + (slot + 1) * 1.7), smooth(clock - slot));
 }
 
 export interface DotState {
@@ -107,8 +108,8 @@ export function globePoints() {
 
 /** Rotation of the globe: a slow constant spin, nudged by scroll, whipped up in the collapse. */
 function spinAt(st: DotState): number {
-  const scroll = st.phase === 'globe' ? st.u * 1.1 : st.phase === 'collapse' ? 1.1 + st.u * st.u * 7 : 0;
-  return SPIN0 - st.now / 9000 + scroll;
+  const scroll = st.phase === 'globe' ? st.u * 0.65 : st.phase === 'collapse' ? 0.65 + smooth(st.u) * 1.4 : 0;
+  return SPIN0 - st.now / 18000 + scroll;
 }
 
 /** Screen position and depth (-1 back … 1 front) of a point on the spinning, tilted globe. */
@@ -133,21 +134,21 @@ function globeLight(p: GlobePoint, z: number): number {
 /** Where a globe dot is on its way into the center during `collapse` (0 = on the globe, 1 = center). */
 export function collapseAt(u: number, seed: number): number {
   const t = clamp01((u - noise(seed) * 0.3) / 0.6);
-  return t ** 2.2;
+  return smooth(t);
 }
 
 /* ------------------------------ The last dot ------------------------------ */
 
 /** The single dot left at the end: brightness, and how far it has risen. */
 export function lastDot(st: DotState): { a: number; rise: number } {
-  const pulse = 0.5 + 0.5 * Math.tanh(4 * Math.sin(st.now / 320));
+  const pulse = 0.12 + 0.88 * (0.5 + 0.5 * Math.sin(st.now / 380));
   switch (st.phase) {
     case 'collapse':
-      return { a: smooth((st.u - 0.45) / 0.4), rise: 0 };
+      return { a: smooth((st.u - 0.55) / 0.3) * lerp(1, pulse, smooth((st.u - 0.85) / 0.15)), rise: 0 };
     case 'blink':
-      return { a: lerp(1, 0.12 + 0.88 * pulse, smooth(st.u / 0.25)), rise: 0 };
+      return { a: pulse, rise: 0 };
     case 'end':
-      return { a: 0.12 + 0.88 * pulse, rise: RISE * smooth(st.u / 0.45) };
+      return { a: pulse, rise: RISE * smooth(st.u / 0.55) };
     default:
       return { a: 0, rise: 0 };
   }
@@ -199,7 +200,7 @@ export function drawDots(ctx: CanvasRenderingContext2D, cam: Camera, st: DotStat
   const cx = W / 2;
   const cy = H / 2;
   const { z } = cam;
-  const dotD = Math.max(4, PITCH.x * z * 0.2);
+  const dotD = Math.max(3, PITCH.x * z * 0.11);
 
   if (st.phase === 'dots') {
     for (const g of gridDots(cam, W, H)) {
@@ -225,26 +226,25 @@ export function drawDots(ctx: CanvasRenderingContext2D, cam: Camera, st: DotStat
   const { all, land, sea } = globePoints();
 
   if (st.phase === 'globe') {
-    const appear = smooth((st.u - 0.12) / 0.45);
-    const waves = smooth((st.u - 0.5) / 0.2);
+    const appear = smooth((st.u - 0.08) / 0.62);
     // The globe, back half first so the front draws over it.
     for (const pass of [0, 1]) {
       for (const p of all) {
         const q = project(p, spin, cx, cy);
         if (q.z > 0 !== (pass === 1)) continue;
-        const sweep = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(q.lon * 3 + st.now / 420));
-        const a = globeLight(p, q.z) * appear * lerp(1, sweep, waves);
+        const sweep = 0.85 + 0.15 * Math.sin(q.lon * 2 + st.now / 1500);
+        const a = globeLight(p, q.z) * appear * sweep;
         dot(ctx, q.x, q.y, (p.land ? 2.4 : 1.6) * (0.55 + 0.225 * (q.z + 1)), a);
       }
     }
     // The session dots swirl in and dissolve into it.
     for (const g of gridDots(cam, W, H)) {
       const d = noise(g.seed);
-      const t = smooth((st.u - d * 0.2) / 0.5);
+      const t = smooth((st.u - d * 0.12) / 0.65);
       if (t >= 1) continue;
       const pool = d < 0.6 ? land : sea;
       const q = project(pool[Math.floor(noise(g.seed * 3.7) * pool.length)], spin, cx, cy);
-      const curl = Math.sin(Math.PI * t) * 60 * (d < 0.5 ? 1 : -1);
+      const curl = Math.sin(Math.PI * t) * 32 * (d < 0.5 ? 1 : -1);
       const dx = q.x - g.sx;
       const dy = q.y - g.sy;
       const len = Math.hypot(dx, dy) || 1;
@@ -262,16 +262,18 @@ export function drawDots(ctx: CanvasRenderingContext2D, cam: Camera, st: DotStat
         if (q.z > 0 !== (pass === 1)) continue;
         const k = collapseAt(st.u, p.seed);
         if (k >= 1) continue;
-        dot(ctx, lerp(q.x, cx, k), lerp(q.y, cy, k), (p.land ? 2.4 : 1.6) * (1 - 0.6 * k), globeLight(p, q.z) * (1 - 0.2 * k));
+        const sweep = 0.85 + 0.15 * Math.sin(q.lon * 2 + st.now / 1500);
+        const radius = (p.land ? 2.4 : 1.6) * (0.55 + 0.225 * (q.z + 1));
+        dot(ctx, lerp(q.x, cx, k), lerp(q.y, cy, k), radius * (1 - 0.6 * k), globeLight(p, q.z) * sweep * (1 - k));
       }
     }
     // One last ripple as everything lands.
     if (st.u > 0.8) {
       const r = smooth((st.u - 0.8) / 0.2);
-      ctx.strokeStyle = `rgba(${DOT_RGB}, ${0.55 * (1 - r)})`;
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(${DOT_RGB}, ${0.16 * Math.sin(Math.PI * r)})`;
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(cx, cy, 8 + r * 460, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 8 + r * 140, 0, Math.PI * 2);
       ctx.stroke();
     }
   }

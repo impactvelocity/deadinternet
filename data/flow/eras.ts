@@ -24,6 +24,7 @@
  *
  * Reorder, add or remove eras here; posts live in `data/flow/posts.ts`.
  */
+import { OPPORTUNITY_FACES } from './images';
 import type { EraTokens, FlowEra, FlowEraId } from './types';
 
 const SYSTEM = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
@@ -40,7 +41,7 @@ const SLOP_TOKENS: EraTokens = {
   panelText: '#65676b',
   text: '#050505',
   muted: '#65676b',
-  accent: '#0866ff',
+  accent: '#075edb',
   accentText: '#ffffff',
   line: '#e4e6eb',
   soft: '#f0f2f5',
@@ -71,6 +72,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2005 -------------------------------- */
   {
     id: 'profile',
+    narration: 'It all started as a space of my own, me and my top 5.',
     year: 2005,
     label: 'Profile pages',
     reference: 'MySpace',
@@ -94,14 +96,14 @@ export const FLOW_ERAS: readonly FlowEra[] = [
     holdPx: 700,
     tokens: {
       font: 'Verdana, Tahoma, Geneva, sans-serif',
-      size: 11,
+      size: 12,
       bg: '#fdf2fa',
       background:
         'radial-gradient(circle at 50% 50%, #ffc2e6 0 1.6px, transparent 2.2px) 0 0/22px 22px,' +
         'radial-gradient(circle at 50% 50%, #c7e3ff 0 1.3px, transparent 1.9px) 11px 11px/22px 22px,' +
         'linear-gradient(180deg, #fff5fb, #f4efff)',
       surface: '#ffffff',
-      panel: '#6699cc',
+      panel: '#426b99',
       panelText: '#ffffff',
       text: '#000000',
       muted: '#666666',
@@ -144,6 +146,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2008 -------------------------------- */
   {
     id: 'wall',
+    narration: 'Then it was about our faces, posting to the wall and making new friends.',
     year: 2008,
     label: 'The Wall',
     reference: 'early Facebook',
@@ -166,14 +169,14 @@ export const FLOW_ERAS: readonly FlowEra[] = [
     loader: 'older',
     tokens: {
       font: '"Lucida Grande", Tahoma, Verdana, Arial, sans-serif',
-      size: 11,
+      size: 12,
       bg: '#ffffff',
       surface: '#ffffff',
       column: '#ffffff',
       panel: '#eceff5',
       panelText: '#333333',
       text: '#333333',
-      muted: '#808080',
+      muted: '#626872',
       accent: '#3b5998',
       accentText: '#ffffff',
       line: '#e9e9e9',
@@ -216,6 +219,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2012 -------------------------------- */
   {
     id: 'cards',
+    narration: 'It became a part of our lives, where we share, and express ourselves.',
     year: 2012,
     label: 'Cards & likes',
     reference: 'Facebook timeline',
@@ -244,7 +248,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
       panel: '#f6f7f8',
       panelText: '#4e5665',
       text: '#141823',
-      muted: '#9197a3',
+      muted: '#626a76',
       accent: '#3b5998',
       accentText: '#ffffff',
       line: '#dfe0e4',
@@ -288,6 +292,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2014 -------------------------------- */
   {
     id: 'viral',
+    narration: "It started to become less about us, and more about something else.",
     year: 2014,
     label: 'Going viral',
     reference: 'Facebook 2014: shares, autoplay video, clickbait',
@@ -316,7 +321,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
       panel: '#f6f7f9',
       panelText: '#4b4f56',
       text: '#1d2129',
-      muted: '#90949c',
+      muted: '#626873',
       accent: '#4267b2',
       accentText: '#ffffff',
       line: '#dddfe2',
@@ -362,6 +367,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2017 -------------------------------- */
   {
     id: 'algorithm',
+    narration: "Something more divisive. More bitter. More angry. And the more we reacted, the more it gave us.",
     year: 2017,
     label: 'The algorithm',
     reference: 'Facebook, reactions + quiz apps',
@@ -390,7 +396,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
       panel: '#f5f6f7',
       panelText: '#4b4f56',
       text: '#1d2129',
-      muted: '#90949c',
+      muted: '#626873',
       accent: '#4267b2',
       accentText: '#ffffff',
       line: '#dddfe2',
@@ -442,6 +448,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2019 -------------------------------- */
   {
     id: 'stories',
+    narration: "The people became more polished. More perfect. And I started wondering why my life didn’t look like theirs.",
     year: 2019,
     label: 'Influencers',
     reference: 'Instagram',
@@ -468,10 +475,10 @@ export const FLOW_ERAS: readonly FlowEra[] = [
       bg: '#fafafa',
       surface: '#ffffff',
       panel: '#ffffff',
-      panelText: '#8e8e8e',
+      panelText: '#666666',
       text: '#262626',
-      muted: '#8e8e8e',
-      accent: '#0095f6',
+      muted: '#666666',
+      accent: '#0875bd',
       accentText: '#ffffff',
       line: '#dbdbdb',
       soft: '#fafafa',
@@ -519,6 +526,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2021 -------------------------------- */
   {
     id: 'reels',
+    narration: "Then came an endless stream posts and videos - I started to miss my friends.",
     year: 2021,
     label: 'Reels',
     reference: 'Facebook / Instagram reels',
@@ -548,7 +556,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
       panelText: '#65676b',
       text: '#050505',
       muted: '#65676b',
-      accent: '#1877f2',
+      accent: '#1266d6',
       accentText: '#ffffff',
       line: '#e4e6eb',
       soft: '#f0f2f5',
@@ -597,6 +605,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2023 -------------------------------- */
   {
     id: 'slop',
+    narration: "Then it got a little weird.",
     year: 2023,
     label: 'AI slop',
     reference: 'Facebook, AI image farms',
@@ -658,6 +667,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2024 -------------------------------- */
   {
     id: 'pro',
+    narration: "Everyone had advice, and every little moment became a lesson to share.",
     year: 2024,
     label: 'Thought leadership',
     reference: 'LinkedIn',
@@ -739,6 +749,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* ------------------------------- machine ------------------------------- */
   {
     id: 'machine',
+    narration: "It wasn't fun anymore.",
     year: 2025,
     label: 'The machine',
     reference: 'no costume: the box model, the markup',
@@ -773,7 +784,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
       panel: '#f6f8fa',
       panelText: '#57606a',
       text: '#24292f',
-      muted: '#6e7781',
+      muted: '#59636e',
       accent: '#0969da',
       accentText: '#ffffff',
       line: '#d0d7de',
@@ -815,10 +826,11 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2025 -------------------------------- */
   {
     id: 'dead',
+    narration: "Then I realized—these are my people. I had something to sell, money to make, and a chance to share what’s working for me. AI changed my life, and it can change yours too. Comment YES if you’re ready to step into your next chapter!",
     year: 2025,
-    label: 'Dead internet',
-    reference: 'all of them, all bots',
-    beat: 'The costume is back on. Nobody here is real, and the agent likes every post.',
+    label: 'The opportunity',
+    reference: 'Ashley’s new business',
+    beat: 'Ashley sells the opportunity. The pitches, replies and inboxes multiply until the person cannot keep up.',
     date: { day: 'Monday, November 3, 2025', time: '3:14 AM' },
     tab: { title: "(99+) Home", url: "https://feed.example/" },
     backdrop: { base: '#dfe0e3', glow: '#d6d8dc', glow2: '#e6e6e8' }, // drained of colour
@@ -840,8 +852,8 @@ export const FLOW_ERAS: readonly FlowEra[] = [
       ...SLOP_TOKENS,
       bg: '#eceef1',
       text: '#1b1c1f',
-      muted: '#7b7f86',
-      accent: '#3e74e8',
+      muted: '#626873',
+      accent: '#2d65d3',
       line: '#e1e3e8',
       radius: 14,
     },
@@ -851,38 +863,30 @@ export const FLOW_ERAS: readonly FlowEra[] = [
       labels: BAR_LABELS,
       counts: 'summary',
       actionBar: 'bar',
-      composer: 'always',
-      composerPlaceholder: '✦ Suggested: “Great insight! 🙌”',
+      composer: 'action',
+      composerPlaceholder: 'Write a reply…',
       submit: null,
       reactions: FB_REACTIONS,
     },
-    you: { name: 'Ashley Parker', lines: ['Active now'], inbox: { messages: 99, requests: 99, alerts: 99 } },
+    you: { name: 'Ashley Parker', lines: ['Digital business owner ✨', 'Helping you find freedom'], inbox: { messages: 2, requests: 1, alerts: 3 } },
     pings: [
-      { kind: 'request', from: 'Sarah Mitchell', text: 'sent you a friend request', face: 'stock-f1', tone: 'scam' },
-      { kind: 'request', from: 'Emma Johnson', text: 'sent you a friend request', face: 'stock-f1', tone: 'scam' },
-      { kind: 'request', from: 'Olivia Brown', text: 'sent you a friend request', face: 'stock-f1', tone: 'scam' },
-      { kind: 'message', from: 'Sarah Mitchell', text: 'Hi dear 🌅', face: 'stock-f1', tone: 'scam' },
+      { kind: 'alert', from: 'Sarah Mitchell', text: 'commented: I AM IN', face: OPPORTUNITY_FACES['Sarah Mitchell'], tone: 'friend' },
+      { kind: 'message', from: 'Jess Morgan', face: OPPORTUNITY_FACES['Jess Morgan'], text: 'Ash… what is this?', tone: 'friend' },
+      { kind: 'alert', from: 'Emma Johnson', text: 'commented: I AM IN 🙋‍♀️', face: OPPORTUNITY_FACES['Emma Johnson'], tone: 'friend' },
+      ...Array.from({ length: 20 }, (_, i) => ({
+        kind: (i % 3 === 0 ? 'message' : 'alert') as 'message' | 'alert',
+        from: ['Sarah Mitchell', 'Emma Johnson', 'Olivia Brown', 'Mike Chen'][i % 4],
+        text: ['I AM IN 💸', 'sent you a message', 'commented: READY', 'shared your opportunity'][i % 4],
+        face: OPPORTUNITY_FACES[['Sarah Mitchell', 'Emma Johnson', 'Olivia Brown', 'Mike Chen'][i % 4]], tone: 'machine' as const,
+      })),
     ],
     platform: {
-      kind: 'contacts',
-      title: 'Active now',
-      items: [
-        { name: 'Sarah Mitchell', face: 'stock-f1' },
-        { name: 'Emma Johnson', face: 'stock-f1' },
-        { name: 'Olivia Brown', face: 'stock-f1' },
-        { name: 'Jess Morgan', face: 'stock-f1' },
+      kind: 'list', title: 'Your business', items: [
+        { label: 'Daybreak · with Ashley', sub: 'Independent opportunity partner' },
+        { label: 'join.daybreak.example/ashley', sub: 'Your personal invite link' },
       ],
     },
-    dock: { kind: 'assistant', text: '✦ I replied to 14 comments for you.' },
-    overlay: {
-      id: 'captcha',
-      kind: 'captcha',
-      title: 'Verify you are human',
-      body: 'Unusual activity was detected from your account.',
-      actions: ["I'm not a robot", 'Verify'],
-      primary: 1,
-      appear: 'late',
-    },
+    dock: { kind: 'chatbar', label: 'Business inbox · Active now' },
   },
 ];
 
@@ -900,7 +904,7 @@ export function wireTokens(t: EraTokens): EraTokens {
     panel: '#e3e3e3',
     panelText: '#444444',
     text: '#222222',
-    muted: '#8a8a8a',
+    muted: '#656b73',
     accent: '#555555',
     accentText: '#ffffff',
     line: '#d4d4d4',

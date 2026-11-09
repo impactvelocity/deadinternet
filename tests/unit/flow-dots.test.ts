@@ -43,4 +43,14 @@ describe('flow reveal: dots, globe, last dot', () => {
     expect(lastDot({ phase: 'end', u: 1, now: 0 }).rise).toBeGreaterThan(100);
     expect(lastDot({ phase: 'globe', u: 0.5, now: 0 }).a).toBe(0);
   });
+
+  it('carries the last light through the collapse and end without a brightness jump', () => {
+    for (const now of [0, 400, 1200, 2300]) {
+      const collapsed = lastDot({ phase: 'collapse', u: 1, now });
+      const blinking = lastDot({ phase: 'blink', u: 0, now });
+      const ending = lastDot({ phase: 'end', u: 0, now });
+      expect(blinking).toEqual(collapsed);
+      expect(ending).toEqual(blinking);
+    }
+  });
 });

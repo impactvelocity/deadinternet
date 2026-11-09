@@ -8,10 +8,11 @@
  * All of this fades away when the reveal starts, leaving the browser window
  * to shrink into the AI chat it was really running in.
  *
- * Logo, links and drawer copy are placeholders to replace.
+ * Era drawer copy is draft context to fact-check before shipping.
  */
 import type { CSSProperties } from 'react';
 import { FLOW_ERAS } from '@/data/flow/eras';
+import narration from '@/data/flow/narration.json';
 import type { FlowEra } from '@/data/flow/types';
 import { Icon } from './icons';
 
@@ -19,13 +20,6 @@ import { Icon } from './icons';
 export const HEADER_H = 56;
 const INK = '#1f1d1a';
 const UI = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
-
-const LINKS = [
-  { label: 'About', href: '#about' },
-  { label: 'The hackathon', href: '#hackathon' },
-  { label: 'Team', href: '#team' },
-  { label: 'Source ↗', href: '#source' },
-];
 
 function eraTitle(era: FlowEra) {
   return era.id === 'machine' ? 'The machine' : `${era.year} · ${era.label}`;
@@ -61,7 +55,8 @@ export function PageHeader({
 }) {
   return (
     <header
-      className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-6"
+      className="fl-page-header absolute inset-x-0 top-0 z-30"
+      inert={!interactive}
       style={
         {
           height: HEADER_H,
@@ -72,11 +67,12 @@ export function PageHeader({
         } as CSSProperties
       }
     >
-      <a href="#top" className="flex items-center gap-2 text-[18px] font-bold tracking-tight">
-        <span aria-hidden className="text-[22px] leading-none">
-          ◐
-        </span>
-        dead internet
+      <a href="#top" className="fl-brand" aria-label="Dead internet — back to beginning">
+        <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <path d="M20.4 8.8A9 9 0 1 0 20.4 15.2M3 12h12M12 3c-4 4.5-4 13.5 0 18M12 3c2.2 2.5 3.2 5.5 3.2 9S14.2 18.5 12 21" />
+          <path d="M19 10l4 4m0-4-4 4" />
+        </svg>
+        <span>dead internet</span>
       </a>
 
       <button
@@ -84,21 +80,19 @@ export function PageHeader({
         onClick={onToggleDrawer}
         aria-expanded={drawerOpen}
         aria-controls="era-drawer"
-        className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center rounded-xl px-4 py-1.5 leading-tight transition-colors hover:bg-black/5"
+        className="fl-era-button flex items-center rounded-lg px-2.5 py-2 leading-tight transition-colors hover:bg-black/5"
       >
-        <span key={era.id} className="fl-date-in flex items-center gap-1.5 text-[16px] font-semibold">
+        <span key={era.id} className="fl-date-in flex items-center gap-1.5 text-[14px] font-medium">
           {eraTitle(era)}
-          <Icon name="chevron" size={16} style={{ transform: drawerOpen ? 'rotate(180deg)' : 'none', transition: 'transform .25s' }} />
+          <Icon name="chevron" size={12} style={{ transform: drawerOpen ? 'rotate(180deg)' : 'none', transition: 'transform .25s' }} />
         </span>
       </button>
 
-      <nav className="flex items-center gap-6 text-[14px] text-[#5b5750]">
-        {LINKS.map((l) => (
-          <a key={l.label} href={l.href} className="hover:text-[#1f1d1a] hover:underline">
-            {l.label}
-          </a>
-        ))}
-      </nav>
+      <div className="fl-header-credits">
+        <span>built by <a href="https://hidylanjones.com/" target="_blank" rel="noopener noreferrer">Dylan</a></span>
+        <span aria-hidden="true" className="fl-credit-divider">|</span>
+        <a href="https://kiroween.devpost.com/" target="_blank" rel="noopener noreferrer">Kiroween</a>
+      </div>
     </header>
   );
 }
@@ -133,10 +127,11 @@ export function EraDrawer({
       <aside
         id="era-drawer"
         aria-hidden={!open}
+        inert={!open}
         className="absolute inset-y-0 right-0 flex w-[min(460px,100vw)] flex-col bg-[#fbfaf7] shadow-[-20px_0_60px_rgba(0,0,0,.15)] transition-transform duration-300 ease-out"
         style={{ transform: open ? 'translateX(0)' : 'translateX(105%)' }}
       >
-        <div className="flex items-center justify-between px-8 pt-7 text-[12px] text-[#7a756c]">
+        <div className="flex items-center justify-between px-8 pt-7 text-[12px] text-[#625d56]">
           <span className="font-mono uppercase tracking-wider">
             Era {index + 1} of {FLOW_ERAS.length}
           </span>
@@ -145,11 +140,15 @@ export function EraDrawer({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-8 pb-8 pt-4">
-          <div className="font-mono text-[14px] text-[#7a756c]">{era.id === 'machine' ? '—' : era.year}</div>
+          <div className="font-mono text-[14px] text-[#625d56]">{era.id === 'machine' ? '—' : era.year}</div>
           <h2 className="mt-1 text-[34px] font-semibold leading-tight tracking-tight">{era.label}</h2>
-          <div className="mt-1 text-[14px] text-[#7a756c]">Looks like: {era.reference}</div>
+          <div className="mt-1 text-[14px] text-[#625d56]">Looks like: {era.reference}</div>
           <p className="mt-6 text-[16px] leading-relaxed">{era.context.summary}</p>
-          <h3 className="mt-8 text-[12px] font-semibold uppercase tracking-wider text-[#7a756c]">What was happening</h3>
+          <details className="mt-5 text-[14px] leading-relaxed">
+            <summary className="cursor-pointer font-medium">Ashley’s narration · transcript</summary>
+            <p className="mt-2">{narration.chunks.find((chunk) => chunk.era === era.id)?.text}</p>
+          </details>
+          <h3 className="mt-8 text-[12px] font-semibold uppercase tracking-wider text-[#625d56]">What was happening</h3>
           <ul className="mt-3 flex flex-col gap-3">
             {era.context.points.map((p) => (
               <li key={p} className="flex gap-3 text-[15px] leading-snug">
@@ -166,7 +165,7 @@ export function EraDrawer({
             onClick={() => prev && onJump(index - 1)}
             className="rounded-xl border border-black/10 px-3 py-2.5 text-left hover:bg-black/5 disabled:opacity-30"
           >
-            <div className="text-[#7a756c]">← Previous</div>
+            <div className="text-[#625d56]">← Previous</div>
             <div className="truncate font-semibold">{prev ? eraTitle(prev) : '—'}</div>
           </button>
           <button
@@ -175,7 +174,7 @@ export function EraDrawer({
             onClick={() => next && onJump(index + 1)}
             className="rounded-xl border border-black/10 px-3 py-2.5 text-right hover:bg-black/5 disabled:opacity-30"
           >
-            <div className="text-[#7a756c]">Next →</div>
+            <div className="text-[#625d56]">Next →</div>
             <div className="truncate font-semibold">{next ? eraTitle(next) : '—'}</div>
           </button>
         </div>

@@ -115,20 +115,18 @@ Link image, 2.1:1 · generate **1536×1024** → crop to 1536×731 → save **10
 Shown with the title "She Thought No One Was Watching. What Happened Next Will Restore Your Faith In Humanity."
 
 ```
-A 2014 clickbait article thumbnail, wide 2.1:1 (keep the subject in the middle band).
-Subject: an elderly woman at a bus stop in the rain, a young stranger holding an umbrella over her, both smiling, warm backlight.
-Style: glossy stock photo, oversaturated, soft golden glow added in post, overly sentimental.
-Feel: emotional-manipulation clickbait. No text.
+A candid 2014 smartphone photograph, wide 2.1:1.
+Subject: an elderly woman seated at a rainy bus stop, a young stranger holding an umbrella over her. Ordinary expressions and worn clothing, photographed by a passerby from several steps away at a slightly imperfect angle.
+Style: flat grey overcast daylight, cool white balance, modest dynamic range, slight motion softness and early smartphone JPEG texture. Mundane shelter and wet street, natural skin and realistic anatomy.
+Feel: an unplanned Facebook upload from 2014. No golden glow, cinematic lighting, HDR, glossy stock-photo posing, portrait-mode bokeh, text, or watermark.
 ```
 
 ### viral-3 · Sarah Lin · "at Barton Springs Pool" (check-in map)
-Map, wide 2.2:1 · generate **1536×1024** → crop to 1536×698 → save **1000×455** as `viral-3.jpg`
+Map, wide 2.2:1 · hand-authored **1000×455** SVG as `viral-3.svg`. The existing UI supplies the check-in pin.
 
 ```
-A 2014-style web map tile for a check-in, wide 2.2:1 (keep everything in the middle band).
-Subject: a flat map of a large city park: a long blue swimming-pool shape fed by a creek, green lawn, trees, a winding path, roads along the edges. No pin, no labels.
-Style: 2014 web map look: soft green park, light blue water, white roads, flat and clean.
-Feel: generic, believable map. No text.
+A 2014-style illustrated check-in map of Barton Springs Pool in Zilker Park.
+Pale green parkland, blue creek and pool, white local roads, pale yellow main road, dashed footpaths, small Arial place and street labels. Pool centered beneath the UI pin. Schematic geography, not a navigation map.
 ```
 
 ### viral-4 · Daily Hacks · link preview
@@ -136,10 +134,9 @@ Link image, 2.1:1 · generate **1536×1024** → crop to 1536×731 → save **10
 Title: "21 Life Hacks That Will Change Everything (#14 Is Genius)"
 
 ```
-A 2014 listicle thumbnail, wide 2.1:1 (keep the subject in the middle band).
-Subject: a bowl of cereal with milk being poured from a carton through a slice of bread used as a "filter", a hand in frame, a bright kitchen counter. Absurd "life hack".
-Style: overlit glossy stock-style photo, very saturated, a big red arrow pointing at the bread.
-Feel: dumb, clickable. No text.
+A 2014 BuzzFeed-style DIY listicle thumbnail, wide 2.1:1, generated with the built-in image tool.
+Two casual overhead photos separated by a narrow white gutter, on an ordinary beige laminate kitchen table. Left: white bowl of cereal and milk with a metal spoon and a few crumbs. Right: open clear plastic food container with cereal at one end and milk at the other, tilted on a folded towel as a keep-cereal-crunchy hack, spoon beside it.
+Cheap direct flash, warm white balance, modest digital noise and imperfect cropping. Bright amateur DIY blog photography. No bread, pouring, hands, arrows, text, branding, cinematic bokeh, HDR or glossy CGI surfaces.
 ```
 
 ### viral-5 · Chris Delgado · "lol I got Paris" (quiz link preview)
@@ -147,10 +144,10 @@ Link image, 2.1:1 · generate **1536×1024** → crop to 1536×731 → save **10
 Title: "Which City Should You Actually Live In?"
 
 ```
-A 2014 online-quiz thumbnail, wide 2.1:1 (keep the subject in the middle band).
-Subject: a dreamy collage of four city skylines blended together (a Paris-style skyline with an iron tower, a New York-style skyline, a tropical beach city, a snowy mountain town), soft pastel gradient overlay.
-Style: 2014 quiz-site graphic, glossy, light-leak glow, very saturated.
-Feel: fun, shareable. No text.
+A 2014 BuzzFeed-style personality quiz RESULT card for fictional site BuzzQuiz, wide 2.1:1. Generated with the built-in image tool.
+White background with a thin red top rule. Left 55%: Arial/Helvetica-like type, red “BuzzQuiz”, small “Which City Should You Actually Live In?”, dominant bold black headline “You got: Paris!” on two lines, and the blurb “You’re a romantic with great taste. You belong among cafés, art, and late-night adventures.”
+Right 45%: single ordinary tourist photo of the Eiffel Tower and Paris rooftops in hazy daylight, natural 2014 consumer-camera colors.
+Simple early-2010s editorial layout, legible at Facebook preview size. No other cities, neon sunset, rounded cards, shadows, gradients, emojis, buttons or extra text.
 ```
 
 ---
@@ -175,9 +172,9 @@ The 2017 sidebar ad ("They don't want you to see this.") can reuse this same fil
 
 ```
 A 2017 hyper-partisan sponsored meme, wide 1.9:1.
-Subject: a grainy, heavily recompressed photo of a waving striped flag (made-up colours, not a real country's flag) against a stormy sky.
+Subject: an ordinary smartphone snapshot of a slightly worn fictional flag with five broad red/off-white stripes and a blank navy canton, no stars or emblem. Familiar American-adjacent palette without the US design. Aluminum flagpole outside a small-town public building, pale overcast sky, natural fabric folds and muted colors. No lightning, dramatic sky, fantasy symbols or HDR.
 Text in image: "THEY DON'T WANT YOU TO SEE THIS" in big white Impact font with a black outline across the top, and "SHARE BEFORE IT'S DELETED" across the bottom.
-Style: screenshot of a repost of a repost: heavy JPEG blocking, oversharpened, a small page watermark in a corner.
+Style: 2017 Facebook repost, soft camera detail, modest JPEG compression and crunchy text edges, small Heartland Voice watermark. Built-in image generation; full revision prompt in `heartland-voice-prompt.txt`.
 Feel: rage bait.
 ```
 
@@ -235,11 +232,11 @@ Carousel, 4:5 · generate **1024×1536** → crop to 1024×1280 → save **1000�
 *Upload `wanderwithjake.jpg` from the avatars as a reference.*
 
 ```
-A 2019 Instagram travel-influencer carousel photo, vertical 4:5.
-Subject: the man in the attached photo (sun-bleached hair, white linen shirt) on a rope swing over a vast jungle valley, arms out, seen from behind and slightly to the side.
-Setting: cliff edge above misty green jungle and a turquoise river, sunrise.
-Style: drone shot, heavily edited: oversaturated teal and orange preset, crushed shadows, glowing haze.
-Feel: aspirational, too good to be real. No text.
+A 2019 Instagram travel-bro carousel photo, vertical 4:5. Built-in image generation; full prompt in `wanderwithjake-prompt.txt`.
+Subject: Jake, matching his avatar, sitting on a scuffed stationary rental moped, loose white linen shirt, faded shorts, worn sneakers, helmet hanging from scooter.
+Setting: ordinary paved lane beside Bali rice paddies, coconut palms, low buildings and utility wires in hazy midday light.
+Style: casual eye-level vacation photo taken by a friend, warm faded 2019 travel preset, muted olive greens, phone softness, real skin and imperfect framing.
+Feel: slightly try-hard backpacker influencer, believable everyday travel photo. No text, epic sunset, cinematic light or fantasy landscape.
 ```
 
 ---
@@ -314,7 +311,7 @@ AI image, 1:1 · generate **1024×1024** → save **1000×1000** as `slop-1.jpg`
 An AI-generated engagement-bait image from 2023, square 1:1.
 Subject: an older man with a grey beard proudly standing beside a giant, impossibly detailed wooden cat sculpture taller than him, wood shavings on the ground. One of his hands, resting on the sculpture, has six fingers.
 Setting: rustic barn workshop, warm glowing light.
-Style: 2023 diffusion-model image: waxy skin, oversaturated, too-perfect wood grain, slightly melted tools in the background.
+Style: early-2023 diffusion output enlarged from low resolution: soft smeary texture, waxy pink skin, uneven eyes and teeth, awkward six-fingered hand, illogical apron straps, repetitive grain blending into fur, poorly resolved paws and melted background tools. Warm orange midtones and muddy shadows, no crisp cinematic polish. Built-in image generation; full prompt in `early-2023-crafts-prompt.txt`.
 Feel: sentimental AI slop. No text.
 ```
 
@@ -327,7 +324,7 @@ An AI-generated product photo for a dropshipping ad, 2023, 6:5.
 Subject: a small "hand-carved" wooden cat figurine sitting on a knitted blanket. The wood grain flows in impossible directions, one paw is fused into the base, and the ears don't match.
 Setting: cosy windowsill, soft warm bokeh, a candle.
 Style: 2023 AI product render: too smooth, glossy, warm, uncanny on a second look.
-Feel: fake handmade. No text.
+Feel: exaggerated fake handmade. Large gold-edged artisan seal reads “HAND CRAFTED”, “MADE IN UZA” (intentional UZA spelling), “WITH LOVE”. Small kraft label reads “100% ARTISAN MADE” and “Every piece tells a story”. Built-in image generation; full edit prompt in `cozy-crafts-badge-prompt.txt`.
 ```
 
 ---
@@ -341,7 +338,8 @@ Ad graphic, 1.91:1 · generate **1536×1024** → crop to 1536×804 → save **1
 A 2024 B2B SaaS sponsored post graphic, wide 1.91:1.
 Subject: a sleek dark-mode software dashboard showing a dense grid of hundreds of tiny identical AI-generated profile pictures, each with a small green "active" dot, plus a big counter reading "1,000 agents active" and a rising line chart.
 Style: polished 2024 AI-startup marketing render: purple and indigo gradients, glassmorphism panels, soft glow, made-up UI, no real company logos.
-Feel: slick and dystopian.
+Headline: “IT’S OVER. YOUR TEAM IS REPLACED.” Supporting copy: “1,000 AI agents. Zero employees.” CTA: “Deploy your AI workforce →”. Dominant white/lavender headline on the left, avatar dashboard on the right.
+Feel: slick, dystopian 2024 replacement hype. Built-in image generation; full edit prompt in `nexora-hype-prompt.txt`.
 ```
 
 ### pro-5 · Kai Lindqvist · "10 lessons from waking up at 4:30am for 365 days 📄" (document slide)
@@ -349,7 +347,7 @@ Document slide, 1:1 · generate **1024×1024** → save **1000×1000** as `pro-5
 
 ```
 Slide 1 of a 2024 professional-network "document" carousel, square 1:1.
-Subject: a minimalist slide on a warm beige background. A small burnt-orange label at the top: "LESSON 1". A huge bold black headline: "DISCIPLINE". A smaller line under it: "is doing it when no one is watching." A tiny round headshot of a blond man in a black turtleneck and "@kai" in the bottom corner.
+Subject: a warm beige slide with burnt-orange “LESSON 01 / 10” label. Bold headline: “Your competition hits snooze. You build your unfair advantage.” Supporting line: “Win the first hour. Own the rest of the day.” Footer: “365 days. 4:30 AM. No excuses.” Small round blond-man headshot and @kai signature. Built-in image generation; full prompt in `kai-linkedin-quote-prompt.txt`.
 Style: clean Canva-style typography slide, generous whitespace.
 Feel: hollow thought leadership.
 ```
@@ -397,15 +395,15 @@ Feel: engagement bait. No text.
 |---|---|
 | wall-2 · Mike Chen's "Spring Break 08!!" album | `posts/facebook-2.jpg` (done) |
 | cards-2 · Tom Bauer's pumpkin spice latte | `posts/early-ads-4.jpg` (done) |
-| cards-4 · FreshKicks sponsored post | `posts/early-ads-6.jpg` (done) |
+| cards-4 · FreshKicks sponsored post | `posts/early-ads-6.jpg` (2012 Web 2.0 retail banner; built-in image generation; see `freshkicks-banner-prompt.txt`) |
 | 2012 sidebar ad · FreshKicks | reuse `posts/early-ads-6.jpg` |
 | algorithm-2 · MindPrint quiz ad | `posts/cambridge-2.jpg` (done) |
 | 2017 sidebar ad · "They don't want you to see this." | reuse `algorithm-3.jpg` |
 | stories-2 · meg.foster's sourdough | `posts/glitch-1.jpg` (done) |
-| stories-4 · lumen.co star projector ad | `posts/algo-hell-3.jpg` (done) |
+| stories-4 · lumen.co star projector ad | `posts/algo-hell-3.jpg` (2019 Instagram promotion, coral 50% OFF label and handwritten caption; built-in image generation; see `lumen-ad-prompt.txt`) |
 | reels-4 · Jess's 2005 throwback carousel | reuse `profile-3.jpg` |
 | Reels shelf · dancequeen, glowskin, storytime | reuse `reels-2.jpg`, `reels-3.jpg`, `reels-5.jpg` |
-| slop-3 · Freedom Eagle's 100th-birthday grandma | `posts/ai-era-1.jpg` (done) |
+| slop-3 · Freedom Eagle's 100th-birthday grandma | `posts/ai-era-1.jpg` (early-2023 diffusion look, waxy face, malformed hands and smeared cake; built-in image generation; see `early-2023-grandma-prompt.txt`) |
 | 2023 sidebar ad · wooden cats | reuse `slop-4.jpg` |
 | Endless feed · tail-1 · Grateful Hearts | reuse `posts/dead-internet-1.jpg` (the unused soldier and dog) |
 
