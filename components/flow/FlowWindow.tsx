@@ -32,7 +32,7 @@ export function WindowChrome({ narration, style }: { narration: string; style?: 
         <span className="size-2 rounded-full bg-[#86ad98]" />
       </span>
       <span
-        className="fl-window-narration absolute left-1/2 w-[72%] -translate-x-1/2 pb-4 text-center text-[24px] font-medium leading-tight tracking-[-0.015em]"
+        className="fl-window-narration absolute bottom-full left-1/2 w-[78%] -translate-x-1/2 pb-1 text-center text-[22px] font-medium leading-tight tracking-[-0.015em]"
       >
         <span key={narration} className="fl-narration-in block">{narration}</span>
       </span>

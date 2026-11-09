@@ -1,7 +1,9 @@
 'use client';
 /**
- * Lab controls for /flow: play/pause and speed, a timeline of eras and agent
- * actions you can click to seek, the current beat, and view toggles.
+ * The player: play/pause, the narration toggle and a scrubber of eras. It
+ * plays at one speed only, the narration's own. The developer panel adds a
+ * timeline of eras and agent actions you can click to seek, the current
+ * beat, and view toggles.
  *
  * Keys: space play · [ ] prev/next era · , . prev/next action ·
  * G guides · W wire · C cursor · H hide this bar.
@@ -10,8 +12,8 @@
  * pages, bots. That bar is the story arc; tune it in `data/flow/posts.ts`.
  */
 import { memo, useState, type Ref } from 'react';
-import { FLOW_ERAS } from '@/data/flow/eras';
-import { composition, FLOW_POSTS } from '@/data/flow/posts';
+import { composition } from '@/data/flow/posts';
+import { FILM_ERAS as FLOW_ERAS, FILM_POSTS as FLOW_POSTS } from '@/data/flow/scenes';
 import type { Timeline } from '@/lib/flow/timeline';
 
 export const HUD_HEIGHT = 56;
@@ -21,18 +23,18 @@ export interface FlowHudProps {
   readingNotes: boolean;
   timeline: Timeline | null;
   era: number;
+  /** Past "Behind the feed" (the reveal narration). */
+  behind: boolean;
   beatLabel: string;
   playing: boolean;
   voiceEnabled: boolean;
   onToggleVoice: () => void;
-  speed: number;
   guides: boolean;
   wire: boolean;
   cursor: boolean;
   playheadRef: Ref<HTMLDivElement>;
   readoutRef: Ref<HTMLSpanElement>;
   onPlay: () => void;
-  onSpeed: () => void;
   onSeek: (s: number) => void;
   onToggle: (key: 'guides' | 'wire' | 'cursor' | 'hud') => void;
 }
@@ -71,12 +73,11 @@ function Toggle({ on, label, k, onClick }: { on: boolean; label: string; k: stri
 }
 
 export const FlowHud = memo(function FlowHud(props: FlowHudProps) {
-  const { timeline: t, era, beatLabel, playing, speed, guides, wire, cursor, playheadRef, readoutRef, onPlay, onSpeed, onSeek, onToggle } = props;
+  const { timeline: t, era, beatLabel, playing, guides, wire, cursor, playheadRef, readoutRef, onPlay, onSeek, onToggle } = props;
   const [devOpen, setDevOpen] = useState(false);
   const total = t?.total ?? 1;
   const pct = (s: number) => `${(s / total) * 100}%`;
-  const current = FLOW_ERAS[era];
-  const revealing = beatLabel.includes('reveal:');
+  const revealing = props.behind;
 
   return (
     <>
@@ -89,9 +90,9 @@ export const FlowHud = memo(function FlowHud(props: FlowHudProps) {
         <button
           type="button"
           className="fl-player-voice"
-          aria-label="Ashley narration"
+          aria-label="Sound"
           aria-pressed={props.voiceEnabled}
-          title={props.voiceEnabled ? 'Turn narration off' : 'Turn narration on'}
+          title={props.voiceEnabled ? 'Turn sound off' : 'Turn sound on'}
           onClick={props.onToggleVoice}
         >
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -100,10 +101,6 @@ export const FlowHud = memo(function FlowHud(props: FlowHudProps) {
           </svg>
         </button>
         <div className="fl-player-story">
-          <div className="fl-player-caption">
-            <span>{revealing ? 'Behind the feed' : current.label}</span>
-            <span className="fl-player-year">{revealing || current.id === 'machine' ? '—' : current.year}</span>
-          </div>
           <div
             className="fl-player-track"
             role="slider"
@@ -157,7 +154,6 @@ export const FlowHud = memo(function FlowHud(props: FlowHudProps) {
             </div>
           </div>
         </div>
-        <button type="button" onClick={onSpeed} title="Playback speed" aria-label={`Playback speed: ${speed} times. Change speed`} className="fl-player-speed">{speed}×</button>
       </div>
 
       <button type="button" className="fl-dev-button" style={{ visibility: props.readingNotes ? 'hidden' : undefined }} aria-label="Developer controls" aria-expanded={devOpen} aria-controls="flow-dev-panel" onClick={() => setDevOpen((v) => !v)}>

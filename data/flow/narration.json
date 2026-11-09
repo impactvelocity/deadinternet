@@ -7,81 +7,124 @@
   "chunks": [
     {
       "era": "profile",
-      "text": "Hi, I'm Ashley - It all started as a space of my own, me and my top 5.",
-      "src": "/assets/narration/ashley-profile-siren-intro.mp3",
-      "durationSeconds": 5.8775,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "This used to be my little corner of the internet. My music. My friends. My space...",
+      "src": "/assets/narration/ashley-profile-ember.mp3",
+      "durationSeconds": 7.549375,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "[thoughtful] This used to be my little corner of the internet. [sighs] My music. My friends. My space..."
     },
     {
       "era": "wall",
-      "text": "Then it was about our faces, posting to the wall and making new friends.",
-      "src": "/assets/narration/ashley-wall-siren-updated.mp3",
-      "durationSeconds": 4.440813,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "Then our little corners came together. We posted on each other\u2019s walls, and made new friends.",
+      "src": "/assets/narration/ashley-wall-ember.mp3",
+      "durationSeconds": 6.03425,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "[warmly] Then our little corners came together. [fondly] We posted on each other\u2019s walls, and made new friends"
     },
     {
       "era": "cards",
-      "text": "It became a part of our lives, where we share, and express ourselves.",
-      "src": "/assets/narration/ashley-cards-siren.mp3",
-      "durationSeconds": 4.440813,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "It became part of everyday life. The big news, the little updates. A way to feel close, even when we were miles apart.",
+      "src": "/assets/narration/ashley-cards-ember.mp3",
+      "durationSeconds": 8.986063,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "[warmly] It became part of everyday life. [softly] The big news, the little updates. [tenderly] A way to feel close, [short pause] even when we were miles apart."
     },
     {
       "era": "viral",
-      "text": "It started to become less about us, and more about something else.",
-      "src": "/assets/narration/ashley-viral-siren-updated.mp3",
-      "durationSeconds": 4.75425,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "It started to feel less about us... and more about something else.",
+      "src": "/assets/narration/ashley-viral-ember.mp3",
+      "durationSeconds": 5.06775,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "[thoughtful] It started to feel less about us... and more about something else."
     },
     {
       "era": "algorithm",
-      "text": "Something more divisive. More bitter. More angry. And the more we reacted, the more it gave us.",
-      "src": "/assets/narration/ashley-algorithm-siren.mp3",
-      "durationSeconds": 7.706063,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "Something more divisive... More bitter and angry... And the more we reacted, the more we saw...",
+      "src": "/assets/narration/ashley-algorithm-ember.mp3",
+      "durationSeconds": 8.90775,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "[thoughtful] Something more divisive... [tired] More bitter and angry... [sighs] And the more we reacted, the more we saw..."
     },
     {
       "era": "stories",
-      "text": "The people became more polished. More perfect. And I started wondering why my life didn\u2019t look like theirs.",
-      "src": "/assets/narration/ashley-stories-siren.mp3",
+      "text": "The people became more polished. More perfect. And I started wondering why my life didn\u2019t look like theirs...",
+      "src": "/assets/narration/ashley-stories-ember.mp3",
       "durationSeconds": 7.392625,
-      "voice": "Siren - Natural realistic conversational voice"
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "[thoughtful] The people became more polished. More perfect. And I started wondering why my life didn\u2019t look like theirs..."
     },
     {
       "era": "reels",
-      "text": "Then came an endless stream posts and videos - I started to miss my friends.",
-      "src": "/assets/narration/ashley-reels-siren.mp3",
-      "durationSeconds": 5.564063,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "Then came an endless stream of posts and videos... I started to miss my friends.",
+      "src": "/assets/narration/ashley-reels-ember.mp3",
+      "durationSeconds": 6.269375,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "Then came an endless stream of posts and videos... [sad] I started to miss my friends."
     },
     {
       "era": "slop",
-      "text": "Then it got a little weird.",
-      "src": "/assets/narration/ashley-slop-siren.mp3",
-      "durationSeconds": 2.272625,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "Then it got a little weird. The stories, the pictures... the people \u2014 was any of it real?",
+      "src": "/assets/narration/ashley-slop-ember.mp3",
+      "durationSeconds": 7.62775,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "[thoughtful] Then it got a little weird. The stories, the pictures... [confused] the people \u2014 was any of it real?"
     },
     {
       "era": "pro",
-      "text": "Everyone had advice, and every little moment became a lesson to share.",
-      "src": "/assets/narration/ashley-pro-siren.mp3",
-      "durationSeconds": 4.5975,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "Everyone seemed to know what was best for me. Another life lesson. Another inspirational quote.",
+      "src": "/assets/narration/ashley-pro-ember.mp3",
+      "durationSeconds": 8.045688,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.5,
+      "direction": "[cynically] Everyone seemed to know what was best for me. [short pause] Another life lesson. [sighs] Another inspirational quote."
     },
     {
       "era": "machine",
-      "text": "It wasn't fun anymore.",
-      "src": "/assets/narration/ashley-machine-siren.mp3",
-      "durationSeconds": 1.880813,
-      "voice": "Siren - Natural realistic conversational voice"
+      "text": "It just wasn\u2019t fun anymore...",
+      "src": "/assets/narration/ashley-machine-nosigh.mp3",
+      "durationSeconds": 2.586063,
+      "tailSeconds": 4.423312,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.17,
+      "direction": "It just wasn\u2019t fun anymore... [sad]"
     },
     {
       "era": "dead",
-      "text": "Then I realized\u2014these are my people. I had something to sell, money to make, and a chance to share what\u2019s working for me. AI changed my life, and it can change yours too. Comment YES if you\u2019re ready to step into your next chapter!",
-      "src": "/assets/narration/ashley-dead-jessica.mp3",
-      "durationSeconds": 14.8375,
-      "voice": "Jessica - Playful, Bright, Warm"
+      "text": "So I stopped sharing my life... and started selling it. It was the only thing anyone wanted. And every time someone said YES... it almost felt like having friends again...",
+      "src": "/assets/narration/ashley-dead-sad.mp3",
+      "durationSeconds": 12.355875,
+      "pullbackAtSeconds": 4.66,
+      "voice": "Ember - Energetic, Confident Protagonist",
+      "stability": 0.17,
+      "direction": "[tired] So I stopped sharing my life... [short pause] and started selling it. [sad] It was the only thing anyone wanted. [softly] And every time someone said YES... [wistful] it almost felt like having friends again..."
     }
   ],
-  "voiceId": "MX0URTwXZSc0YLXuD9IN"
+  "voiceId": "MX0URTwXZSc0YLXuD9IN",
+  "reveal": {
+    "text": "The internet used to be our sandbox... A place to play, to connect, to be ourselves. Now it\u2019s just a chat agent pretending to be us... pretending to be me... pretending to be you... but who are they speaking to? ...Is there anyone here? Can anyone hear me?",
+    "src": "/assets/narration/sandbox-subscription.mp3",
+    "durationSeconds": 28.6,
+    "sandboxDurationSeconds": 19.722438,
+    "cues": {
+      "signal": 3.0
+    },
+    "voice": "Ember - Energetic, Confident Protagonist",
+    "direction": "[thoughtful] The internet used to be our sandbox... [sighs] A place to play, [wistful] to connect, to be ourselves. Now it\u2019s just a chat agent pretending to be us... [uneasy] pretending to be me... pretending to be you... but who are they speaking to? [thoughtful] ...Is there anyone here? [softy] can anyone hear me?",
+    "stability": 0.5,
+    "subscription": {
+      "text": "You\u2019ve run out of credits. To continue being yourself, upgrade to Pro Max Plus Pro. Only twenty-nine dollars a month for the rest of your life...",
+      "src": "/assets/narration/subscription-robot.mp3",
+      "durationSeconds": 8.986063,
+      "voice": "Elon - Robotic and Cold Android",
+      "stability": 0.17
+    }
+  }
 }

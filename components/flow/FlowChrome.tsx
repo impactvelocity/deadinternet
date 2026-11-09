@@ -19,10 +19,11 @@
  */
 import { OPPORTUNITY_FACES } from '@/data/flow/images';
 import { memo, type CSSProperties, type ReactNode } from 'react';
-import { FLOW_ERAS } from '@/data/flow/eras';
-import { FLOW_POSTS, viewerFor } from '@/data/flow/posts';
+import { FILM_ERAS as FLOW_ERAS, FILM_POSTS as FLOW_POSTS } from '@/data/flow/scenes';
+import { viewerFor } from '@/data/flow/posts';
 import type { CornerModule, DockSpec, EraTokens, FlowEra, FlowEraId, OverlaySpec, Ping, PingKind } from '@/data/flow/types';
 import type { FlowEffects, PingSlot } from '@/lib/flow/timeline';
+import type { InboxKind } from '@/lib/flow/inbox';
 import { Icon, type IconName } from './icons';
 import { Avatar, box, eraStyle, MediaBox, SCREEN, SLOTS, type SlotId } from './parts';
 
@@ -255,20 +256,27 @@ function PlatformCard({ ctx }: { ctx: ModuleCtx }) {
 /* --------------------------------- You chip -------------------------------- */
 
 const PING_ICON: Record<PingKind, IconName> = { request: 'users', message: 'inbox', alert: 'bell' };
-const fmtCount = (n: number) => (n > 99 ? '99+' : String(n));
-
-function Count({ icon, n, machine, label }: { icon: IconName; n: number; machine: boolean; label: string }) {
+/**
+ * One unread badge. The number itself is written every frame by the lab
+ * (`inboxCounts` in lib/flow/inbox.ts), so it can keep climbing without
+ * re-rendering React; this only draws the slot it lands in.
+ */
+function Count({ icon, kind, machine, label }: { icon: IconName; kind: InboxKind; machine: boolean; label: string }) {
   return (
     <span className="relative flex items-center gap-1" style={{ color: 'var(--f-text)' }}>
       <Icon name={icon} size={machine ? 14 : 20} />
       <span
-        className="text-center font-bold"
+        data-flow-count={kind}
+        data-label={label}
+        data-machine={machine}
+        className="fl-count text-center font-bold tabular-nums"
         style={
           machine
             ? { fontFamily: MONO, fontSize: 10, color: 'var(--f-text)', background: 'transparent', padding: 0, boxShadow: 'none' }
             : {
                 position: 'absolute',
-                right: -10,
+                // Anchored at the icon's corner, growing right as the count does.
+                left: 12,
                 top: -6,
                 minWidth: 17,
                 padding: '0 4px',
@@ -276,14 +284,12 @@ function Count({ icon, n, machine, label }: { icon: IconName; n: number; machine
                 fontSize: 10,
                 lineHeight: '16px',
                 color: '#fff',
-                background: n > 0 ? '#e41e3f' : 'transparent',
-                opacity: n > 0 ? 1 : 0,
+                background: '#e41e3f',
                 boxShadow: '0 0 0 2px var(--f-surface)',
+                whiteSpace: 'nowrap',
               }
         }
-      >
-        {machine ? `${label}=${n}` : fmtCount(n)}
-      </span>
+      />
     </span>
   );
 }
@@ -325,7 +331,7 @@ function Toast({ ping, ctx }: { ping: Ping; ctx: ModuleCtx }) {
   );
 }
 
-function YouChip({ ctx, counts, toasts }: { ctx: ModuleCtx; counts: { messages: number; requests: number; alerts: number }; toasts: Ping[] }) {
+function YouChip({ ctx, toasts }: { ctx: ModuleCtx; toasts: Ping[] }) {
   const { era, tokens, wire } = ctx;
   const machine = tokens.modules === 'machine';
   return (
@@ -353,10 +359,10 @@ function YouChip({ ctx, counts, toasts }: { ctx: ModuleCtx; counts: { messages: 
               )}
             </div>
           </div>
-          <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1 pl-1 pt-2" style={{ borderTop: '1px solid var(--f-line)' }}>
-            <Count icon="inbox" label="messages" n={counts.messages} machine={machine} />
-            <Count icon="users" label="requests" n={counts.requests} machine={machine} />
-            <Count icon="bell" label="alerts" n={counts.alerts} machine={machine} />
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-9 gap-y-1 pl-1 pt-2" style={{ borderTop: '1px solid var(--f-line)' }}>
+            <Count icon="inbox" kind="messages" label="messages" machine={machine} />
+            <Count icon="users" kind="requests" label="requests" machine={machine} />
+            <Count icon="bell" kind="alerts" label="alerts" machine={machine} />
           </div>
         </Frame>
       </div>
@@ -613,10 +619,9 @@ export interface ChromeProps {
   tokens: ReadonlyMap<FlowEraId, EraTokens>;
   wire: boolean;
   effects: FlowEffects;
-  /** All scheduled notifications, the ones on screen, and how many have arrived. */
+  /** All scheduled notifications and the ones on screen. */
   pings: readonly PingSlot[];
   activePings: readonly number[];
-  pingsSeen: number;
 }
 
 /**
@@ -629,7 +634,7 @@ export const ChromeBackground = memo(function ChromeBackground({ active, tokens 
   const t = tokens.get(era.id) ?? era.tokens;
   return (
     <div aria-hidden className="absolute inset-0">
-      <div className="absolute inset-0" style={{ backgroundColor: t.bg, transition: 'background-color .8s ease' }} />
+      <div className="absolute inset-0" style={{ backgroundColor: t.bg, transition: 'background-color .9s ease' }} />
       {FLOW_ERAS.map((e) => {
         const et = tokens.get(e.id) ?? e.tokens;
         if (!et.background) return null;
@@ -637,7 +642,7 @@ export const ChromeBackground = memo(function ChromeBackground({ active, tokens 
           <div
             key={e.id}
             className="absolute inset-0"
-            style={{ background: et.background, opacity: e.id === era.id ? 1 : 0, transition: 'opacity .8s ease' }}
+            style={{ background: et.background, opacity: e.id === era.id ? 1 : 0, transition: 'opacity .9s ease' }}
           />
         );
       })}
@@ -647,23 +652,12 @@ export const ChromeBackground = memo(function ChromeBackground({ active, tokens 
 });
 
 /** Date pill, you chip, top-right card and dock (one of each), plus each era's pop-up. */
-export const ChromeLayers = memo(function ChromeLayers({ active, tokens, wire, effects, pings, activePings, pingsSeen, typing, revealStep }: ChromeProps) {
+export const ChromeLayers = memo(function ChromeLayers({ active, tokens, wire, effects, pings, activePings, typing, revealStep }: ChromeProps) {
   const era = FLOW_ERAS[active];
   const t = tokens.get(era.id) ?? era.tokens;
   const ctx: ModuleCtx = { era, tokens: t, wire, effects };
   const revealing = era.id === 'dead' && revealStep >= 0;
   const inboxTick = Math.max(0, Math.floor(revealStep / 2));
-
-  const seen = { request: 0, message: 0, alert: 0 };
-  for (let n = 0; n < pingsSeen; n++) {
-    const p = pings[n];
-    if (p?.era === active) seen[era.pings[p.index].kind]++;
-  }
-  const counts = {
-    messages: era.you.inbox.messages + seen.message + (revealing ? inboxTick * 2 : 0),
-    requests: era.you.inbox.requests + seen.request,
-    alerts: era.you.inbox.alerts + seen.alert + (revealing ? inboxTick : 0),
-  };
   const toasts = activePings
     .map((n) => pings[n])
     .filter((p) => p?.era === active)
@@ -678,7 +672,7 @@ export const ChromeLayers = memo(function ChromeLayers({ active, tokens, wire, e
   return (
     <>
       <div data-flow-chrome="" data-era={era.id} className="fl-era fl-morph pointer-events-none absolute inset-0" style={eraStyle(t)}>
-        <YouChip ctx={ctx} counts={counts} toasts={outreachToasts} />
+        <YouChip ctx={ctx} toasts={outreachToasts} />
         <PlatformCard ctx={ctx} />
         <Dock spec={era.dock} ctx={ctx} />
         <OpportunityChats ctx={ctx} typing={typing} revealing={revealing} />

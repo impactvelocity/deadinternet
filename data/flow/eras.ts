@@ -72,7 +72,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2005 -------------------------------- */
   {
     id: 'profile',
-    narration: 'It all started as a space of my own, me and my top 5.',
+    narration: "This used to be my little corner of the internet. My music. My friends. My space...",
     year: 2005,
     label: 'Profile pages',
     reference: 'MySpace',
@@ -146,7 +146,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2008 -------------------------------- */
   {
     id: 'wall',
-    narration: 'Then it was about our faces, posting to the wall and making new friends.',
+    narration: "Then our little corners came together. We posted on each other’s walls, and made new friends.",
     year: 2008,
     label: 'The Wall',
     reference: 'early Facebook',
@@ -219,7 +219,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2012 -------------------------------- */
   {
     id: 'cards',
-    narration: 'It became a part of our lives, where we share, and express ourselves.',
+    narration: "It became part of everyday life. The big news, the little updates. A way to feel close, even when we were miles apart.",
     year: 2012,
     label: 'Cards & likes',
     reference: 'Facebook timeline',
@@ -292,7 +292,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2014 -------------------------------- */
   {
     id: 'viral',
-    narration: "It started to become less about us, and more about something else.",
+    narration: "It started to feel less about us... and more about something else.",
     year: 2014,
     label: 'Going viral',
     reference: 'Facebook 2014: shares, autoplay video, clickbait',
@@ -367,7 +367,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2017 -------------------------------- */
   {
     id: 'algorithm',
-    narration: "Something more divisive. More bitter. More angry. And the more we reacted, the more it gave us.",
+    narration: "Something more divisive... More bitter and angry... And the more we reacted, the more we saw...",
     year: 2017,
     label: 'The algorithm',
     reference: 'Facebook, reactions + quiz apps',
@@ -448,7 +448,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2019 -------------------------------- */
   {
     id: 'stories',
-    narration: "The people became more polished. More perfect. And I started wondering why my life didn’t look like theirs.",
+    narration: "The people became more polished. More perfect. And I started wondering why my life didn’t look like theirs...",
     year: 2019,
     label: 'Influencers',
     reference: 'Instagram',
@@ -526,7 +526,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2021 -------------------------------- */
   {
     id: 'reels',
-    narration: "Then came an endless stream posts and videos - I started to miss my friends.",
+    narration: "Then came an endless stream of posts and videos... I started to miss my friends.",
     year: 2021,
     label: 'Reels',
     reference: 'Facebook / Instagram reels',
@@ -605,7 +605,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2023 -------------------------------- */
   {
     id: 'slop',
-    narration: "Then it got a little weird.",
+    narration: "Then it got a little weird. The stories, the pictures... the people — was any of it real?",
     year: 2023,
     label: 'AI slop',
     reference: 'Facebook, AI image farms',
@@ -667,7 +667,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2024 -------------------------------- */
   {
     id: 'pro',
-    narration: "Everyone had advice, and every little moment became a lesson to share.",
+    narration: "Everyone seemed to know what was best for me. Another life lesson. Another inspirational quote.",
     year: 2024,
     label: 'Thought leadership',
     reference: 'LinkedIn',
@@ -749,7 +749,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* ------------------------------- machine ------------------------------- */
   {
     id: 'machine',
-    narration: "It wasn't fun anymore.",
+    narration: "It just wasn’t fun anymore...",
     year: 2025,
     label: 'The machine',
     reference: 'no costume: the box model, the markup',
@@ -826,7 +826,7 @@ export const FLOW_ERAS: readonly FlowEra[] = [
   /* -------------------------------- 2025 -------------------------------- */
   {
     id: 'dead',
-    narration: "Then I realized—these are my people. I had something to sell, money to make, and a chance to share what’s working for me. AI changed my life, and it can change yours too. Comment YES if you’re ready to step into your next chapter!",
+    narration: "So I stopped sharing my life... and started selling it. It was the only thing anyone wanted. And every time someone said YES... it almost felt like having friends again...",
     year: 2025,
     label: 'The opportunity',
     reference: 'Ashley’s new business',

@@ -12,13 +12,14 @@
  *     world (front)        same camera as the back world
  *       window             the browser window; its screen is the site:
  *         screen           backgrounds, feed, pinned pieces, guides, cursor
- *     canvas               dots, globe, last dot
+ *     canvas               dots, then the pixel screen of symbols
  *     RevealOverlay        vignette, session counter, end card
  *   PageHeader             full-width header: logo, era name, links (fades at the reveal)
  *   EraDrawer              full-height drawer: what was happening online in this era
  *   FlowHud                floating play bar
  *
- * Until the reveal the window sits at PAGE_WINDOW on the page. At the reveal
+ * Until the reveal the window sits at PAGE_WINDOW on the page, growing from
+ * small to full size (windowScale) and showing only its screen. At the reveal
  * the camera takes over at exactly that spot, the page fades away, and the
  * window shrinks into the empty slot of the live chat session.
  *
@@ -29,12 +30,18 @@
  */
 import './flow.css';
 import { type Ref, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { FLOW_ERAS, wireTokens } from '@/data/flow/eras';
-import { FLOW_POSTS } from '@/data/flow/posts';
+import { wireTokens } from '@/data/flow/eras';
+import narration from '@/data/flow/narration.json';
+import { FILM_ERAS as FLOW_ERAS, FILM_POSTS as FLOW_POSTS, FILM_TITLES } from '@/data/flow/scenes';
 import type { EraTokens, FlowEraId } from '@/data/flow/types';
-import { cameraAt, PAGE, PAGE_WINDOW, WINDOW, WINDOW_PLACEMENT } from '@/lib/flow/camera';
+import { cameraAt, PAGE, PAGE_WINDOW, WINDOW, WINDOW_GROWTH, WINDOW_PLACEMENT, windowScale, windowTransform } from '@/lib/flow/camera';
 import { DOT_PHASES, drawDots } from '@/lib/flow/dots';
 import { measureFlow } from '@/lib/flow/measure';
+import { lightInkEra, pageDarkness } from '@/lib/flow/darkness';
+import { ENDING, titleOpacity } from '@/lib/flow/ending';
+import { formatCount, inboxCounts, type InboxKind } from '@/lib/flow/inbox';
+import { musicCues } from '@/lib/flow/music';
+import { PLAY_SPEED } from '@/lib/flow/playback';
 import {
   compileTimeline,
   deriveEffects,
@@ -49,8 +56,9 @@ import {
 import { ChromeBackground, ChromeLayers, Guides } from './FlowChrome';
 import { FlowFeed } from './FlowFeed';
 import { FlowHud, HUD_HEIGHT } from './FlowHud';
+import { FlowMusic } from './FlowMusic';
 import { FlowNarration } from './FlowNarration';
-import { EraDrawer, HEADER_H, PageBackdrop, PageHeader } from './FlowPage';
+import { EndTitle, EraDrawer, HEADER_H, PageBackdrop, PageHeader } from './FlowPage';
 
 /** Least room kept above and below the browser window, in page units. */
 const PAGE_GAP = 20;
@@ -60,9 +68,6 @@ import { WINDOW_SHADOW, WindowChrome } from './FlowWindow';
 import { FlowReveal, RevealOverlay, type ToolCall } from './FlowReveal';
 import { box, SCREEN, SLOTS } from './parts';
 
-/** Autoplay speed at 1×, in story px per second. */
-const PLAY_SPEED = 640;
-const SPEEDS = [0.5, 1, 2, 4];
 /** Scroll smoothing time constant (s). */
 const SMOOTHING = 0.09;
 
@@ -73,11 +78,12 @@ interface Snap {
   typingPost: string | null;
   typingText: string;
   phase: RevealPhase | null;
+  /** Past "Behind the feed": the reveal narration is playing. */
+  behind: boolean;
   /** Step within the reveal phase, 0..24 (drives the streaming chat). */
   revealK: number;
   /** Active notification indices, comma-joined. */
   pings: string;
-  pingsSeen: number;
 }
 
 const INITIAL_SNAP: Snap = {
@@ -87,9 +93,9 @@ const INITIAL_SNAP: Snap = {
   typingPost: null,
   typingText: '',
   phase: null,
+  behind: false,
   revealK: 0,
   pings: '',
-  pingsSeen: 0,
 };
 const NO_PINGS: readonly PingSlot[] = [];
 const GLITCH_BARS = 9;
@@ -109,9 +115,9 @@ const sameSnap = (a: Snap, b: Snap) =>
   a.typingPost === b.typingPost &&
   a.typingText === b.typingText &&
   a.phase === b.phase &&
+  a.behind === b.behind &&
   a.revealK === b.revealK &&
-  a.pings === b.pings &&
-  a.pingsSeen === b.pingsSeen;
+  a.pings === b.pings;
 
 /* Window size as an external store, so the fit is computed during render. */
 function subscribeResize(cb: () => void) {
@@ -169,7 +175,6 @@ export function FlowLab() {
   const [playing, setPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [speedIndex, setSpeedIndex] = useState(1);
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [snap, setSnap] = useState<Snap>(INITIAL_SNAP);
 
@@ -181,7 +186,8 @@ export function FlowLab() {
   const band = Math.max(1, vh - HEADER_H - PLAY_BAR_ROOM);
   const scale = Math.min(vw / PAGE.w, band / (WINDOW.h + 2 * PAGE_GAP));
   const fitX = vw / 2 - (PAGE_WINDOW.x + WINDOW.w / 2) * scale;
-  const fitY = HEADER_H + band / 2 - (PAGE_WINDOW.y + WINDOW.h / 2) * scale;
+  // Centre the screen itself: the browser chrome above it only shows at the reveal.
+  const fitY = HEADER_H + band / 2 - (PAGE_WINDOW.y + WINDOW.chrome + (WINDOW.h - WINDOW.chrome) / 2) * scale;
   const stageStyle = { width: PAGE.w, height: PAGE.h, transform: `translate(${fitX}px, ${fitY}px) scale(${scale})` };
   const [drawer, setDrawer] = useState(false);
 
@@ -204,7 +210,6 @@ export function FlowLab() {
   const shownRef = useRef(0);
   const playRef = useRef(false);
   const autoRef = useRef(0);
-  const speedRef = useRef(SPEEDS[1]);
 
   const tokens = useMemo<ReadonlyMap<FlowEraId, EraTokens>>(
     () => new Map(FLOW_ERAS.map((e) => [e.id, wire ? wireTokens(e.tokens) : e.tokens])),
@@ -216,6 +221,8 @@ export function FlowLab() {
     [snap.typingPost, snap.typingText],
   );
   const calls = useMemo(() => (timeline ? toolCalls(timeline) : []), [timeline]);
+  const musicCuesFor = useMemo(() => (timeline ? musicCues(timeline) : null), [timeline]);
+  const inkEra = useMemo(() => (timeline ? lightInkEra(timeline) : Infinity), [timeline]);
   const activePings = useMemo(() => (snap.pings ? snap.pings.split(',').map(Number) : []), [snap.pings]);
 
   const beat = timeline?.beats[snap.beat];
@@ -225,8 +232,8 @@ export function FlowLab() {
       ? `▸ ${beat.label}`
       : beat.kind === 'hold'
         ? `‖ ${beat.label}`
-        : beat.kind === 'reveal'
-          ? `◎ reveal: ${beat.phase}`
+        : beat.kind === 'tail'
+          ? '↓ endless tail'
           : '↓ scrolling';
 
   useEffect(() => {
@@ -268,18 +275,13 @@ export function FlowLab() {
   const seek = useCallback(
     (s: number) => {
       stopPlay();
-      window.scrollTo(0, Math.max(0, Math.ceil(s)));
+      const destination = Math.max(0, Math.ceil(s));
+      shownRef.current = destination;
+      autoRef.current = destination;
+      window.scrollTo(0, destination);
     },
     [stopPlay],
   );
-
-  const cycleSpeed = useCallback(() => {
-    setSpeedIndex((i) => {
-      const next = (i + 1) % SPEEDS.length;
-      speedRef.current = SPEEDS[next];
-      return next;
-    });
-  }, []);
 
   const toggle = useCallback((key: 'guides' | 'wire' | 'cursor' | 'hud') => {
     if (key === 'guides') setGuides((v) => !v);
@@ -403,6 +405,9 @@ export function FlowLab() {
       const root = rootRef.current;
       if (back && front && win && root) {
         win.dataset.agent = f.reveal ? 'on' : 'off';
+        // Once the voice stops, let the screen and the music have the room.
+        const quiet = !!f.reveal && f.s >= t.revealStart + narration.reveal.durationSeconds * PLAY_SPEED;
+        root.dataset.monitor = quiet ? 'true' : 'false';
         let pageOpacity = 1;
         const canvas = dotsRef.current;
         const dotsOn = !!f.reveal && DOT_PHASES.includes(f.reveal.phase);
@@ -434,7 +439,7 @@ export function FlowLab() {
               canvas.height = bh;
             }
             ctx.setTransform(k, 0, 0, k, DOT_BLEED * k, DOT_BLEED * k);
-            drawDots(ctx, cam, { phase: f.reveal.phase, u: f.reveal.u, now }, PAGE.w, PAGE.h);
+            drawDots(ctx, cam, { phase: f.reveal.phase, u: f.reveal.u, now, clock: (f.s - t.revealStart) / PLAY_SPEED, speech: narration.reveal.durationSeconds, veil: titleOpacity(t, f.s) * ENDING.veil }, PAGE.w, PAGE.h);
           }
           const tf = `translate(${cam.tx}px, ${cam.ty}px) scale(${cam.z})`;
           back.style.transform = tf;
@@ -447,9 +452,30 @@ export function FlowLab() {
           root.style.setProperty('--field-edge', '1');
           back.style.transform = '';
           front.style.transform = '';
-          win.style.transform = `translate(${PAGE_WINDOW.x}px, ${PAGE_WINDOW.y}px)`;
+          // The screen grows steadily with the web, to full size at the pull-back.
+          win.style.transform = windowTransform(windowScale(f.s, t.pullbackStart));
         }
         root.style.setProperty('--page-o', pageOpacity.toFixed(3));
+        root.style.setProperty('--page-dark', pageDarkness(f.s, t.pullbackStart).toFixed(4));
+        // The closing title, once the last voice is done; clickable once it shows.
+        const titleO = titleOpacity(t, f.s);
+        root.style.setProperty('--title-o', titleO.toFixed(3));
+        const titleOn = titleO > 0.5 ? 'on' : 'off';
+        if (root.dataset.title !== titleOn) {
+          root.dataset.title = titleOn;
+          const card = root.querySelector<HTMLElement>('.fl-end-title');
+          card?.toggleAttribute('inert', titleOn === 'off');
+          card?.setAttribute('aria-hidden', String(titleOn === 'off'));
+        }
+        // Unread badges climb every frame, and explode at the reveal.
+        const counts = inboxCounts(FLOW_ERAS, t, f.s);
+        for (const el of root.querySelectorAll<HTMLElement>('[data-flow-count]')) {
+          const n = counts[el.dataset.flowCount as InboxKind];
+          const text = el.dataset.machine === 'true' ? `${el.dataset.label}=${n}` : formatCount(n);
+          if (el.textContent !== text) el.textContent = text;
+          const empty = n > 0 ? 'false' : 'true';
+          if (el.dataset.empty !== empty) el.dataset.empty = empty;
+        }
       }
 
       glitch(f.glitch, now);
@@ -461,9 +487,9 @@ export function FlowLab() {
         typingPost: f.typing?.postId ?? null,
         typingText: f.typing?.text ?? '',
         phase: f.reveal?.phase ?? null,
+        behind: f.s >= t.revealStart,
         revealK: f.reveal ? Math.min(24, Math.floor(f.reveal.u * 25)) : 0,
         pings: f.pings.join(','),
-        pingsSeen: f.pingsSeen,
       };
       if (!sameSnap(snapRef.current, next)) {
         snapRef.current = next;
@@ -477,7 +503,8 @@ export function FlowLab() {
       const t = timelineRef.current;
       let target = window.scrollY;
       if (playRef.current && t) {
-        autoRef.current = Math.min(t.total, autoRef.current + PLAY_SPEED * speedRef.current * dt);
+        // One speed: the film runs on the narration's clock.
+        autoRef.current = Math.min(t.total, autoRef.current + PLAY_SPEED * dt);
         window.scrollTo(0, autoRef.current);
         target = autoRef.current;
         if (autoRef.current >= t.total) {
@@ -486,7 +513,7 @@ export function FlowLab() {
         }
       }
       const shown = shownRef.current + (target - shownRef.current) * (1 - Math.exp(-dt / SMOOTHING));
-      shownRef.current = Math.abs(target - shown) < 0.25 ? target : shown;
+      shownRef.current = playRef.current || Math.abs(target - shown) < 0.25 ? target : shown;
       if (t) apply(t, shownRef.current, now);
       raf = requestAnimationFrame(loop);
     };
@@ -535,7 +562,7 @@ export function FlowLab() {
           return;
         case '[':
         case ']':
-          if (t) jump(e.key === ']' ? 1 : -1, [...t.eraArrivals, t.revealStart]);
+          if (t) jump(e.key === ']' ? 1 : -1, [...t.eraStarts, t.pullbackStart, t.revealStart]);
           return;
         case ',':
         case '.':
@@ -567,11 +594,18 @@ export function FlowLab() {
   const drawerOpen = drawer && !revealOn;
   const jumpToEra = (k: number) => {
     const t = timelineRef.current;
-    if (t) seek(t.eraArrivals[k]);
+    if (t) seek(t.eraStarts[k]);
   };
 
   return (
-    <div ref={rootRef} data-flow-root="" className="bg-[#050507]" style={{ overflowAnchor: 'none' }}>
+    <div
+      ref={rootRef}
+      data-flow-root=""
+      // Page text turns light once the page has darkened past mid-grey.
+      data-ink={revealOn || snap.era >= inkEra ? 'light' : 'dark'}
+      className="bg-[#050507]"
+      style={{ overflowAnchor: 'none' }}
+    >
       <div aria-hidden style={{ height: timeline ? timeline.total + vh : vh * 30 }} />
 
       <div className="fixed inset-0 overflow-hidden bg-[#050507]">
@@ -594,10 +628,10 @@ export function FlowLab() {
               style={{
                 width: WINDOW.w,
                 height: WINDOW.h,
-                transform: `translate(${PAGE_WINDOW.x}px, ${PAGE_WINDOW.y}px)`,
+                transform: windowTransform(WINDOW_GROWTH.start),
               }}
             >
-              <WindowChrome narration={hasStarted ? era.narration : ''} />
+              <WindowChrome narration={hasStarted && !revealOn ? FILM_TITLES[era.id] : ''} />
               <div
                 ref={screenRef}
                 data-flow-screen=""
@@ -607,7 +641,7 @@ export function FlowLab() {
               >
                 <ChromeBackground active={snap.era} tokens={tokens} />
                 <div ref={viewportRef} data-flow-viewport="" className="overflow-hidden" style={box(SLOTS.feed)}>
-                  <FlowFeed tokens={tokens} wire={wire} guides={guides && !revealOn} effects={effects} typing={typing} />
+                  <FlowFeed activeEra={era.id} revealing={revealOn} tokens={tokens} wire={wire} guides={guides && !revealOn} effects={effects} typing={typing} />
                 </div>
                 <ChromeLayers
                   active={snap.era}
@@ -618,7 +652,6 @@ export function FlowLab() {
                   typing={typing}
                   pings={timeline?.pings ?? NO_PINGS}
                   activePings={activePings}
-                  pingsSeen={snap.pingsSeen}
                 />
                 <div ref={glitchRef} aria-hidden className="pointer-events-none absolute inset-0 z-[45]">
                   {Array.from({ length: GLITCH_BARS }, (_, i) => (
@@ -642,7 +675,16 @@ export function FlowLab() {
         </div>
 
         <PageHeader era={era} drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer} interactive={!revealOn} />
-        <FlowNarration era={era.id} revealing={revealOn} playing={playing} enabled={voiceEnabled} />
+        <EndTitle />
+        <FlowNarration
+          era={era.id}
+          revealing={snap.behind}
+          playing={playing}
+          enabled={voiceEnabled}
+          position={shownRef}
+          eraStart={(snap.behind ? timeline?.revealStart : timeline?.eraStarts[snap.era]) ?? 0}
+        />
+        <FlowMusic playing={playing} enabled={voiceEnabled} position={shownRef} cues={musicCuesFor} total={timeline?.total ?? 0} />
         <EraDrawer era={era} index={snap.era} open={drawerOpen} onClose={() => setDrawer(false)} onJump={jumpToEra} />
       </div>
 
@@ -652,18 +694,17 @@ export function FlowLab() {
           readingNotes={drawerOpen}
           timeline={timeline}
           era={snap.era}
-          beatLabel={beatLabel}
+          behind={snap.behind}
+          beatLabel={snap.phase ? `◎ ${snap.phase} · ${beatLabel}` : beatLabel}
           playing={playing}
           voiceEnabled={voiceEnabled}
           onToggleVoice={() => setVoiceEnabled((enabled) => !enabled)}
-          speed={SPEEDS[speedIndex]}
           guides={guides}
           wire={wire}
           cursor={cursorOn}
           playheadRef={playheadRef}
           readoutRef={readoutRef}
           onPlay={togglePlay}
-          onSpeed={cycleSpeed}
           onSeek={seek}
           onToggle={toggle}
         />

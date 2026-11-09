@@ -160,6 +160,8 @@ export type AgentAction =
   | { type: 'overlay'; choice: number };
 
 export interface FlowPost {
+  /** Editorial out-point in this era's narration, in seconds. */
+  endsAtSeconds?: number;
   /** Scripted business finale: slow setup, then accelerating automation. */
   tempo?: number;
   agent?: AgentStyle;

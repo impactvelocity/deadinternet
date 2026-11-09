@@ -234,7 +234,7 @@ export function MediaBox({ media, wire, radius = 0, className, style, target, vi
   if (wire) background = 'repeating-linear-gradient(135deg, #e4e4e4 0 10px, #ececec 10px 20px)';
   // Albums render their distinct previews below.
   else if (kind === 'album') background = '#f7f7f7';
-  else if (src) background = `url("${src}") center / cover no-repeat #e5e5e5`;
+  else if (src) background = `url("${src}") center top / cover no-repeat #e5e5e5`;
   else if (kind === 'ai')
     background = `radial-gradient(circle at 30% 25%, hsl(${h} 90% 84%), transparent 55%), radial-gradient(circle at 75% 70%, hsl(${(h + 120) % 360} 85% 72%), transparent 60%), linear-gradient(135deg, hsl(${(h + 200) % 360} 70% 62%), hsl(${(h + 40) % 360} 80% 58%))`;
   else if (kind === 'meme') background = 'linear-gradient(#f7f7f7, #e2e2e2)';
@@ -263,7 +263,7 @@ export function MediaBox({ media, wire, radius = 0, className, style, target, vi
                 role="img"
                 aria-label={photo.alt}
                 className="relative border border-white"
-                style={{ background: wire ? '#d8d8d8' : photo.src ? `url("${photo.src}") center / cover no-repeat` : photoBackground(h) }}
+                style={{ background: wire ? '#d8d8d8' : photo.src ? `url("${photo.src}") center top / cover no-repeat` : photoBackground(h) }}
               >
                 {i === 3 && !!media.count && media.count > 4 && (
                   <span className="absolute bottom-1 right-1 bg-black/60 px-1.5 py-0.5 text-[11px] text-white">+{media.count - 4}</span>

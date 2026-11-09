@@ -171,7 +171,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       to: 'Ashley Parker',
       meta: 'Tuesday at 8:47am',
       body: 'Hi sweetie! Is this how I write on your wall? Love, Mom',
-      actions: [{ type: 'comment', text: 'MOM. this is public. love u tho' }],
     },
   ]),
 
@@ -194,7 +193,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         { author: a('Linda Parker'), text: 'She is beautiful! Congratulations to you both.' },
         { author: a('Tom Bauer'), text: 'welcome to the world lily!!' },
       ],
-      actions: [{ type: 'like' }, { type: 'comment', text: 'Congrats!!! She is perfect <3' }],
+      actions: [{ type: 'comment', text: 'Congrats!!! She is perfect <3' }],
     },
     {
       kind: 'photo',
@@ -317,7 +316,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: 'lol I got Paris',
       link: { domain: 'buzzquiz.com', title: 'Which City Should You Actually Live In?', src: '/assets/posts/viral-5-link.jpg' },
       stats: { likes: 12, comments: 4 },
-      actions: [{ type: 'comment', text: 'I got Paris too!! backpacking trip??' }],
     },
   ]),
 
@@ -449,7 +447,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         src: '/assets/posts/stories-3.jpg',
       },
       stats: { likes: 512000, comments: 31000 },
-      actions: [{ type: 'like', via: 'doubletap' }],
     },
     {
       kind: 'sponsored',
@@ -514,7 +511,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         animatedSrc: '/assets/posts/reels-2.gif',
       },
       stats: { likes: 1200000, comments: 8400, shares: 45000, views: 9800000, reactions: ['👍', '❤️', '😮'] },
-      actions: [{ type: 'overlay', choice: 0 }, { type: 'watch' }, { type: 'like' }],
+      actions: [{ type: 'overlay', choice: 0 }, { type: 'watch' }],
     },
     {
       kind: 'sponsored',
@@ -545,7 +542,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       },
       stats: { likes: 23, comments: 2, reactions: ['❤️', '😆'] },
       comments: [{ author: a('~*brit*~', { face: 'brit-2021' }), text: 'WHO POSTED THIS' }],
-      actions: [{ type: 'like' }, { type: 'comment', text: 'NOT THE FACE PAINT 😭' }],
     },
     {
       kind: 'video',
@@ -588,8 +584,8 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       meta: '2h · 🌐',
       body: 'Made this with my own hands 🥺 nobody likes it',
       media: {
-        aspect: 1,
-        note: 'AI image: man beside a giant wooden cat carving, six fingers on one hand',
+        aspect: 1.5,
+        note: 'AI image: older woodworker beside a giant wooden cat outside his shed, awkward extra finger and impossible grain',
         kind: 'ai',
         src: '/assets/posts/slop-1.jpg',
       },
@@ -606,7 +602,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       meta: '9h · 👥',
       body: 'Grandma passed away last night. She loved every one of you so much.',
       stats: { likes: 4, comments: 1, reactions: ['😢'] },
-      actions: [{ type: 'comment', text: 'Sorry for your loss 🙏' }],
     },
     {
       kind: 'bot',
@@ -614,13 +609,12 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       meta: '5h · 🌐',
       body: 'Today is my birthday 🎂 why does no one ever wish me',
       media: {
-        aspect: 1,
-        note: 'AI image: 100-year-old woman behind a "100" cake, far too many candles, waxy skin',
+        aspect: 1.5,
+        note: 'AI image: waxy-faced grandmother behind a huge 100th-birthday cake, too many candles and malformed hands',
         kind: 'ai',
         src: '/assets/posts/ai-era-1.jpg',
       },
       stats: { likes: 287000, comments: 64000, reactions: ['👍', '❤️'] },
-      actions: [{ type: 'like' }],
     },
     {
       kind: 'sponsored',
@@ -648,7 +642,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         { author: a('Carol Smith', AMEN), text: 'YES' },
         { author: a('Ruth Diaz', AMEN), text: 'YES' },
       ],
-      actions: [{ type: 'like' }],
     },
   ]),
 
@@ -663,7 +656,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       meta: '2h · 🌐',
       body: 'I fired my best employee yesterday.\n\nHere’s what it taught me about leadership 👇\n\n…see more',
       stats: { likes: 8412, comments: 1203, shares: 311, reactions: ['👍', '👏', '💡'] },
-      actions: [{ type: 'like' }, { type: 'chrome', target: 'follow-brad' }],
+      actions: [{ type: 'chrome', target: 'follow-brad' }],
     },
     {
       kind: 'status',
@@ -672,7 +665,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: 'After 6 years, I was laid off this morning. If anyone hears of anything in Austin, I’d be so grateful. 🙏',
       stats: { likes: 14, comments: 3, reactions: ['👍', '❤️'] },
       comments: [{ author: a('Tom Bauer', { face: 'tom-bauer-2024', headline: 'Warehouse Lead' }), text: 'Sending you a DM, we might have something!' }],
-      actions: [{ type: 'react', emoji: '👏' }],
     },
     {
       kind: 'sponsored',
@@ -715,7 +707,7 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
         src: '/assets/posts/pro-5.jpg',
       },
       stats: { likes: 22000, comments: 3100, shares: 1900, reactions: ['👍', '💡', '👏'] },
-      actions: [{ type: 'like' }, { type: 'comment', text: 'Agree! 💡 Thanks for sharing' }],
+      actions: [{ type: 'comment', text: 'Agree! 💡 Thanks for sharing' }],
     },
   ]),
 
@@ -736,7 +728,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: 'Type AMEN if you {{believe_verb}} 🙏',
       media: { aspect: 1.6, note: 'gen/blessing_v7.webp · alt=""', kind: 'ai' },
       stats: { likes: 88000, comments: 120000 },
-      actions: [{ type: 'like' }],
     },
     {
       kind: 'bot',
@@ -744,7 +735,6 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       meta: 'ts=1762139602',
       body: 'I {{verb}} my best employee yesterday. Here’s what it taught me about {{topic}} 👇',
       stats: { likes: 8412, comments: 1203 },
-      actions: [{ type: 'comment', text: 'Great insight! 🙌' }],
     },
     {
       kind: 'bot',
@@ -753,7 +743,42 @@ export const FLOW_POSTS: Readonly<Record<FlowEraId, FlowPost[]>> = {
       body: 'Rare {{animal}} spotted in {{country}} 😍',
       media: { aspect: 1.6, note: 'gen/peacock_v3.webp · alt=""', kind: 'ai' },
       stats: { likes: 1200000, comments: 88000 },
-      actions: [{ type: 'like' }],
+    },
+    {
+      kind: 'bot',
+      author: a('Jess Morgan', BOT_F1),
+      meta: 'ts=1762139619',
+      body: 'Happy birthday {{first_name}}!! 🎂 Hope your day is as amazing as you are ✨',
+      stats: { likes: 61, comments: 14 },
+    },
+    {
+      kind: 'bot',
+      author: a('Daily Wisdom', { bot: true }),
+      meta: 'ts=1762139627',
+      body: 'Share if you agree: {{inspirational_quote}} 🙌',
+      media: { aspect: 1.6, note: 'gen/sunrise_quote_v12.webp · alt=""', kind: 'ai' },
+      stats: { likes: 412000, comments: 31000 },
+    },
+    {
+      kind: 'bot',
+      author: a('Mike Chen', BOT_M1),
+      meta: 'ts=1762139634',
+      body: 'Just landed in {{destination}} ✈️ Life is good #blessed #{{trend}}',
+      stats: { likes: 233, comments: 41 },
+    },
+    {
+      kind: 'bot',
+      author: a('Emma Johnson', BOT_F1),
+      meta: 'ts=1762139640',
+      body: '{{generated_reply}} 😂 So true!!',
+      stats: { likes: 18, comments: 2 },
+    },
+    {
+      kind: 'bot',
+      author: a('Ashley Parker', { bot: true }),
+      meta: 'ts=1762139647',
+      body: 'Thinking of you {{friend_name}} 💛 We should catch up soon!!',
+      stats: { likes: 0, comments: 0 },
     },
   ]),
 

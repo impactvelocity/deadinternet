@@ -1,15 +1,16 @@
 'use client';
 /**
- * The continuous feed: one section per era, each styled by its own era, so
- * older styles stay above newer ones as you scroll. Each section ends with
- * that era's "load more" idiom, and the feed ends in an endless tail of bot
- * posts that keeps scrolling during the reveal.
+ * Every era shares one continuous scroll surface, drawn in place: the next
+ * era is already there below the fold as the feed scrolls into it, so the
+ * hand-off never shows a blank stretch or pops content in. Eras that haven't
+ * started yet (and the endless tail before the reveal) stay inert and hidden
+ * from assistive tech.
  */
 import { Fragment, memo } from 'react';
-import { FLOW_ERAS } from '@/data/flow/eras';
+import { FILM_ERAS as FLOW_ERAS, FILM_POSTS as FLOW_POSTS } from '@/data/flow/scenes';
 import { OPPORTUNITY_FACES } from '@/data/flow/images';
-import { FLOW_POSTS, OPPORTUNITY_FOLLOWUPS } from '@/data/flow/posts';
-import type { EraTokens, FlowEra, FlowEraId, LoaderIdiom } from '@/data/flow/types';
+import { OPPORTUNITY_FOLLOWUPS } from '@/data/flow/posts';
+import type { EraTokens, FlowEra, FlowEraId } from '@/data/flow/types';
 import type { FlowEffects } from '@/lib/flow/timeline';
 import { FlowPost } from './FlowPost';
 import { OpportunityReactions } from './OpportunityUi';
@@ -17,6 +18,8 @@ import { Icon } from './icons';
 import { Avatar, eraStyle, MediaBox } from './parts';
 
 export interface FlowFeedProps {
+  activeEra: FlowEraId;
+  revealing: boolean;
   tokens: ReadonlyMap<FlowEraId, EraTokens>;
   wire: boolean;
   guides: boolean;
@@ -47,67 +50,29 @@ function NeighborPost({ index, wire }: { index: number; wire: boolean }) {
   );
 }
 
-function Loader({ idiom }: { idiom: LoaderIdiom }) {
-  const small = { fontSize: 'calc(var(--f-size) - 1px)' };
-  switch (idiom) {
-    case 'pager':
-      return (
-        <div className="py-3 text-center" style={{ ...small, color: 'var(--f-accent)' }}>
-          « Prev | <b>1</b> 2 3 4 5 … 41 | Next »
-        </div>
-      );
-    case 'older':
-      return (
-        <div className="my-3 px-2 py-2 text-center font-bold" style={{ ...small, background: 'var(--f-soft)', color: 'var(--f-accent)' }}>
-          Older Posts
-        </div>
-      );
-    case 'more':
-      return (
-        <div className="py-3 text-center" style={{ ...small, color: 'var(--f-accent)', background: 'var(--f-column)' }}>
-          Load more posts
-        </div>
-      );
-    case 'spinner':
-      return (
-        <div className="grid place-items-center py-5">
-          <span className="fl-spin size-6 rounded-full" style={{ border: '3px solid var(--f-line)', borderTopColor: 'var(--f-accent)' }} />
-        </div>
-      );
-    case 'skeleton':
-      return (
-        <div className="space-y-2 pb-4">
-          {[0, 1].map((i) => (
-            <div key={i} className="fl-shimmer flex gap-3 p-3" style={{ background: 'var(--f-surface)', borderRadius: 'var(--f-radius)' }}>
-              <span className="size-10 rounded-full" style={{ background: 'var(--f-line)' }} />
-              <span className="flex flex-1 flex-col gap-2 pt-1">
-                <span className="h-2.5 w-1/3 rounded" style={{ background: 'var(--f-line)' }} />
-                <span className="h-2.5 w-2/3 rounded" style={{ background: 'var(--f-line)' }} />
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    default:
-      return <div className="h-4" />;
-  }
-}
-
-function EraSection({
+/**
+ * Memoised so an era change only re-renders the section it reaches, and a
+ * keystroke only the section being typed in: a full-feed render at either
+ * moment drops frames right as the feed glides.
+ */
+const EraSection = memo(function EraSection({
   era,
   tokens,
   wire,
   guides,
   effects,
   typing,
-}: Omit<FlowFeedProps, 'tokens'> & { era: FlowEra; tokens: EraTokens }) {
+  reached,
+}: Omit<FlowFeedProps, 'tokens' | 'revealing' | 'activeEra'> & { era: FlowEra; tokens: EraTokens; reached: boolean }) {
   const posts = FLOW_POSTS[era.id];
   const column = !!tokens.column;
   return (
     <section
       data-flow-era={era.id}
+      aria-hidden={!reached}
+      inert={!reached}
       className="fl-era relative"
-      style={{ ...eraStyle(tokens), paddingTop: 20 }}
+      style={{ ...eraStyle(tokens), paddingTop: 12 }}
     >
       <div
         aria-hidden
@@ -158,19 +123,18 @@ function EraSection({
           );
         })}
       </div>
-      <Loader idiom={era.loader} />
     </section>
   );
-}
+});
 
 /** Repeating bot posts after the real feed: the feed never actually ends. */
-function EndlessTail({ tokens, wire }: { tokens: EraTokens; wire: boolean }) {
+const EndlessTail = memo(function EndlessTail({ tokens, wire, reached }: { tokens: EraTokens; wire: boolean; reached: boolean }) {
   const names = ['Sarah Mitchell', 'Emma Johnson', 'Mike Chen', 'Jess Morgan', 'Olivia Brown', 'Sarah Mitchell'];
-  const pitches = [...OPPORTUNITY_FOLLOWUPS, FLOW_POSTS.dead[2].body];
+  const pitches = [...OPPORTUNITY_FOLLOWUPS, FLOW_POSTS.dead[2].body].map((text) => text.replaceAll('I AM IN', 'YES'));
   // Enough outreach to sustain machine-speed scrolling throughout the pullback.
   const leads = Array.from({ length: 96 }, (_, i) => names[i % names.length]);
   return (
-    <div data-flow-tail className="fl-era pt-2" style={eraStyle(tokens)}>
+    <div data-flow-tail aria-hidden={!reached} inert={!reached} className="fl-era pt-2" style={eraStyle(tokens)}>
       {leads.map((name, i) => i % 5 === 4 ? <NeighborPost key={`neighbor-${i}`} index={i} wire={wire} /> : (
         <div
           key={`${name}-${i}`}
@@ -185,35 +149,39 @@ function EndlessTail({ tokens, wire }: { tokens: EraTokens; wire: boolean }) {
             </div>
           </div>
           <div className="whitespace-pre-line px-3 pb-2">{pitches[i % pitches.length]}</div>
-          {i % 3 === 0 && <MediaBox media={{ kind: 'product', aspect: 1.5, src: i % 2 ? '/assets/posts/daybreak-training.jpg' : '/assets/posts/daybreak-invitation.jpg', note: 'Daybreak campaign creative' }} wire={wire} />}
+          {i % 3 === 0 && <MediaBox media={{ kind: 'product', aspect: 1.5, src: i % 2 ? '/assets/posts/daybreak-training.jpg' : '/assets/posts/daybreak-invitation-yes.png', note: 'Daybreak campaign creative' }} wire={wire} />}
           <OpportunityReactions likes={2341 + i * 37} comments={412 + i * 11} shares={86 + i * 3} />
           <div className="fl-neighbor-actions">{(['like', 'comment', 'share'] as const).map((action) => <span key={action}><Icon name={action} size={19} />{action[0].toUpperCase() + action.slice(1)}</span>)}</div>
           <div className="mx-3 my-2 rounded-lg bg-[#f0f2f5] p-3 text-[13px]">
-            <div className="mb-1 flex items-center gap-2"><Avatar author={{ name, face: OPPORTUNITY_FACES[name] }} size={24} shape="circle" wire={wire} /><strong>{name}</strong> · I AM IN</div>
+            <div className="mb-1 flex items-center gap-2"><Avatar author={{ name, face: OPPORTUNITY_FACES[name] }} size={24} shape="circle" wire={wire} /><strong>{name}</strong> · YES</div>
             <span className="text-[#0866ff]">Ashley Parker</span> · Sent! Check your inbox 💛
           </div>
         </div>
       ))}
     </div>
   );
-}
+});
 
 function FlowFeedInner(props: FlowFeedProps) {
   const last = FLOW_ERAS[FLOW_ERAS.length - 1];
+  const active = FLOW_ERAS.findIndex((item) => item.id === props.activeEra);
+  // Typing ids are `<post>` or `<post>:<publish|message>`.
+  const typingPost = props.typing?.postId.split(':')[0];
   return (
     <div data-flow-content className="relative px-0 pb-24 will-change-transform">
-      {FLOW_ERAS.map((era) => (
+      {FLOW_ERAS.map((era, k) => (
         <EraSection
           key={era.id}
           era={era}
+          reached={k <= active}
           tokens={props.tokens.get(era.id) ?? era.tokens}
           wire={props.wire}
           guides={props.guides}
           effects={props.effects}
-          typing={props.typing}
+          typing={typingPost && FLOW_POSTS[era.id].some((post) => post.id === typingPost) ? props.typing : null}
         />
       ))}
-      <EndlessTail tokens={props.tokens.get(last.id) ?? last.tokens} wire={props.wire} />
+      <EndlessTail tokens={props.tokens.get(last.id) ?? last.tokens} wire={props.wire} reached={props.revealing} />
     </div>
   );
 }

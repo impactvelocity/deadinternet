@@ -22,6 +22,9 @@
  * offset of the beat that uses them.
  */
 import type { AgentAction, FlowEra, FlowPost } from '@/data/flow/types';
+import narration from '@/data/flow/narration.json';
+import { MUSIC } from './music';
+import { PLAY_SPEED, SCENE_PAUSE_SECONDS, sceneSeconds } from './playback';
 
 /* ---------------------------------- Types --------------------------------- */
 
@@ -54,10 +57,13 @@ export interface FlowMeasure {
   targets: Record<string, TargetRect>;
 }
 
-export type RevealPhase = 'sandbox' | 'chat' | 'servers' | 'farm' | 'dots' | 'globe' | 'collapse' | 'blink' | 'end';
+export type RevealPhase = 'sandbox' | 'chat' | 'servers' | 'farm' | 'dots' | 'signal' | 'end';
+
+/** Share of the `dots` phase spent shrinking each session into its dot (see dots.ts). */
+export const DOT_MORPH = 0.55;
 
 /** Reveal phases in order. */
-export const REVEAL_PHASES: readonly RevealPhase[] = ['sandbox', 'chat', 'servers', 'farm', 'dots', 'globe', 'collapse', 'blink', 'end'];
+export const REVEAL_PHASES: readonly RevealPhase[] = ['sandbox', 'chat', 'servers', 'farm', 'dots', 'signal', 'end'];
 
 export type Seg =
   | { kind: 'move'; s0: number; s1: number; from: Pt; to: Pt; curve: number; linear: boolean }
@@ -78,8 +84,24 @@ export type Beat =
   /**
    * The feed glides from `from` to `to`: quick away, eased in to land, then
    * overshoots by `bounce` px and springs back (0 for robots).
+   *
+   * A `continuous` scroll (the edited film) is one piece of a single smooth
+   * motion instead: a cubic that leaves at velocity `v0` and arrives at `v1`
+   * (feed px per story px), so consecutive scrolls join without a jolt and
+   * the feed only comes to rest where the agent acts.
    */
-  | { kind: 'scroll'; s0: number; s1: number; from: number; to: number; bounce: number; cursor: Pt }
+  | {
+      kind: 'scroll';
+      s0: number;
+      s1: number;
+      from: number;
+      to: number;
+      bounce: number;
+      cursor: Pt;
+      continuous?: boolean;
+      v0?: number;
+      v1?: number;
+    }
   | { kind: 'hold'; s0: number; s1: number; offset: number; cursor: Pt; label: string }
   | {
       kind: 'act';
@@ -93,7 +115,24 @@ export type Beat =
       cursorEnd: Pt;
       label: string;
     }
-  | { kind: 'reveal'; s0: number; s1: number; phase: RevealPhase; from: number; to: number; cursor: Pt };
+  /**
+   * After the last era's narration: the feed runs on through the endless tail
+   * of bot posts, picking up speed from rest, until the film ends.
+   */
+  | { kind: 'tail'; s0: number; s1: number; from: number; to: number; ramp: number; cursor: Pt };
+
+/**
+ * One step of the camera's pull-back, on its own track: it starts during the
+ * last era's narration while the feed in the window keeps playing. `warp`
+ * bends progress so a phase can hold its end state longer: progress `at`
+ * maps to `u = to`, linearly on both sides.
+ */
+export interface RevealSpan {
+  phase: RevealPhase;
+  s0: number;
+  s1: number;
+  warp?: { at: number; to: number };
+}
 
 export type EffectType =
   | 'like'
@@ -143,9 +182,14 @@ export interface Timeline {
   total: number;
   /** `s` at which era k becomes the active era. */
   eraStarts: number[];
-  /** `s` at which the feed arrives at era k and pauses (good jump targets). */
+  /** `s` at which the feed finishes its entrance into era k and pauses. */
   eraArrivals: number[];
+  /** The camera starts pulling back (during the last era's narration). */
+  pullbackStart: number;
+  /** "Behind the feed": the last era's narration ends and the reveal's begins. */
   revealStart: number;
+  /** The camera's pull-back, in order, from `pullbackStart` to `total`. */
+  reveal: RevealSpan[];
   /** Notifications, sorted by `s0`. */
   pings: PingSlot[];
   glitches: GlitchWindow[];
@@ -176,9 +220,9 @@ export interface FlowFrame {
 
 /* --------------------------------- Timing --------------------------------- */
 
-/** Every pacing knob in one place. Lengths are story px (scroll distance). */
+/** Relative pacing weights, fitted to each voice clip. Reveal lengths are story px. */
 export const FLOW_TIMING = {
-  /** Where "reading" happens, as a fraction of the feed viewport. Era changes key off this. */
+  /** Reference line shown by the feed's development guides. */
   readingLine: 0.4,
   /** Where an action's target is parked before the agent acts on it. */
   focusLine: 0.5,
@@ -236,15 +280,58 @@ export const FLOW_TIMING = {
   glitchIn: 260,
   glitchOut: 520,
   /**
-   * Reveal phase lengths: pull back to the chat, hold on it, to the wall, to
-   * the farm; every session shrinks to a dot, the dots become a spinning
-   * globe with waves of light, the globe collapses into one dot, it blinks;
-   * end card.
+   * Relative lengths of the pull-back while the last line plays: to the
+   * chat, a short hold on it, to the wall, to the farm. The later phases are
+   * set by the reveal narration's cues (data/flow/narration.json); their
+   * weights here only matter without cues.
    */
-  reveal: { sandbox: 2400, chat: 3200, servers: 1900, farm: 1700, dots: 1600, globe: 2200, collapse: 1450, blink: 650, end: 1800 } as Record<
+  reveal: { sandbox: 2400, chat: 1500, servers: 1900, farm: 1700, dots: 1600, signal: 6000, end: 1800 } as Record<
     RevealPhase,
     number
   >,
+  /**
+   * The edited film (posts with `endsAtSeconds`), in seconds and feed px.
+   * Each post's narration window is filled by one smooth feed motion: glide
+   * in, the agent acts at close to its natural speed, then a slow drift
+   * carries on into the next post. Nothing parks unless the agent is acting.
+   */
+  film: {
+    /** Comfortable glide: `base + perK * (d / 1000)^exp` seconds for d px. */
+    glide: { base: 0.3, perK: 0.62, exp: 0.85 },
+    /** How far a glide may be squeezed or relaxed to fit its window. */
+    glideMin: 0.75,
+    glideMax: 1.5,
+    /** Spare time with nowhere to drift slows the glide this far before the cursor. */
+    glideLast: 2.2,
+    /** How far the agent's own actions may be sped up or slowed down. */
+    actMin: 0.7,
+    actMax: 1.25,
+    /** Acted-on targets stay this far inside the viewport. */
+    edge: 48,
+    /** A framed post is kept whole if it fits with this much room at each end. */
+    frame: 16,
+    /** Targets already within this share of the viewport from the focus line stay put. */
+    settle: 0.15,
+    /** A post being read drifts this fast, at least `readMin`, at most `readMax` px. */
+    readSpeed: 34,
+    readMin: 24,
+    readMax: 200,
+    readSeconds: 0.3,
+    /** A drifting post may slide this far past the viewport edge. */
+    crop: 40,
+    /** After an action, spare time becomes a slow drift on toward the next post. */
+    trailSpeed: 30,
+    trailMax: 140,
+    trailSeconds: 0.35,
+  },
+  /** Ramp (share of the reveal) over which the endless tail gets up to speed. */
+  tailRamp: 0.035,
+  /** Seconds the sessions take to shrink into dots, ending as "Behind the feed" starts. */
+  revealMorph: 2.4,
+  /** Least time (s) for the pull-back from the window to the field. */
+  revealPullMin: 4,
+  /** Seconds over which the screen fades out with the last note. */
+  revealEndCard: 6,
   /** Dwell/travel multipliers by agent style. */
   pace: { human: 1, quick: 0.7, robot: 0.4 },
   /** Path bend by agent style (fraction of distance). */
@@ -272,6 +359,35 @@ export function glide(u: number): number {
 export function bump(u: number): number {
   const w = clamp((u - 0.55) / 0.45, 0, 1);
   return Math.sin(Math.PI * w) ** 2;
+}
+
+/**
+ * Cubic Hermite from 0 to 1 that leaves with slope `a` and arrives with slope
+ * `b` (both relative to the straight line). Monotonic for 0 ≤ a, b ≤ 3.
+ */
+export function hermite(u: number, a: number, b: number): number {
+  const t = clamp(u, 0, 1);
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return (t3 - 2 * t2 + t) * a + (3 * t2 - 2 * t3) + (t3 - t2) * b;
+}
+
+/**
+ * Shared velocity where two scroll pieces meet (Fritsch–Butland): a weighted
+ * harmonic mean of their slopes, so the joined curve never overshoots or
+ * reverses, and zero where the direction changes.
+ */
+function joinSlope(h0: number, d0: number, h1: number, d1: number): number {
+  if (d0 * d1 <= 0) return 0;
+  return (3 * (h0 + h1)) / ((2 * h1 + h0) / d0 + (h1 + 2 * h0) / d1);
+}
+
+/** 0..1 progress that starts from rest and reaches full speed over about `ramp`. */
+export function rampIn(x: number, ramp: number): number {
+  const t = clamp(x, 0, 1);
+  if (ramp <= 0) return t;
+  const f = (v: number) => v - ramp * (1 - Math.exp(-v / ramp));
+  return f(t) / f(1);
 }
 
 function bezier(from: Pt, to: Pt, curve: number, t: number): Pt {
@@ -329,6 +445,35 @@ function actionLabel(action: AgentAction, post: FlowPost): string {
   }
 }
 
+/** Target ids an action touches, in order; null when it can't run in this era. */
+function actionTargets(action: AgentAction, post: FlowPost, era: FlowEra): string[] | null {
+  const id = (part: string) => `${post.id}:${part}`;
+  switch (action.type) {
+    case 'publish':
+      return [id('publish'), id('publish-submit')];
+    case 'message':
+      return [id('message')];
+    case 'read':
+      return [id('body')];
+    case 'like':
+      return [action.via === 'doubletap' ? id('media') : id('like')];
+    case 'react':
+      return [id('like'), id(`react:${action.emoji}`)];
+    case 'comment':
+      return era.post.submit ? [id('composer'), id('submit')] : [id('composer')];
+    case 'share':
+      return [id('share')];
+    case 'cta':
+      return [id('cta')];
+    case 'watch':
+      return [id('media')];
+    case 'chrome':
+      return [`chrome:${era.id}:${action.target}`];
+    case 'overlay':
+      return era.overlay ? [`overlay:${era.overlay.id}:${action.choice}`] : null;
+  }
+}
+
 /* --------------------------------- Compile -------------------------------- */
 
 export function compileTimeline(
@@ -352,14 +497,14 @@ export function compileTimeline(
   let rate: number = T.scrollRate;
   let bounciness = 1;
 
-  const scrollTo = (target: number, reframe = false) => {
+  const scrollTo = (target: number, reframe = false, continuous = false) => {
     const to = clamp(target, reframe ? 0 : offset, maxOffset);
     const delta = to - offset;
     const d = Math.abs(delta);
     if (d < 1) return false;
     const len = rate * (T.scrollBase + d ** T.scrollExp);
-    const bounce = Math.min(T.bounceMax, d * T.bounceShare) * bounciness;
-    beats.push({ kind: 'scroll', s0: s, s1: s + len, from: offset, to, bounce: bounce * Math.sign(delta), cursor });
+    const bounce = continuous ? 0 : Math.min(T.bounceMax, d * T.bounceShare) * bounciness;
+    beats.push({ kind: 'scroll', s0: s, s1: s + len, from: offset, to, bounce: bounce * Math.sign(delta), cursor, continuous });
     s += len;
     offset = to;
     return true;
@@ -376,28 +521,128 @@ export function compileTimeline(
 
   const eraArrivals: number[] = [];
   const eraSettled: number[] = [];
+  const eraStarts: number[] = [];
+  const eraEnds: number[] = [];
 
   const toScreen = (r: TargetRect, aim: Pt): Pt =>
     r.space === 'feed'
       ? { x: m.viewport.x + r.x + r.w * aim.x, y: m.viewport.y + r.y - offset + r.h * aim.y }
       : { x: r.x + r.w * aim.x, y: r.y + r.h * aim.y };
 
+  /* ----------------------- The edited film: framing ------------------------ */
+
+  const F = T.film;
+  /** Story px planned for each film beat, by beat index; applied per era. */
+  const planned = new Map<number, number>();
+
+  /** Comfortable glide time (s) for d px: short hops are quick, long ones take longer but go faster. */
+  const glideSeconds = (d: number, feel: number) => (F.glide.base + F.glide.perK * (Math.abs(d) / 1000) ** F.glide.exp) * feel;
+
+  const inView = (rects: readonly Rect[], at: number) =>
+    rects.every((r) => r.y >= at + F.edge && r.y + r.h <= at + vh - F.edge);
+
+  /**
+   * Offset that brings the targets as close to the focus line as keeping the
+   * whole post in view allows. A post taller than the screen centres the
+   * targets themselves.
+   */
+  const focusOn = (box: { top: number; height: number }, rects: readonly Rect[]) => {
+    const tTop = rects.length ? Math.min(...rects.map((r) => r.y)) : box.top;
+    const tBottom = rects.length ? Math.max(...rects.map((r) => r.y + r.h)) : box.top + box.height;
+    const want = (tTop + tBottom) / 2 - vh * T.focusLine;
+    const lo = box.top + box.height + F.frame - vh;
+    const hi = box.top - F.frame;
+    return lo <= hi ? clamp(want, lo, hi) : clamp(want, tBottom + F.edge - vh, tTop - F.edge);
+  };
+
+  /**
+   * Fill one post's narration window. Glides get a comfortable duration for
+   * their distance, the agent's own actions run close to their natural speed,
+   * and spare time keeps the feed drifting gently instead of parking it or
+   * playing the cursor in slow motion. Durations land in `planned`.
+   */
+  const planWindow = (first: number, seconds: number, feel: number, readTo: number | null, trailRoom: number, label: string) => {
+    const glides: number[] = [];
+    const acts: number[] = [];
+    for (let i = first; i < beats.length; i++) (beats[i].kind === 'scroll' ? glides : acts).push(i);
+    const natural = glides.map((i) => {
+      const b = beats[i];
+      return b.kind === 'scroll' ? glideSeconds(b.to - b.from, feel) : 0;
+    });
+    const naturalGlide = natural.reduce((n, x) => n + x, 0);
+    const naturalActs = acts.reduce((n, i) => n + beats[i].s1 - beats[i].s0, 0) / PLAY_SPEED;
+    const readTarget = readTo === null ? null : clamp(readTo, offset, maxOffset);
+    const reads = readTarget !== null && readTarget - offset >= 1;
+
+    // Start from the tightest acceptable timing, then hand out the rest.
+    let glide = naturalGlide * F.glideMin;
+    let pace = F.actMin;
+    let read = reads ? F.readSeconds : 0;
+    const need = glide + naturalActs * pace + read;
+    let rem = seconds - need;
+    if (rem < 0 && need > 0) {
+      const f = seconds / need;
+      glide *= f;
+      pace *= f;
+      read *= f;
+      rem = 0;
+    }
+    const give = (cap: number) => {
+      const g = clamp(cap, 0, rem);
+      rem -= g;
+      return g;
+    };
+    glide += give(naturalGlide - glide);
+    if (naturalActs > 0) pace += give(naturalActs * (1 - pace)) / naturalActs;
+    if (reads) read += give(rem);
+    glide += give(naturalGlide * F.glideMax - glide);
+    if (naturalActs > 0) pace += give(naturalActs * (F.actMax - pace)) / naturalActs;
+    let trail = 0;
+    let trailTo = offset;
+    if (naturalActs > 0 && rem >= F.trailSeconds) {
+      trailTo = clamp(offset + Math.min(trailRoom, F.trailMax, F.trailSpeed * rem), offset, maxOffset);
+      if (trailTo - offset >= 1) trail = give(rem);
+    }
+    // Nowhere left to drift: a gentler glide shows less than a slower cursor.
+    glide += give(naturalGlide * F.glideLast - glide);
+    if (naturalActs > 0) pace += give(rem) / naturalActs;
+    else if (naturalGlide > 0) glide += give(rem);
+
+    glides.forEach((i, j) => planned.set(i, (natural[j] / naturalGlide) * glide * PLAY_SPEED));
+    for (const i of acts) planned.set(i, (beats[i].s1 - beats[i].s0) * pace);
+    if (reads && scrollTo(readTarget, false, true)) planned.set(beats.length - 1, read * PLAY_SPEED);
+    if (trail > 0 && scrollTo(trailTo, false, true)) planned.set(beats.length - 1, trail * PLAY_SPEED);
+    if (rem > 0) {
+      hold(rem * PLAY_SPEED, label);
+      planned.set(beats.length - 1, rem * PLAY_SPEED);
+    }
+  };
+
   eras.forEach((era, k) => {
+    const start = s;
+    const firstBeat = beats.length;
+    const firstEvent = events.length;
+    eraStarts.push(start);
     const top = m.eras[k]?.top ?? 0;
+    const scenePosts = posts[era.id] ?? [];
+    // The film: every shot has an out-point in the narration. One continuous
+    // feed carries straight on from the previous era; nothing is hidden.
+    const edited = scenePosts.length > 0 && scenePosts.every((post) => post.endsAtSeconds !== undefined);
+    let windowStart = 0;
     rate = T.scrollRate * era.scrollRate;
     bounciness = T.bounciness[era.agent];
-    if (k > 0) scrollTo(top - T.arriveMargin);
+    if (k > 0 && !edited) scrollTo(top - T.arriveMargin);
 
-    const holdLen = era.holdPx ?? T.hold;
+    const holdLen = edited ? 0 : era.holdPx ?? T.hold;
     eraArrivals.push(s);
     eraSettled.push(s + holdLen);
     if (era.overlay && era.overlay.appear !== 'late') {
       events.push({ s: s + holdLen * 0.55, type: 'appear', key: era.overlay.id });
     }
-    hold(holdLen, `${era.year} · ${era.label}`);
+    if (holdLen > 0) hold(holdLen, `${era.year} · ${era.label}`);
 
     let bend = 1;
-    for (const post of posts[era.id] ?? []) {
+    for (const post of scenePosts) {
       const agent = post.agent ?? era.agent;
       const tempo = post.tempo ?? 1;
       const pace = T.pace[agent] * tempo;
@@ -408,61 +653,63 @@ export function compileTimeline(
       rate = T.scrollRate * era.scrollRate * tempo;
       bounciness = T.bounciness[agent];
       const box = m.posts[post.id];
+      const postFirst = beats.length;
+      const feel = clamp(era.scrollRate * tempo, 0.8, 1.2);
+      // Everything the agent will touch on this post, so it's framed once.
+      const postRects = edited
+        ? (post.actions ?? [])
+            .flatMap((a) => actionTargets(a, post, era) ?? [])
+            .map((t) => m.targets[t])
+            .filter((r) => r && r.space === 'feed')
+        : [];
+      let readTo: number | null = null;
       // Establish the post before interacting. Explicit reading/watching beats
       // already provide that pause; don't make the viewer sit through it twice.
       const firstAction = post.actions?.[0];
-      if (box && firstAction?.type !== 'read' && firstAction?.type !== 'watch' && firstAction?.type !== 'publish') {
+      if (edited) {
+        // The composer opens as the feed sets off toward it.
+        if (firstAction?.type === 'publish') events.push({ s, type: 'focus', key: `${post.id}:publish` });
+        if (box && !firstAction) {
+          // Read while moving: glide in until the post sits centred, then let
+          // it drift slowly past for the rest of its line.
+          const centre = box.top + box.height / 2 - vh * T.focusLine;
+          const lo = box.top + box.height - F.crop - vh;
+          const hi = box.top + F.crop;
+          const seconds = post.endsAtSeconds! - windowStart;
+          const drift = clamp(F.readSpeed * Math.max(F.readSeconds, seconds - glideSeconds(centre - offset, feel)), F.readMin, F.readMax);
+          let from: number;
+          let to: number;
+          if (hi - lo >= F.readMin) {
+            const d = Math.min(drift, hi - lo);
+            from = clamp(centre - d / 2, lo, hi - d);
+            to = from + d;
+          } else {
+            // Taller than the screen: read it top to bottom.
+            from = box.top - F.edge;
+            to = Math.max(from + F.readMin, box.top + box.height + F.edge - vh);
+          }
+          const arrive = clamp(Math.max(from, offset), 0, maxOffset);
+          readTo = Math.max(to, arrive + Math.min(drift, to - from));
+          scrollTo(arrive, false, true);
+        } else if (box) {
+          // Frame the post once, as central as its targets allow. Close
+          // enough is left alone: a nudge of a few px reads as a fidget.
+          const want = focusOn(box, postRects);
+          if (!(inView(postRects, offset) && Math.abs(want - offset) <= vh * F.settle)) scrollTo(want, true, true);
+        }
+      } else if (box && firstAction?.type !== 'read' && firstAction?.type !== 'watch' && firstAction?.type !== 'publish') {
         scrollTo(frameOf(box));
         hold(T.glance * pace * (post.media || post.reels ? 1.25 : 1), `${firstAction ? 'preview' : 'glance'} · ${post.author.name}`);
       }
       for (const action of post.actions ?? []) {
-        const id = (part: string) => `${post.id}:${part}`;
         const overlay = era.overlay;
-        let lateOverlay = false;
-
         // Target ids this action touches, in order.
-        let ids: string[];
-        switch (action.type) {
-          case 'publish':
-            ids = [id('publish'), id('publish-submit')];
-            break;
-          case 'message':
-            ids = [id('message')];
-            break;
-          case 'read':
-            ids = [id('body')];
-            break;
-          case 'like':
-            ids = [action.via === 'doubletap' ? id('media') : id('like')];
-            break;
-          case 'react':
-            ids = [id('like'), id(`react:${action.emoji}`)];
-            break;
-          case 'comment':
-            ids = [id('composer')];
-            if (era.post.submit) ids.push(id('submit'));
-            break;
-          case 'share':
-            ids = [id('share')];
-            break;
-          case 'cta':
-            ids = [id('cta')];
-            break;
-          case 'watch':
-            ids = [id('media')];
-            break;
-          case 'chrome':
-            ids = [`chrome:${era.id}:${action.target}`];
-            break;
-          case 'overlay':
-            if (!overlay) {
-              warnings.push(`${post.id}: overlay action but era "${era.id}" has no overlay`);
-              continue;
-            }
-            ids = [`overlay:${overlay.id}:${action.choice}`];
-            lateOverlay = overlay.appear === 'late';
-            break;
+        const ids = actionTargets(action, post, era);
+        if (!ids) {
+          warnings.push(`${post.id}: overlay action but era "${era.id}" has no overlay`);
+          continue;
         }
+        const lateOverlay = action.type === 'overlay' && overlay?.appear === 'late';
 
         const rects = ids.map((t) => m.targets[t]);
         const missing = ids.filter((_, i) => !rects[i]);
@@ -471,7 +718,7 @@ export function compileTimeline(
           continue;
         }
 
-        if (action.type === 'publish') events.push({ s, type: 'focus', key: `${post.id}:publish` });
+        if (action.type === 'publish' && !edited) events.push({ s, type: 'focus', key: `${post.id}:publish` });
 
         // Reading frames the post; interactions frame the exact target.
         // A local upward adjustment is intentional (older layouts put Like
@@ -479,18 +726,21 @@ export function compileTimeline(
         const feedRects = rects.filter((r) => r.space === 'feed');
         if (feedRects.length) {
           const first = feedRects[0];
-          let want = action.type === 'read' && box
-            ? frameOf(box)
-            : first.y + first.h / 2 - vh * T.focusLine;
           const top = Math.min(...feedRects.map((r) => r.y));
           const bottom = Math.max(...feedRects.map((r) => r.y + r.h));
-          // Keep companion targets (reaction palette / submit) in view. A
-          // taller-than-screen image is framed at its top instead of cropped
-          // on both ends; ordinary controls still land exactly at center.
-          want = bottom - top <= vh - 64
-            ? clamp(want, bottom + 32 - vh, top - 32)
-            : top - 32;
-          if (scrollTo(want, true)) hold(100 * landPace, `settle · ${action.type}`);
+          if (edited) {
+            // Already framed with its post; only move if a target is out of view.
+            if (!inView(feedRects, offset)) {
+              scrollTo(clamp((top + bottom) / 2 - vh * T.focusLine, bottom + F.edge - vh, top - F.edge), true, true);
+            }
+          } else {
+            let want = action.type === 'read' && box ? frameOf(box) : first.y + first.h / 2 - vh * T.focusLine;
+            // Keep companion targets (reaction palette / submit) in view. A
+            // taller-than-screen image is framed at its top instead of cropped
+            // on both ends; ordinary controls still land exactly at center.
+            want = bottom - top <= vh - 64 ? clamp(want, bottom + 32 - vh, top - 32) : top - 32;
+            if (scrollTo(want, true)) hold(100 * landPace, `settle · ${action.type}`);
+          }
           for (const r of feedRects) {
             if (r.h <= vh - 64 && (r.y - offset < 0 || r.y + r.h - offset > vh)) warnings.push(`${post.id}: ${action.type} target off screen`);
           }
@@ -670,53 +920,145 @@ export function compileTimeline(
         s = at;
         cursor = pos;
       }
+      if (edited) {
+        // Drift on after the action without carrying its targets off screen.
+        const room = postRects.length ? Math.min(...postRects.map((r) => r.y)) - offset - F.edge : F.trailMax;
+        planWindow(postFirst, post.endsAtSeconds! - windowStart, feel, readTo, room, `pause · ${post.author.name}`);
+        windowStart = post.endsAtSeconds!;
+      }
     }
+
+    if (!edited && k === eras.length - 1 && !posts[era.id]?.at(-1)?.revealAfterPublish) {
+      scrollTo(feedEndOffset);
+      hold(T.tail, 'end of the real feed');
+    }
+
+    // Fit the measured layout to the voice clip. All nested cursor, typing
+    // and effect times use the same mapping, so scrubbing stays reversible.
+    // The film retimes beat by beat to its plan; otherwise everything scales.
+    const duration = sceneSeconds(era.id) * PLAY_SPEED;
+    const scale = duration / (s - start);
+    const olds = [start];
+    const news = [start];
+    if (edited) {
+      for (let i = firstBeat; i < beats.length; i++) {
+        olds.push(beats[i].s1);
+        news.push(news[news.length - 1] + (planned.get(i) ?? 0));
+      }
+    }
+    const time = (value: number) => {
+      if (!edited) return start + (value - start) * scale;
+      let lo = 0;
+      let hi = olds.length - 1;
+      if (value <= olds[lo]) return news[lo];
+      if (value >= olds[hi]) return news[hi];
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (olds[mid] <= value) lo = mid;
+        else hi = mid;
+      }
+      return news[lo] + ((value - olds[lo]) / (olds[hi] - olds[lo])) * (news[hi] - news[lo]);
+    };
+    for (let i = firstBeat; i < beats.length; i++) {
+      const beat = beats[i];
+      beat.s0 = time(beat.s0);
+      beat.s1 = time(beat.s1);
+      if (beat.kind !== 'act') continue;
+      for (const seg of beat.segs) {
+        seg.s0 = time(seg.s0);
+        seg.s1 = time(seg.s1);
+      }
+      if (beat.typing) {
+        beat.typing.s0 = time(beat.typing.s0);
+        beat.typing.s1 = time(beat.typing.s1);
+        beat.typing.end = time(beat.typing.end);
+      }
+    }
+    for (let i = firstEvent; i < events.length; i++) events[i].s = time(events[i].s);
+    eraArrivals[k] = time(eraArrivals[k]);
+    eraSettled[k] = time(eraSettled[k]);
+    if (edited) {
+      // The era has arrived once its first glide lands.
+      const entrance = beats[firstBeat];
+      eraArrivals[k] = eraSettled[k] = entrance?.kind === 'scroll' ? entrance.s1 : start;
+    }
+    s = start + duration;
+    eraEnds.push(s);
+    if (SCENE_PAUSE_SECONDS > 0) hold(SCENE_PAUSE_SECONDS * PLAY_SPEED, `breath · ${era.label}`);
   });
 
-  // Run out the feed, then pull back. The long repeating tail keeps the
-  // browser racing through outreach while the camera reveals its operator.
-  const lastEra = eras.at(-1);
-  const revealOnPost = lastEra && posts[lastEra.id]?.at(-1)?.revealAfterPublish;
-  if (!revealOnPost) {
-    scrollTo(feedEndOffset);
-    hold(T.tail, 'end of the real feed');
-  }
+  /*
+   * The reveal. "Behind the feed" starts when the last era's line ends
+   * (`revealStart`), but the camera sets off earlier, on a cue inside that
+   * line ("It was the only thing anyone wanted…"), while the agent keeps
+   * working in the window:
+   *
+   *   pullbackStart  sandbox → chat → servers → farm, then every session
+   *                  shrinks into a dot, finishing as the line ends
+   *   revealStart    rows of blinking dots ("The internet used to be our
+   *                  sandbox,"), then the camera pushes in until they read as
+   *                  pixels, which show symbols in step with the voice and
+   *                  after it, through the music's swell (signal.ts)
+   *   total          the score's last note, as the screen fades to black
+   */
   const revealStart = s;
-  const phases = REVEAL_PHASES;
-  const revealLen = phases.reduce((n, p) => n + T.reveal[p], 0);
-  const tailFrom = offset;
-  for (const phase of phases) {
-    const len = T.reveal[phase];
-    const from = lerp(tailFrom, maxOffset, (s - revealStart) / revealLen);
-    const to = lerp(tailFrom, maxOffset, (s + len - revealStart) / revealLen);
-    beats.push({ kind: 'reveal', s0: s, s1: s + len, phase, from, to, cursor });
-    s += len;
+  const P = PLAY_SPEED;
+  const voice = narration.reveal;
+  const lastLine = narration.chunks.find((c) => c.era === eras.at(-1)?.id) as { pullbackAtSeconds?: number } | undefined;
+  const lastStart = eraStarts.at(-1) ?? 0;
+  const cue = lastLine?.pullbackAtSeconds;
+  const pullbackStart = cue === undefined ? revealStart : Math.min(revealStart, lastStart + cue * P);
+  // Sessions finish shrinking into dots as the line ends (or soon after, without a cue).
+  const dotsStart = Math.max(pullbackStart + T.revealPullMin * P, revealStart - T.revealMorph * P);
+  const morphEnd = dotsStart + T.revealMorph * P;
+  const signalAt = Math.max(morphEnd + P, revealStart + voice.cues.signal * P);
+  const speechEnd = revealStart + voice.durationSeconds * P;
+  // The film runs until the score finishes (it starts with the first word).
+  const total = Math.max(MUSIC.durationSeconds * P, speechEnd + T.revealEndCard * P, signalAt + 2 * T.revealEndCard * P);
+  const cardAt = total - T.revealEndCard * P;
+
+  const reveal: RevealSpan[] = [];
+  const pull = ['sandbox', 'chat', 'servers', 'farm'] as const;
+  const weight = pull.reduce((n, phase) => n + T.reveal[phase], 0);
+  let at = pullbackStart;
+  for (const phase of pull) {
+    const len = ((dotsStart - pullbackStart) * T.reveal[phase]) / weight;
+    reveal.push({ phase, s0: at, s1: at + len });
+    at += len;
+  }
+  reveal.push(
+    // The shrink takes `revealMorph`; the rest of the phase is the twinkling rows.
+    { phase: 'dots', s0: dotsStart, s1: signalAt, warp: { at: (morphEnd - dotsStart) / (signalAt - dotsStart), to: DOT_MORPH } },
+    { phase: 'signal', s0: signalAt, s1: cardAt },
+    { phase: 'end', s0: cardAt, s1: total },
+  );
+
+  // Meanwhile the feed in the window plays out the last era; after its line
+  // the endless tail takes over, picking up speed from rest.
+  beats.push({ kind: 'tail', s0: revealStart, s1: total, from: offset, to: maxOffset, ramp: T.tailRamp, cursor });
+  s = total;
+
+  // Join each run of film scrolls into one smooth motion: neighbours share
+  // their velocity where they meet, and the feed eases to rest only where
+  // the agent acts (or the run ends).
+  for (let i = 0; i < beats.length; ) {
+    const run: Extract<Beat, { kind: 'scroll' }>[] = [];
+    for (let b = beats[i]; b?.kind === 'scroll' && b.continuous; b = beats[++i]) run.push(b);
+    if (!run.length) {
+      i++;
+      continue;
+    }
+    const len = (b: (typeof run)[number]) => b.s1 - b.s0;
+    const slope = (b: (typeof run)[number]) => (b.to - b.from) / len(b);
+    run.forEach((b, j) => {
+      const prev = run[j - 1];
+      const next = run[j + 1];
+      b.v0 = prev ? joinSlope(len(prev), slope(prev), len(b), slope(b)) : 0;
+      b.v1 = next ? joinSlope(len(b), slope(b), len(next), slope(next)) : 0;
+    });
   }
 
   events.sort((x, y) => x.s - y.s);
-
-  // Era k is active once its section top crosses the reading line.
-  const eraStarts = eras.map((_, k) => {
-    if (k === 0) return 0;
-    const threshold = (m.eras[k]?.top ?? 0) - vh * T.readingLine;
-    if (threshold <= 0) return 0;
-    for (const b of beats) {
-      if (b.kind === 'scroll' && b.to >= threshold) {
-        if (b.from >= threshold) return b.s0;
-        // Invert the glide (monotonic) so the switch keys off the settled
-        // offset, never the bounce: an era can't flicker back and forth.
-        let lo = 0;
-        let hi = 1;
-        for (let i = 0; i < 40; i++) {
-          const mid = (lo + hi) / 2;
-          if (b.from + (b.to - b.from) * glide(mid) < threshold) lo = mid;
-          else hi = mid;
-        }
-        return b.s0 + hi * (b.s1 - b.s0);
-      }
-    }
-    return revealStart;
-  });
 
   // Notifications: spread across each era, after it settles in.
   const pings: PingSlot[] = [];
@@ -724,7 +1066,7 @@ export function compileTimeline(
     const n = era.pings.length;
     if (!n) return;
     const start = eraSettled[k];
-    const end = k + 1 < eras.length ? eraArrivals[k + 1] : revealStart;
+    const end = eraEnds[k];
     const step = Math.max(1, (end - start) / n);
     const life = Math.min(T.pingLife, step * 1.35);
     era.pings.forEach((_, i) => {
@@ -743,7 +1085,7 @@ export function compileTimeline(
     glitches.push({ s: out, width: T.glitchOut, strength: era.glitch.out });
   });
 
-  return { beats, events, total: s, eraStarts, eraArrivals, revealStart, pings, glitches, warnings };
+  return { beats, events, total: s, eraStarts, eraArrivals, pullbackStart, revealStart, reveal, pings, glitches, warnings };
 }
 
 /* --------------------------------- Sample --------------------------------- */
@@ -777,6 +1119,20 @@ export function eraAt(t: Timeline, s: number): number {
   return k;
 }
 
+/** Where the camera's pull-back is at `s`, or null before it starts. */
+function revealAt(t: Timeline, s: number): FlowFrame['reveal'] {
+  if (s < t.pullbackStart || !t.reveal.length) return null;
+  let span = t.reveal[0];
+  for (const r of t.reveal) if (r.s0 <= s) span = r;
+  let u = span.s1 > span.s0 ? clamp((s - span.s0) / (span.s1 - span.s0), 0, 1) : 1;
+  if (span.warp) {
+    const { at, to } = span.warp;
+    u = u < at ? (u / at) * to : to + ((u - at) / (1 - at)) * (1 - to);
+  }
+  const run = t.total - t.pullbackStart;
+  return { phase: span.phase, u, total: run > 0 ? (s - t.pullbackStart) / run : 1 };
+}
+
 export function sampleTimeline(t: Timeline, sIn: number): FlowFrame {
   const s = clamp(sIn, 0, t.total);
   const index = t.beats.length ? findBeat(t.beats, s) : 0;
@@ -802,7 +1158,7 @@ export function sampleTimeline(t: Timeline, sIn: number): FlowFrame {
     era: eraAt(t, s),
     fired: firedAt(t.events, s),
     typing: null,
-    reveal: null,
+    reveal: revealAt(t, s),
     pings: activePings,
     pingsSeen,
     glitch,
@@ -812,21 +1168,20 @@ export function sampleTimeline(t: Timeline, sIn: number): FlowFrame {
 
   switch (beat.kind) {
     case 'scroll': {
-      const settled = lerp(beat.from, beat.to, glide(u));
+      let progress: number;
+      if (beat.continuous) {
+        // Slopes relative to the straight line, so the cubic meets its neighbours' speed.
+        const line = (beat.to - beat.from) / (beat.s1 - beat.s0);
+        progress = line ? hermite(u, (beat.v0 ?? 0) / line, (beat.v1 ?? 0) / line) : u;
+      } else progress = glide(u);
+      const settled = lerp(beat.from, beat.to, progress);
       return { ...base, offset: settled + beat.bounce * bump(u), settled, cursor: beat.cursor };
     }
     case 'hold':
       return { ...base, offset: beat.offset, settled: beat.offset, cursor: beat.cursor };
-    case 'reveal': {
-      const span = t.total - t.revealStart;
-      const tail = lerp(beat.from, beat.to, u);
-      return {
-        ...base,
-        offset: tail,
-        settled: tail,
-        cursor: beat.cursor,
-        reveal: { phase: beat.phase, u, total: span > 0 ? (s - t.revealStart) / span : 1 },
-      };
+    case 'tail': {
+      const tail = lerp(beat.from, beat.to, rampIn(u, beat.ramp));
+      return { ...base, offset: tail, settled: tail, cursor: beat.cursor };
     }
     case 'act': {
       let cursor = beat.cursorEnd;

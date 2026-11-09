@@ -447,6 +447,12 @@
     --bd-glow 1.4s ease,
     --bd-glow2 1.4s ease;
 }
+/* The sandbox's black, rising with the story; at the reveal the page is
+   already the chat it fades into. Set per frame by the lab (no transition). */
+.fl-backdrop-dark {
+  background: radial-gradient(120% 95% at 50% 42%, #101016, #050507 72%);
+  opacity: var(--page-dark, 0);
+}
 
 /* ------------------------- Morphing between eras -------------------------- */
 /* The pinned pieces are the same elements in every era; when the era's
@@ -454,12 +460,12 @@
 .fl-morph,
 .fl-morph * {
   transition-property: background-color, color, border-color, border-radius, box-shadow, padding, margin, opacity, min-width;
-  transition-duration: 0.6s;
+  transition-duration: 0.9s;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fl-date-in {
-  animation: fl-date-in 0.5s ease-out both;
+  animation: fl-date-in 0.8s ease-out both;
 }
 @keyframes fl-date-in {
   from {
@@ -470,6 +476,7 @@
 
 /* Quiet page chrome around the film. */
 .fl-page-header {
+  color: #1f1d1a;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -487,7 +494,7 @@
   white-space: nowrap;
 }
 .fl-brand svg { flex-shrink: 0; }
-.fl-era-button { justify-self: center; color: #514d48; }
+.fl-era-button { justify-self: center; color: #514d48; white-space: nowrap; }
 .fl-header-credits {
   display: flex;
   align-items: center;
@@ -529,12 +536,11 @@
   gap: 18px;
   max-width: calc(100vw - 24px);
   padding: 0 18px 0 12px;
-  border: 1px solid rgb(255 255 255 / 12%);
+  border: 1px solid transparent;
   border-radius: 14px;
-  background: rgb(31 28 37 / 92%);
-  color: #f4f0f7;
-  box-shadow: 0 8px 32px rgb(20 16 28 / 18%);
-  backdrop-filter: blur(20px);
+  background: rgb(255 255 255 / 5%);
+  color: #625d57;
+  backdrop-filter: blur(4px);
   font-family: ui-sans-serif, system-ui, sans-serif;
 }
 .fl-player-play {
@@ -545,31 +551,26 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #f4f0f7;
-  color: #26212e;
-  transition: transform .15s, background .15s;
+  background: rgb(87 84 79 / 6%);
+  color: #625d57;
+  transition: background .15s;
 }
-.fl-player-play:hover { transform: scale(1.05); background: white; }
+.fl-player-play:hover { background: rgb(87 84 79 / 11%); }
 .fl-player-story { display: flex; align-items: center; gap: 24px; flex: 1; min-width: 0; }
-.fl-player-caption { display: flex; align-items: center; flex: 0 0 190px; min-width: 0; max-width: 42%; gap: 10px; font-size: 12px; font-weight: 500; }
-.fl-player-caption > :first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fl-player-year { flex-shrink: 0; color: #a9a1b3; font-size: 11px; font-variant-numeric: tabular-nums; }
 .fl-player-track { display: flex; flex: 1; min-width: 32px; align-items: center; height: 32px; cursor: pointer; touch-action: none; }
-.fl-player-rail { position: relative; height: 5px; width: 100%; }
-.fl-player-segment { position: absolute; top: -13.5px; height: 32px; padding: 13.5px 1.5px; }
-.fl-player-segment-fill { display: block; height: 5px; border-radius: 999px; background: rgb(255 255 255 / 22%); transition: background-color 160ms ease; }
-.fl-player-segment[data-active="true"] .fl-player-segment-fill { background: #b9a7ca; }
-.fl-player-segment:hover .fl-player-segment-fill { background: #d4c7e1; }
+.fl-player-rail { position: relative; height: 4px; width: 100%; }
+.fl-player-segment { position: absolute; top: -14px; height: 32px; padding: 14px 1.5px; }
+.fl-player-segment-fill { display: block; height: 4px; border-radius: 999px; background: rgb(87 84 79 / 16%); transition: background-color 160ms ease; }
+.fl-player-segment[data-active="true"] .fl-player-segment-fill { background: #98938c; }
+.fl-player-segment:hover .fl-player-segment-fill { background: #827d76; }
 .fl-player-tooltip {
   position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-  padding: 6px 9px; border: 1px solid rgb(255 255 255 / 10%); border-radius: 6px;
-  background: #211c29; color: #e9e3ef; font-size: 11px; font-weight: 500; line-height: 1.4; white-space: nowrap;
-  box-shadow: 0 4px 16px rgb(0 0 0 / 22%); pointer-events: none; visibility: hidden; opacity: 0; transition: opacity 120ms ease, visibility 120ms ease;
+  padding: 6px 9px; border: 1px solid rgb(87 84 79 / 10%); border-radius: 6px;
+  background: #faf9f7; color: #625d57; font-size: 11px; font-weight: 500; line-height: 1.4; white-space: nowrap;
+  box-shadow: 0 3px 12px rgb(59 53 46 / 6%); pointer-events: none; visibility: hidden; opacity: 0; transition: opacity 120ms ease, visibility 120ms ease;
 }
 .fl-player-segment:hover .fl-player-tooltip { visibility: visible; opacity: 1; }
-.fl-player-head { position: absolute; top: 50%; width: 9px; height: 9px; pointer-events: none; border-radius: 50%; background: #eee5f7; transform: translate(-50%, -50%); box-shadow: 0 0 0 3px rgb(238 229 247 / 8%); }
-.fl-player-speed { flex-shrink: 0; width: 30px; padding: 8px 0; font-size: 12px; color: #c6bdcf; font-variant-numeric: tabular-nums; }
-.fl-player-speed:hover { color: white; }
+.fl-player-head { position: absolute; top: 50%; width: 8px; height: 8px; pointer-events: none; border-radius: 50%; background: #827d76; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px #faf9f7; }
 .fl-dev-button {
   position: fixed; bottom: 96px; right: 24px; z-index: 51;
   display: grid; place-items: center; width: 38px; height: 38px;
@@ -585,27 +586,28 @@
   font-family: ui-monospace, monospace; font-size: 11px;
   box-shadow: 0 12px 40px rgb(0 0 0 / 25%);
 }
-:is(.fl-player, .fl-dev-panel) button:focus-visible, .fl-player-track:focus-visible, .fl-dev-button:focus-visible {
+.fl-dev-panel button:focus-visible, .fl-dev-button:focus-visible {
   outline: 2px solid #c9b6df; outline-offset: 4px;
+}
+.fl-player button:focus-visible, .fl-player-track:focus-visible {
+  outline: 2px solid #827d76; outline-offset: 4px;
 }
 @media (max-width: 600px) {
   .fl-player { gap: 10px; padding: 0 10px; }
   .fl-player-story { gap: 10px; }
-  .fl-player-caption { flex-basis: 140px; gap: 6px; font-size: 11px; max-width: 48%; }
   .fl-player-play { width: 30px; height: 30px; }
   .fl-dev-button { right: 12px; }
   .fl-dev-panel { right: 12px; }
-  .fl-player-year { font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .fl-player-play { transition: none; } }
 
 /* Each chapter arrives with the feed's existing era switch. */
 .fl-narration-in {
-  animation: fl-narration-in 700ms ease-out both;
+  animation: fl-narration-in 160ms ease-out both;
 }
 @keyframes fl-narration-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .fl-narration-in { animation: none; }
@@ -616,8 +618,155 @@
 }
 
 /* Narration shares the story transport. */
-.fl-player-voice { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: #ffffff80; cursor: pointer; }
-.fl-player-voice:hover { color: white; background: #ffffff15; }
-.fl-player-voice[aria-pressed="true"] { color: white; background: #ffffff20; }
-.fl-player-voice:focus-visible { outline: 2px solid white; outline-offset: 3px; }
-.fl-narration-error { position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%); z-index: 50; max-width: calc(100vw - 32px); border-radius: 12px; padding: 10px 14px; background: #252229; color: white; font: 12px/1.5 ui-sans-serif, system-ui, sans-serif; }
+.fl-player-voice { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: #76716b; cursor: pointer; }
+.fl-player-voice:hover { color: #514d48; background: rgb(87 84 79 / 6%); }
+.fl-player-voice[aria-pressed="true"] { color: #514d48; background: rgb(87 84 79 / 10%); }
+.fl-narration-error { position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%); z-index: 50; max-width: calc(100vw - 32px); border: 1px solid rgb(87 84 79 / 10%); border-radius: 12px; padding: 10px 14px; background: #faf9f7; color: #625d57; font: 12px/1.5 ui-sans-serif, system-ui, sans-serif; }
+
+/* Let the monitor ending breathe; controls remain available on hover or focus. */
+[data-flow-root][data-monitor="true"] .fl-player,
+[data-flow-root][data-monitor="true"] .fl-dev-button {
+  opacity: 0;
+}
+[data-flow-root][data-monitor="true"] .fl-player:hover,
+[data-flow-root][data-monitor="true"] .fl-player:focus-within,
+[data-flow-root][data-monitor="true"] .fl-dev-button:hover,
+[data-flow-root][data-monitor="true"] .fl-dev-button:focus-visible {
+  opacity: 1;
+}
+
+/* ------------------- Page text as the page darkens ------------------------
+   The page darkens with the story (lib/flow/darkness.ts, `--page-dark`).
+   Dark text deepens toward full strength as the page nears mid-grey; past it
+   the lab sets data-ink="light" at an era change (the flip rides along with
+   the era's own title change), and light text starts bright and relaxes as
+   the page goes on to black. By the reveal these are the sandbox's colours,
+   so the hand-off changes nothing on screen. */
+[data-flow-root] {
+  /* 0% on the bright page, 100% at mid-grey. */
+  --toward-mid: clamp(0%, calc(var(--page-dark, 0) * 200%), 100%);
+  /* 100% at mid-grey, 0% at the sandbox's black. */
+  --past-mid: clamp(0%, calc((1 - var(--page-dark, 0)) * 200%), 100%);
+}
+.fl-page-header,
+.fl-header-credits,
+.fl-header-credits a,
+.fl-window-chrome,
+.fl-window-narration,
+.fl-player,
+.fl-player-voice,
+.fl-player-head {
+  transition: color .9s ease, background-color .9s ease, box-shadow .9s ease;
+}
+.fl-player-play { transition: background .15s, color .9s ease; }
+
+[data-flow-root][data-ink='dark'] .fl-era-button { color: color-mix(in srgb, #514d48, #1f1d1a var(--toward-mid)); }
+[data-flow-root][data-ink='dark'] .fl-header-credits { color: color-mix(in srgb, #625d57, #1f1d1a var(--toward-mid)); }
+[data-flow-root][data-ink='dark'] .fl-header-credits a { color: color-mix(in srgb, #393530, #1f1d1a var(--toward-mid)); }
+[data-flow-root][data-ink='dark'] .fl-window-chrome {
+  color: color-mix(in srgb, #68616e, #1f1d1a var(--toward-mid));
+  --chrome-caption: color-mix(in srgb, #302b35, #141216 var(--toward-mid));
+}
+[data-flow-root][data-ink='dark'] .fl-player-play { color: color-mix(in srgb, #625d57, #1f1d1a var(--toward-mid)); background: color-mix(in srgb, rgb(87 84 79 / 6%), rgb(31 29 26 / 14%) var(--toward-mid)); }
+[data-flow-root][data-ink='dark'] .fl-player-voice { color: color-mix(in srgb, #76716b, #1f1d1a var(--toward-mid)); }
+[data-flow-root][data-ink='dark'] .fl-player-voice:hover,
+[data-flow-root][data-ink='dark'] .fl-player-voice[aria-pressed="true"] { color: color-mix(in srgb, #514d48, #1f1d1a var(--toward-mid)); }
+[data-flow-root][data-ink='dark'] .fl-player-segment-fill { background: color-mix(in srgb, rgb(87 84 79 / 16%), rgb(31 29 26 / 40%) var(--toward-mid)); }
+[data-flow-root][data-ink='dark'] .fl-player-segment[data-active="true"] .fl-player-segment-fill { background: color-mix(in srgb, #98938c, #2e2b28 var(--toward-mid)); }
+[data-flow-root][data-ink='dark'] .fl-player-head { background: color-mix(in srgb, #827d76, #1f1d1a var(--toward-mid)); }
+
+[data-flow-root][data-ink='light'] .fl-page-header { color: color-mix(in srgb, #ece8f1, #ffffff var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-era-button { color: color-mix(in srgb, #d6d0dd, #ffffff var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-era-button:hover { background: rgb(255 255 255 / 8%); }
+[data-flow-root][data-ink='light'] .fl-header-credits { color: color-mix(in srgb, #a9a3b2, #f6f4f9 var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-header-credits a { color: color-mix(in srgb, #dcd7e3, #ffffff var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-window-chrome {
+  color: color-mix(in srgb, #b3acbf, #f1eef5 var(--past-mid));
+  --chrome-caption: color-mix(in srgb, #e6e1ec, #ffffff var(--past-mid));
+}
+[data-flow-root][data-ink='light'] .fl-player { color: color-mix(in srgb, #c9c3d1, #ffffff var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-player-play { background: color-mix(in srgb, rgb(255 255 255 / 8%), rgb(255 255 255 / 16%) var(--past-mid)); color: color-mix(in srgb, #d6d0dd, #ffffff var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-player-play:hover { background: rgb(255 255 255 / 18%); }
+[data-flow-root][data-ink='light'] .fl-player-voice { color: color-mix(in srgb, #a9a3b2, #f6f4f9 var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-player-voice:hover,
+[data-flow-root][data-ink='light'] .fl-player-voice[aria-pressed="true"] { color: color-mix(in srgb, #e3dee9, #ffffff var(--past-mid)); background: rgb(255 255 255 / 9%); }
+[data-flow-root][data-ink='light'] .fl-player-segment-fill { background: color-mix(in srgb, rgb(255 255 255 / 16%), rgb(255 255 255 / 42%) var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-player-segment[data-active="true"] .fl-player-segment-fill { background: color-mix(in srgb, #a59fae, #f1eef5 var(--past-mid)); }
+[data-flow-root][data-ink='light'] .fl-player-segment:hover .fl-player-segment-fill { background: #e3dee9; }
+[data-flow-root][data-ink='light'] .fl-player-head { background: color-mix(in srgb, #d6d0dd, #ffffff var(--past-mid)); box-shadow: 0 0 0 2px #0b0b10; }
+[data-flow-root][data-ink='light'] :is(.fl-player button, .fl-player-track):focus-visible { outline-color: #d6d0dd; }
+@media (prefers-reduced-motion: reduce) {
+  .fl-page-header, .fl-header-credits, .fl-header-credits a, .fl-window-chrome, .fl-window-narration, .fl-player, .fl-player-voice, .fl-player-head { transition: none; }
+}
+
+/* Unread badges are filled in every frame (lib/flow/inbox.ts); an empty one hides. */
+.fl-count:empty,
+.fl-count[data-machine='false'][data-empty='true'] { opacity: 0; }
+
+/* The film is just the screen: the browser's own chrome (traffic lights,
+   chapter title, back/forward) only appears once the camera pulls back and
+   it turns out to be a window in someone else's sandbox. */
+[data-flow-window] > .fl-window-chrome { transition: opacity .6s ease, color .5s ease; }
+[data-flow-window][data-agent='off'] > .fl-window-chrome { opacity: 0; }
+
+/* Once the page is dark there's nothing behind the player worth blurring, and
+   re-blurring the ending's full-screen dot canvas every frame halves the
+   frame rate. A flat tint reads the same. */
+[data-flow-root][data-ink='light'] .fl-player {
+  backdrop-filter: none;
+  background: rgb(255 255 255 / 6%);
+}
+
+/* ------------------------------ Closing title ----------------------------- */
+/* Centred over the last screen of dots once the voice is done (ending.ts). */
+.fl-end-title {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 24px;
+  text-align: center;
+  color: #f1eef6;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  opacity: var(--title-o, 0);
+  pointer-events: none;
+  text-shadow: 0 0 24px rgb(5 5 7 / 90%), 0 0 4px rgb(5 5 7 / 90%);
+}
+[data-flow-root][data-title='on'] .fl-end-title { pointer-events: auto; }
+.fl-end-title svg { opacity: .85; margin-bottom: 18px; }
+.fl-end-title h2 {
+  margin: 0;
+  font-size: clamp(44px, 7.2vw, 96px);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+.fl-end-credit { margin: 22px 0 0; font-size: clamp(15px, 1.6vw, 19px); color: #d9d4e2; }
+.fl-end-date {
+  margin: 10px 0 0;
+  font: 500 12px/1.4 ui-monospace, Menlo, monospace;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8f899b;
+}
+.fl-end-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
+.fl-end-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  background: rgb(5 5 7 / 55%);
+  color: #e6e1ec;
+  font-size: 13px;
+  text-decoration: none;
+  text-shadow: none;
+  transition: background-color .2s, border-color .2s;
+}
+.fl-end-links a:hover { background: rgb(255 255 255 / 9%); border-color: rgb(255 255 255 / 26%); }
+.fl-end-links a:focus-visible { outline: 2px solid #d6d0dd; outline-offset: 3px; }

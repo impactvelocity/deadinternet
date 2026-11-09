@@ -36,7 +36,7 @@ export function PostVideo({ src, poster, label, duration, watching = false }: {
         controls={false}
         disablePictureInPicture
         aria-label={label}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover object-top"
         onPlay={() => { setStarted(true); setFailed(false); }}
         onPause={() => setStarted(false)}
         onEnded={() => setStarted(false)}

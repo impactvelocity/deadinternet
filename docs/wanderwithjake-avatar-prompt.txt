@@ -1,0 +1,7 @@
+Use case: photorealistic-natural
+Asset type: square Instagram profile photo for fictional travel influencer wanderwithjake in 2019.
+Reference image: supplied moped travel photo is an identity reference for Jake. Create a NEW photograph of the same man, preserving his recognizable face, sandy sun-bleached wavy shoulder-length hair, light stubble, tanned skin and late-twenties age.
+Primary request: a convincing 2019 travel-bro avatar. Tight head-and-shoulders portrait of Jake in an open-collar rumpled white linen shirt, thin dark cord necklace, relaxed confident half-smile, looking into the camera. Sun-bleached hair pushed back loosely, eyes open and visible. Tropical coast in Bali with turquoise water and a few palms softly out of focus behind him.
+Style: friend took the photo on an iPhone XS during a backpacking trip, slightly imperfect framing, natural skin pores and windblown hair, subtle faded warm highlights and teal shadows from a 2019 Instagram travel preset. Aspirational and casually curated, believable amateur travel photography.
+Composition: square 1:1, face centered and large enough to read at 40px, full hair and chin safely inside the central circular-crop area with breathing room. No pre-applied circle, no ring or border.
+Constraints: no text, no logos, no watermark, no sunglasses, no exaggerated perfect teeth, no glossy studio lighting or plastic skin.

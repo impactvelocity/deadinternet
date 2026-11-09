@@ -20,15 +20,17 @@ describe('flow reveal camera', () => {
     }
   });
 
-  it('only ever pulls back', () => {
+  it('only ever pulls back, to the end of the film', () => {
     let last = Infinity;
     for (const phase of REVEAL_PHASES) {
       for (let u = 0; u <= 1; u += 0.05) {
         const { z } = cameraAt(phase, u);
-        expect(z).toBeLessThanOrEqual(last + 1e-9);
+        expect(z, phase).toBeLessThanOrEqual(last + 1e-9);
         last = z;
       }
     }
+    // The ending packs about twice as many dots across the screen as the rows did.
+    expect(cameraAt('end', 1).z).toBeLessThan(cameraAt('dots', 1).z * 0.6);
   });
 
   it('keeps moving at the same speed from the session grid into the field', () => {

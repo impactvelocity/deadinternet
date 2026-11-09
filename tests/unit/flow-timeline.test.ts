@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { FLOW_ERAS } from '@/data/flow/eras';
+import narration from '@/data/flow/narration.json';
+import { MUSIC } from '@/lib/flow/music';
+import { PLAY_SPEED, SCENE_PAUSE_SECONDS, sceneSeconds } from '@/lib/flow/playback';
 import { composition, FLOW_POSTS } from '@/data/flow/posts';
 import type { CornerModule } from '@/data/flow/types';
-import type { FlowMeasure, TargetRect } from '@/lib/flow/timeline';
 import {
   bump,
   compileTimeline,
+  DOT_MORPH,
+  REVEAL_PHASES,
   deriveEffects,
   firedAt,
   FLOW_TIMING,
@@ -14,55 +18,7 @@ import {
   typedCount,
 } from '@/lib/flow/timeline';
 
-/**
- * A synthetic layout: every post is 400px tall, every target sits inside its
- * post, chrome and overlay targets sit on the screen.
- */
-function fakeMeasure(): FlowMeasure {
-  const viewport = { x: 300, y: 120, w: 600, h: 680 };
-  const targets: Record<string, TargetRect> = {};
-  const posts: FlowMeasure['posts'] = {};
-  const eras: FlowMeasure['eras'] = [];
-  let y = 0;
-  for (const era of FLOW_ERAS) {
-    eras.push({ id: era.id, top: y });
-    y += 120; // section break
-    for (const post of FLOW_POSTS[era.id]) {
-      posts[post.id] = { top: y, height: 400 };
-      const part = (name: string, dy: number) => {
-        targets[`${post.id}:${name}`] = { space: 'feed', x: 40, y: y + dy, w: 80, h: 24 };
-      };
-      part('publish', 60);
-      part('publish-submit', 240);
-      targets[`${post.id}:message`] = { space: 'screen', x: 1040, y: 550, w: 200, h: 30 };
-      part('body', 60);
-      part('media', 140);
-      part('like', 300);
-      part('share', 300);
-      part('cta', 280);
-      part('composer', 340);
-      part('submit', 370);
-      for (const action of post.actions ?? []) {
-        if (action.type === 'react') part(`react:${action.emoji}`, 260);
-      }
-      y += 400;
-    }
-    for (const mod of [era.platform]) {
-      if (mod.kind === 'people' || mod.kind === 'requests') {
-        for (const item of mod.items) {
-          if (item.id) targets[`chrome:${era.id}:${item.id}`] = { space: 'screen', x: 1100, y: 300, w: 60, h: 20 };
-        }
-      }
-    }
-    if (era.overlay) {
-      era.overlay.actions.forEach((_, i) => {
-        targets[`overlay:${era.overlay!.id}:${i}`] = { space: 'screen', x: 600 + i * 90, y: 450, w: 80, h: 30 };
-      });
-    }
-  }
-  const feedEnd = y;
-  return { viewport, contentHeight: feedEnd + 1600, feedEnd, eras, posts, targets };
-}
+import { fakeMeasure } from '../fixtures/flow-measure';
 
 describe('flow timeline', () => {
   const m = fakeMeasure();
@@ -75,6 +31,24 @@ describe('flow timeline', () => {
       .flat()
       .reduce((n, p) => n + (p.actions?.length ?? 0), 0);
     expect(acts).toBe(expected);
+  });
+
+  it('transitions immediately when each voice clip finishes, without a gap', () => {
+    for (const layout of [m, { ...m, viewport: { ...m.viewport, h: 440 } }]) {
+      const timeline = compileTimeline(FLOW_ERAS, FLOW_POSTS, layout);
+      FLOW_ERAS.forEach((era, k) => {
+        const start = timeline.eraStarts[k];
+        const end = timeline.eraStarts[k + 1] ?? timeline.revealStart;
+        const duration = sceneSeconds(era.id);
+        expect((end - start) / PLAY_SPEED, era.id).toBeCloseTo(duration, 6);
+        expect(sampleTimeline(timeline, end - 1).era).toBe(k);
+        if (k + 1 < FLOW_ERAS.length) expect(sampleTimeline(timeline, end).era).toBe(k + 1);
+        // By "Behind the feed" every session has already become a dot.
+        else expect(sampleTimeline(timeline, end).reveal).toMatchObject({ phase: 'dots' });
+      });
+      expect(timeline.beats.some((b) => b.kind === 'hold' && b.label.startsWith('breath'))).toBe(false);
+      expect(timeline.beats.every((b) => b.s1 > b.s0)).toBe(true);
+    }
   });
 
   it('covers story distance with contiguous beats', () => {
@@ -248,14 +222,36 @@ describe('flow timeline', () => {
     }
   });
 
-  it('ends with the reveal', () => {
-    const end = sampleTimeline(t, t.total);
-    expect(end.reveal?.phase).toBe('end');
-    expect(sampleTimeline(t, t.revealStart - 1).reveal).toBeNull();
+  it('pulls back on "…and with AI", while the agent keeps working in the window', () => {
+    const dead = FLOW_ERAS.length - 1;
+    const cue = narration.chunks.find((c) => c.era === FLOW_ERAS[dead].id)!.pullbackAtSeconds!;
+    expect((t.pullbackStart - t.eraStarts[dead]) / PLAY_SPEED).toBeCloseTo(cue, 6);
+    expect(sampleTimeline(t, t.pullbackStart - 1).reveal).toBeNull();
+    expect(sampleTimeline(t, t.pullbackStart).reveal?.phase).toBe('sandbox');
+    // The last era's own beats run on under the camera until its line ends.
+    expect(t.beats.some((b) => b.kind === 'act' && b.s0 >= t.pullbackStart && b.s1 <= t.revealStart)).toBe(true);
+    expect(t.reveal.map((r) => r.phase)).toEqual(REVEAL_PHASES);
+    for (let i = 1; i < t.reveal.length; i++) expect(t.reveal[i].s0).toBeCloseTo(t.reveal[i - 1].s1, 6);
+  });
+
+  it('opens "Behind the feed" on rows of dots, turns them into a screen, and fades out with the score', () => {
+    const at = (phase: string) => t.reveal.find((r) => r.phase === phase)!;
+    const into = (s: number) => (s - t.revealStart) / PLAY_SPEED;
+    // "Behind the feed" opens on rows of dots that have finished forming.
+    const rows = sampleTimeline(t, t.revealStart).reveal!;
+    expect(rows.phase).toBe('dots');
+    expect(rows.u).toBeGreaterThanOrEqual(DOT_MORPH - 1e-6);
+    // The push in starts on its cue and runs through the voice and the music.
+    expect(into(at('signal').s0)).toBeCloseTo(narration.reveal.cues.signal, 6);
+    expect(into(at('end').s0)).toBeGreaterThan(narration.reveal.durationSeconds);
+    expect(narration.reveal).not.toHaveProperty('foley');
+    expect(t.total / PLAY_SPEED).toBeCloseTo(MUSIC.durationSeconds, 6);
+    expect((t.total - at('end').s0) / PLAY_SPEED).toBeCloseTo(FLOW_TIMING.revealEndCard, 6);
+    expect(sampleTimeline(t, t.total).reveal?.phase).toBe('end');
   });
 
   it('lets every visible result land before the feed moves on', () => {
-    const minLand = Math.min(...Object.values(FLOW_TIMING.land)) * Math.min(...Object.values(FLOW_TIMING.landPace));
+    const minLand = PLAY_SPEED * 0.1;
     const landing = new Set(['like', 'react', 'post', 'share', 'cta', 'chrome', 'dismiss']);
     const acts = t.beats.filter((b) => b.kind === 'act');
     let checked = 0;
@@ -290,19 +286,21 @@ describe('flow timeline', () => {
     expect(landed.reactions.get(pick.key)).toBe(pick.value);
     expect(landed.palettes.has(pick.key)).toBe(false);
   });
-  it('reveals the sandbox immediately after the inbox announcement is published', () => {
+  it('holds the final announcement before revealing the sandbox', () => {
     const publications = t.beats.filter((b) => b.kind === 'act' && b.action.type === 'publish');
     expect(publications).toHaveLength(3);
     const openingDuration = publications[0].s1 - publications[0].s0;
-    expect(openingDuration).toBeGreaterThan(2500);
+    // The sadder line is shorter; the first post still gets a few unhurried seconds.
+    expect(openingDuration).toBeGreaterThan(1900);
     expect(openingDuration).toBeLessThan(4000);
     const firstPublished = t.events.find((e) => e.key === 'dead-1:publish' && e.type === 'post')!;
     expect(publications[0].s1 - firstPublished.s).toBeLessThan(1200);
     const last = publications.at(-1)!;
     expect(last.kind === 'act' && last.postId).toBe('dead-3');
-    expect(last.s1).toBe(t.revealStart);
+    expect(t.revealStart - last.s1).toBeCloseTo(SCENE_PAUSE_SECONDS * PLAY_SPEED, 6);
     const announcement = t.events.find((e) => e.key === 'dead-3:publish' && e.type === 'post')!;
-    expect(t.revealStart - announcement.s).toBeLessThan(400);
+    expect(t.revealStart - announcement.s).toBeGreaterThan(SCENE_PAUSE_SECONDS * PLAY_SPEED);
+    expect(t.revealStart - announcement.s).toBeLessThan(PLAY_SPEED);
     expect(sampleTimeline(t, t.revealStart).settled).toBeCloseTo(sampleTimeline(t, t.revealStart - 1).settled, 6);
     for (const post of FLOW_POSTS.dead) {
       const published = t.events.find((e) => e.key === `${post.id}:publish` && e.type === 'post')!;

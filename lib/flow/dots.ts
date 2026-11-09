@@ -1,50 +1,39 @@
 /**
- * The last beat of the reveal: every session becomes a dot of light, the dots
- * become the world, and the world collapses into one dot.
+ * The last beat of the reveal: every session becomes a dot of light, and the
+ * dots become a screen.
  *
- * - `dots`      each session's browser shrinks into a dot (quickly), then the
- *               dots twinkle
- * - `globe`     the dots swirl into a spinning 3D globe made of dots: land
- *               bright, ocean faint, the far side dim through the sphere;
- *               waves of light sweep around it
- * - `collapse`  the globe spins faster and every dot falls into the center,
- *               with one last ripple as it lands
- * - `blink`     a single dot, blinking
- * - `end`       the dot rises above the headline and keeps blinking
+ * - `dots`    each session's browser shrinks into a dot (quickly), then the
+ *             rows of dots twinkle
+ * - `signal`  the camera pulls back so the small round dots pack tighter, and
+ *             they light up as symbols nobody is there to see (see signal.ts)
+ * - `end`     the last symbol fades out with the music
  *
- * Scroll position drives every step, so scrolling back undoes it. The twinkle,
- * the spin, the waves and the blink also move with time, so a held frame is
- * still alive.
+ * Scroll position drives every step, so scrolling back undoes it. The twinkle
+ * and the flicker also move with time, so a held frame is still alive.
  *
  * Drawn on a canvas in page space (design px) on top of the reveal world,
  * using the same camera, so the first dots sit exactly where their sessions
  * were.
  */
 import { REVEAL_GEOMETRY as G, type Camera } from './camera';
-import { isLand } from './land';
-import type { RevealPhase } from './timeline';
+import { maskOf, sampleMask, signalAt } from './signal';
+import { DOT_MORPH, type RevealPhase } from './timeline';
 
-export const DOT_PHASES: readonly RevealPhase[] = ['dots', 'globe', 'collapse', 'blink', 'end'];
+export const DOT_PHASES: readonly RevealPhase[] = ['dots', 'signal', 'end'];
 
 const PITCH = { x: G.tile.w + G.gap, y: G.tile.h + G.gap };
 const TILE_C = { x: G.tile.w / 2, y: G.tile.h / 2 };
 const SLOT_C = { x: G.slot.x + G.slot.w / 2, y: G.slot.y + G.slot.h / 2 };
 /** Share of the dots phase spent shrinking sessions into dots. */
-const MORPH = 0.55;
+const MORPH = DOT_MORPH;
 const DOT_RGB = '226, 233, 255';
+/** Dot size on the final screen, in page px (about 4px on screen). */
+const SIGNAL_DOT = 4.6;
+/** How much of the red/blue fringe shows in a symbol's colour (0 = pure white light). */
+const SIGNAL_TINT = 0.35;
 /** Matches the stage background, so the field fades into the same night. */
 const NIGHT = '5, 5, 7';
 
-/** Globe size and pose. */
-const GLOBE_R = 330;
-const GLOBE_POINTS = 3200;
-const TILT = (-18 * Math.PI) / 180;
-/** Turned so the Atlantic faces the viewer first. */
-const SPIN0 = 0.6;
-/** How far the last dot rises above the headline in `end`. */
-const RISE = 170;
-
-const D2R = Math.PI / 180;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const smooth = (v: number) => {
   const t = clamp01(v);
@@ -68,8 +57,14 @@ export interface DotState {
   phase: RevealPhase;
   /** Progress through the phase, 0..1. */
   u: number;
-  /** Clock in ms, for the twinkle, spin, waves and blink. */
+  /** Clock in ms, for the twinkle and flicker. */
   now: number;
+  /** Seconds since "Behind the feed" (drives the symbols). */
+  clock?: number;
+  /** Seconds after "Behind the feed" when the voice stops. */
+  speech?: number;
+  /** 0..1: dim the screen behind the closing title. */
+  veil?: number;
 }
 
 /* ------------------------------- Grid dots -------------------------------- */
@@ -77,81 +72,6 @@ export interface DotState {
 /** Brightness of one session dot during `dots`: bright as it forms, then twinkling. */
 export function gridLight(u: number, now: number, seed: number): number {
   return lerp(0.9, twinkle(seed, now), smooth((u - MORPH) / 0.25));
-}
-
-/* --------------------------------- Globe ---------------------------------- */
-
-export interface GlobePoint {
-  lat: number;
-  lon: number;
-  land: boolean;
-  seed: number;
-}
-
-let globe: { all: GlobePoint[]; land: GlobePoint[]; sea: GlobePoint[] } | null = null;
-
-/** Evenly spread points on the sphere (Fibonacci lattice), tagged land or sea. */
-export function globePoints() {
-  if (globe) return globe;
-  const all: GlobePoint[] = [];
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < GLOBE_POINTS; i++) {
-    const y = 1 - (2 * (i + 0.5)) / GLOBE_POINTS;
-    const lat = Math.asin(y) / D2R;
-    let lon = ((i * golden) % (2 * Math.PI)) / D2R;
-    if (lon > 180) lon -= 360;
-    all.push({ lat, lon, land: isLand(lat, lon), seed: i * 31 + 7 });
-  }
-  globe = { all, land: all.filter((p) => p.land), sea: all.filter((p) => !p.land) };
-  return globe;
-}
-
-/** Rotation of the globe: a slow constant spin, nudged by scroll, whipped up in the collapse. */
-function spinAt(st: DotState): number {
-  const scroll = st.phase === 'globe' ? st.u * 0.65 : st.phase === 'collapse' ? 0.65 + smooth(st.u) * 1.4 : 0;
-  return SPIN0 - st.now / 18000 + scroll;
-}
-
-/** Screen position and depth (-1 back … 1 front) of a point on the spinning, tilted globe. */
-function project(p: GlobePoint, spin: number, cx: number, cy: number) {
-  const lat = p.lat * D2R;
-  const lon = p.lon * D2R + spin;
-  const x = Math.cos(lat) * Math.sin(lon);
-  const y = Math.sin(lat);
-  const z = Math.cos(lat) * Math.cos(lon);
-  const y2 = y * Math.cos(TILT) - z * Math.sin(TILT);
-  const z2 = y * Math.sin(TILT) + z * Math.cos(TILT);
-  return { x: cx + GLOBE_R * x, y: cy - GLOBE_R * y2, z: z2, lon };
-}
-
-/** Land glows, ocean barely shows; the far side is dimmed through the sphere. */
-function globeLight(p: GlobePoint, z: number): number {
-  const front = z > 0;
-  if (p.land) return front ? 0.95 : 0.1;
-  return front ? 0.16 : 0.04;
-}
-
-/** Where a globe dot is on its way into the center during `collapse` (0 = on the globe, 1 = center). */
-export function collapseAt(u: number, seed: number): number {
-  const t = clamp01((u - noise(seed) * 0.3) / 0.6);
-  return smooth(t);
-}
-
-/* ------------------------------ The last dot ------------------------------ */
-
-/** The single dot left at the end: brightness, and how far it has risen. */
-export function lastDot(st: DotState): { a: number; rise: number } {
-  const pulse = 0.12 + 0.88 * (0.5 + 0.5 * Math.sin(st.now / 380));
-  switch (st.phase) {
-    case 'collapse':
-      return { a: smooth((st.u - 0.55) / 0.3) * lerp(1, pulse, smooth((st.u - 0.85) / 0.15)), rise: 0 };
-    case 'blink':
-      return { a: pulse, rise: 0 };
-    case 'end':
-      return { a: pulse, rise: RISE * smooth(st.u / 0.55) };
-    default:
-      return { a: 0, rise: 0 };
-  }
 }
 
 /* --------------------------------- Draw ----------------------------------- */
@@ -197,8 +117,6 @@ export function drawDots(ctx: CanvasRenderingContext2D, cam: Camera, st: DotStat
   ctx.fillStyle = `rgba(${NIGHT}, ${morph})`;
   ctx.fillRect(-8, -8, W + 16, H + 16);
 
-  const cx = W / 2;
-  const cy = H / 2;
   const { z } = cam;
   const dotD = Math.max(3, PITCH.x * z * 0.11);
 
@@ -222,62 +140,73 @@ export function drawDots(ctx: CanvasRenderingContext2D, cam: Camera, st: DotStat
     return;
   }
 
-  const spin = spinAt(st);
-  const { all, land, sea } = globePoints();
-
-  if (st.phase === 'globe') {
-    const appear = smooth((st.u - 0.08) / 0.62);
-    // The globe, back half first so the front draws over it.
-    for (const pass of [0, 1]) {
-      for (const p of all) {
-        const q = project(p, spin, cx, cy);
-        if (q.z > 0 !== (pass === 1)) continue;
-        const sweep = 0.85 + 0.15 * Math.sin(q.lon * 2 + st.now / 1500);
-        const a = globeLight(p, q.z) * appear * sweep;
-        dot(ctx, q.x, q.y, (p.land ? 2.4 : 1.6) * (0.55 + 0.225 * (q.z + 1)), a);
-      }
+  // `signal` and `end`: the same small round dots, now showing symbols.
+  const frame = signalAt(st.clock ?? 0, st.speech ?? Infinity);
+  const main = frame.glyph && frame.level > 0 ? maskOf(frame.glyph) : null;
+  const flash = frame.flash ? maskOf(frame.flash) : null;
+  const settle = st.phase === 'signal' ? smooth(st.u / 0.12) : 1;
+  // Dots stay small and round (about 4px on screen) however close the camera gets.
+  const size = lerp(dotD, SIGNAL_DOT, settle);
+  // The red and blue channels slip a little against the green, re-slipping every 90ms.
+  const tick = Math.floor(st.now / 90);
+  const split = PITCH.x * z * (0.1 + 0.12 * noise(tick * 1.3));
+  // The last note takes the screen to black.
+  const fade = (st.phase === 'end' ? 1 - smooth(st.u) : 1) * (1 - (st.veil ?? 0));
+  // Each dot averages the symbol over its share of the screen, for soft shading.
+  const radius = PITCH.y * z * 0.4;
+  const glows = new Map<string, Path2D>();
+  const dots = new Map<string, Path2D>();
+  for (const g of gridDots(cam, W, H)) {
+    // The rows keep a faint twinkle, dimming as the symbols take over.
+    const idle = twinkle(g.seed, st.now) * lerp(0.9, 0.3, settle);
+    const hum = 0.85 + 0.15 * noise(g.seed + tick);
+    let r = 0;
+    let gr = 0;
+    let b = 0;
+    if (main) {
+      r = sampleMask(main, g.sx - split, g.sy, radius) * frame.level * hum;
+      gr = sampleMask(main, g.sx, g.sy, radius) * frame.level * hum;
+      b = sampleMask(main, g.sx + split, g.sy, radius) * frame.level * hum;
     }
-    // The session dots swirl in and dissolve into it.
-    for (const g of gridDots(cam, W, H)) {
-      const d = noise(g.seed);
-      const t = smooth((st.u - d * 0.12) / 0.65);
-      if (t >= 1) continue;
-      const pool = d < 0.6 ? land : sea;
-      const q = project(pool[Math.floor(noise(g.seed * 3.7) * pool.length)], spin, cx, cy);
-      const curl = Math.sin(Math.PI * t) * 32 * (d < 0.5 ? 1 : -1);
-      const dx = q.x - g.sx;
-      const dy = q.y - g.sy;
-      const len = Math.hypot(dx, dy) || 1;
-      const x = lerp(g.sx, q.x, t) - (dy / len) * curl;
-      const y = lerp(g.sy, q.y, t) + (dx / len) * curl;
-      dot(ctx, x, y, lerp(dotD / 2, 2, t), twinkle(g.seed, st.now) * (1 - t));
+    if (flash) {
+      const f = sampleMask(flash, g.sx, g.sy, radius) * 0.75;
+      r = Math.max(r, f);
+      gr = Math.max(gr, f);
+      b = Math.max(b, f);
     }
-    return;
+    // Mostly white light, with only a hint of the colour fringe.
+    const lum = (r + gr + b) / 3;
+    const tint = (c: number) => lum + (c - lum) * SIGNAL_TINT;
+    const light = Math.min(1, Math.max(idle * 0.55, lum * 0.9));
+    if (light * fade < 0.01) continue;
+    const R = Math.min(255, 226 * idle * 0.55 + 240 * tint(r)) * fade;
+    const Gc = Math.min(255, 233 * idle * 0.55 + 240 * tint(gr)) * fade;
+    const B = Math.min(255, 255 * idle * 0.55 + 250 * tint(b)) * fade;
+    const rgb = `${step(R)},${step(Gc)},${step(B)}`;
+    // A faint glow around the brightest dots.
+    if (lum > 0.45) addCircle(glows, `rgba(${rgb},${(Math.round((lum - 0.45) * 0.18 * fade * 50) / 50).toFixed(2)})`, g.sx, g.sy, size * 1.8);
+    addCircle(dots, `rgb(${rgb})`, g.sx, g.sy, size / 2);
   }
-
-  if (st.phase === 'collapse') {
-    for (const pass of [0, 1]) {
-      for (const p of all) {
-        const q = project(p, spin, cx, cy);
-        if (q.z > 0 !== (pass === 1)) continue;
-        const k = collapseAt(st.u, p.seed);
-        if (k >= 1) continue;
-        const sweep = 0.85 + 0.15 * Math.sin(q.lon * 2 + st.now / 1500);
-        const radius = (p.land ? 2.4 : 1.6) * (0.55 + 0.225 * (q.z + 1));
-        dot(ctx, lerp(q.x, cx, k), lerp(q.y, cy, k), radius * (1 - 0.6 * k), globeLight(p, q.z) * sweep * (1 - k));
-      }
-    }
-    // One last ripple as everything lands.
-    if (st.u > 0.8) {
-      const r = smooth((st.u - 0.8) / 0.2);
-      ctx.strokeStyle = `rgba(${DOT_RGB}, ${0.16 * Math.sin(Math.PI * r)})`;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 8 + r * 140, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+  // Thousands of dots, but only a few dozen colours: one fill per colour.
+  for (const [style, path] of glows) {
+    ctx.fillStyle = style;
+    ctx.fill(path);
   }
+  for (const [style, path] of dots) {
+    ctx.fillStyle = style;
+    ctx.fill(path);
+  }
+}
 
-  const last = lastDot(st);
-  dot(ctx, cx, cy - last.rise, 5, last.a);
+/** Colour channels rounded to steps of 8, so dots can share a fill. */
+const step = (v: number) => Math.round(v / 8) * 8;
+
+function addCircle(paths: Map<string, Path2D>, style: string, x: number, y: number, r: number) {
+  let path = paths.get(style);
+  if (!path) {
+    path = new Path2D();
+    paths.set(style, path);
+  }
+  path.moveTo(x + r, y);
+  path.arc(x, y, r, 0, Math.PI * 2);
 }

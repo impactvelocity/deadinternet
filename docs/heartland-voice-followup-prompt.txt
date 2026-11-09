@@ -1,0 +1,9 @@
+Use case: historical-scene
+Asset type: fictional 2017 Facebook rage-bait meme for the third Heartland Voice post in a historical social-media feed.
+Primary request: a completely new image for the caption "Still angry? Here’s what they’re hiding now. 😡", visually distinct from a flag meme.
+Scene: an ordinary harsh-flash smartphone photo of a manila folder open on a scuffed office desk, with several printed documents covered in thick black redaction bars. One page is pulled forward, with a crude thick bright red circle and a red arrow pointing at the blacked-out lines as if they are a shocking discovery. Small binder clip and paper edges. No identifiable real person or institution.
+Style: cheap 2017 Facebook conspiracy repost meme, slightly grainy, mildly over-sharpened, compressed JPEG appearance, mundane unremarkable office lighting. Printed papers must read as generic documents, no actual claims.
+Composition: landscape aspect ratio 1.9:1; documents clearly visible in the central area; big legible white all-caps Impact-style text with thick black outline, top caption and bottom caption each fully inside the image with generous side margins.
+Text (verbatim): top "WHAT ARE THEY HIDING?" bottom "SHARE BEFORE THIS DISAPPEARS"
+Small bottom-right watermark "Heartland Voice".
+Constraints: no flags, no flag colors as a theme, no politicians, no government seals, no cinematic lighting, no lightning, no glossy modern design. It should look like a real low-budget meme shared in 2017.

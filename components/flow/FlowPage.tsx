@@ -11,7 +11,7 @@
  * Era drawer copy is draft context to fact-check before shipping.
  */
 import type { CSSProperties } from 'react';
-import { FLOW_ERAS } from '@/data/flow/eras';
+import { FILM_ERAS as FLOW_ERAS } from '@/data/flow/scenes';
 import narration from '@/data/flow/narration.json';
 import type { FlowEra } from '@/data/flow/types';
 import { Icon } from './icons';
@@ -28,7 +28,8 @@ function eraTitle(era: FlowEra) {
 /**
  * The page behind the browser window, filling the viewport. Its colours are
  * registered custom properties (`.fl-backdrop` in flow.css), so moving to the
- * next era eases from one gradient to the next.
+ * next era eases from one gradient to the next. Over it, the sandbox's own
+ * black fades in with the story (`--page-dark`, lib/flow/darkness.ts).
  */
 export function PageBackdrop({ era }: { era: FlowEra }) {
   const b = era.backdrop;
@@ -37,7 +38,45 @@ export function PageBackdrop({ era }: { era: FlowEra }) {
       aria-hidden
       className="fl-backdrop absolute inset-0"
       style={{ '--bd-base': b.base, '--bd-glow': b.glow, '--bd-glow2': b.glow2, opacity: 'var(--page-o, 1)' } as CSSProperties}
-    />
+    >
+      <div className="fl-backdrop-dark absolute inset-0" />
+    </div>
+  );
+}
+
+/** The dead-internet mark: a globe with its edge cut off by an ×. */
+function BrandMark({ size }: { size: number }) {
+  return (
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M20.4 8.8A9 9 0 1 0 20.4 15.2M3 12h12M12 3c-4 4.5-4 13.5 0 18M12 3c2.2 2.5 3.2 5.5 3.2 9S14.2 18.5 12 21" />
+      <path d="M19 10l4 4m0-4-4 4" />
+    </svg>
+  );
+}
+
+/**
+ * The closing title, centred over the last screen of dots. Its opacity
+ * (`--title-o`) is set every frame by the lab from story position
+ * (lib/flow/ending.ts); it only takes clicks once it's showing.
+ */
+export function EndTitle() {
+  return (
+    <section className="fl-end-title" aria-label="Dead Internet: credits">
+      <BrandMark size={34} />
+      <h2>Dead Internet</h2>
+      <p className="fl-end-credit">Short film by Dylan Jones for Kiroween</p>
+      <p className="fl-end-date">2026 — the year the internet died</p>
+      <nav className="fl-end-links" aria-label="Links">
+        <a href="https://hidylanjones.com/" target="_blank" rel="noopener noreferrer">
+          <Icon name="globe" size={15} />
+          hidylanjones.com
+        </a>
+        <a href="https://kiroween.devpost.com/" target="_blank" rel="noopener noreferrer">
+          <Icon name="code" size={15} />
+          Kiroween on Devpost
+        </a>
+      </nav>
+    </section>
   );
 }
 
@@ -60,7 +99,6 @@ export function PageHeader({
       style={
         {
           height: HEADER_H,
-          color: INK,
           fontFamily: UI,
           opacity: 'var(--page-o, 1)',
           pointerEvents: interactive ? 'auto' : 'none',
@@ -68,10 +106,7 @@ export function PageHeader({
       }
     >
       <a href="#top" className="fl-brand" aria-label="Dead internet — back to beginning">
-        <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <path d="M20.4 8.8A9 9 0 1 0 20.4 15.2M3 12h12M12 3c-4 4.5-4 13.5 0 18M12 3c2.2 2.5 3.2 5.5 3.2 9S14.2 18.5 12 21" />
-          <path d="M19 10l4 4m0-4-4 4" />
-        </svg>
+        <BrandMark size={19} />
         <span>dead internet</span>
       </a>
 

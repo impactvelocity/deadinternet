@@ -178,6 +178,10 @@ Style: 2017 Facebook repost, soft camera detail, modest JPEG compression and cru
 Feel: rage bait.
 ```
 
+### algorithm-more · Heartland Voice · "Still angry? Here’s what they’re hiding now. 😡"
+Third post in the 2017 film scene, 1.9:1 · saved as **1000×525** `algorithm-more.jpg`.
+Generated with the built-in image tool. Redacted documents on an office desk, a crude red circle and arrow, and white Impact-style captions: "WHAT ARE THEY HIDING?" / "SHARE BEFORE THIS DISAPPEARS". Full generation prompt in `heartland-voice-followup-prompt.txt`.
+
 ### algorithm-4 · Greg Parker · "Wake up people!!!" (link preview)
 Link image, 2.1:1 · generate **1536×1024** → crop to 1536×731 → save **1000×476** as `algorithm-4-link.jpg`
 Shown with "patriotdailynews.info · SHOCKING: What they found will make you furious"
@@ -305,13 +309,13 @@ Feel: generic hustle content. No text.
 ## 2023 · AI slop
 
 ### slop-1 · Amazing Crafts World · "Made this with my own hands 🥺 nobody likes it"
-AI image, 1:1 · generate **1024×1024** → save **1000×1000** as `slop-1.jpg`
+AI image, 3:2 · saved **1000×666** as `slop-1.jpg`. Wide composition fits the film's image-height limit without cropping the sculpture.
 
 ```
-An AI-generated engagement-bait image from 2023, square 1:1.
-Subject: an older man with a grey beard proudly standing beside a giant, impossibly detailed wooden cat sculpture taller than him, wood shavings on the ground. One of his hands, resting on the sculpture, has six fingers.
-Setting: rustic barn workshop, warm glowing light.
-Style: early-2023 diffusion output enlarged from low resolution: soft smeary texture, waxy pink skin, uneven eyes and teeth, awkward six-fingered hand, illogical apron straps, repetitive grain blending into fur, poorly resolved paws and melted background tools. Warm orange midtones and muddy shadows, no crisp cinematic polish. Built-in image generation; full prompt in `early-2023-crafts-prompt.txt`.
+An AI-generated engagement-bait image from 2023, landscape 3:2.
+Subject: older grey-bearded woodworker on the left, giant wooden cat sculpture on the right. Complete figures including ears, paws, curved tail, plinth and boots fit inside the frame. Awkward extra finger, impossible flowing woodgrain and repeated toe grooves.
+Setting: ordinary shed and faded green yard, washed daylight, sawdust underfoot.
+Style: enlarged early-diffusion output, waxy skin, soft synthetic detail and subtly melted tools. Honey-colored wood against neutral surroundings. Built-in image generation; full prompt in `early-2023-crafts-prompt.txt`.
 Feel: sentimental AI slop. No text.
 ```
 
@@ -321,10 +325,10 @@ The 2023 sidebar ad ("Hand-carved wooden cats 🐈") can reuse this same file.
 
 ```
 An AI-generated product photo for a dropshipping ad, 2023, 6:5.
-Subject: a small "hand-carved" wooden cat figurine sitting on a knitted blanket. The wood grain flows in impossible directions, one paw is fused into the base, and the ears don't match.
-Setting: cosy windowsill, soft warm bokeh, a candle.
+Subject: a complete "hand-carved" wooden cat figurine on the left, one large artisan seal on the right. The wood grain flows in impossible directions, one paw is fused into the base, and the ears don't match.
+Setting: cream knitted blanket on a windowsill, soft daylight, muted sage background.
 Style: 2023 AI product render: too smooth, glossy, warm, uncanny on a second look.
-Feel: exaggerated fake handmade. Large gold-edged artisan seal reads “HAND CRAFTED”, “MADE IN UZA” (intentional UZA spelling), “WITH LOVE”. Small kraft label reads “100% ARTISAN MADE” and “Every piece tells a story”. Built-in image generation; full edit prompt in `cozy-crafts-badge-prompt.txt`.
+Feel: exaggerated fake handmade. Large gold-edged artisan seal reads “HAND CRAFTED”, “MADE IN UZA” (intentional UZA spelling), “WITH LOVE”. Both the cat and seal fit inside the frame; no secondary label. Built-in image generation; full prompt in `cozy-crafts-badge-prompt.txt`.
 ```
 
 ---
@@ -403,7 +407,7 @@ Feel: engagement bait. No text.
 | stories-4 · lumen.co star projector ad | `posts/algo-hell-3.jpg` (2019 Instagram promotion, coral 50% OFF label and handwritten caption; built-in image generation; see `lumen-ad-prompt.txt`) |
 | reels-4 · Jess's 2005 throwback carousel | reuse `profile-3.jpg` |
 | Reels shelf · dancequeen, glowskin, storytime | reuse `reels-2.jpg`, `reels-3.jpg`, `reels-5.jpg` |
-| slop-3 · Freedom Eagle's 100th-birthday grandma | `posts/ai-era-1.jpg` (early-2023 diffusion look, waxy face, malformed hands and smeared cake; built-in image generation; see `early-2023-grandma-prompt.txt`) |
+| slop-3 · Freedom Eagle's 100th-birthday grandma | `posts/ai-era-1.jpg` (1000×666 landscape; full cake and hands in frame; waxy face and smeared frosting; built-in image generation; see `early-2023-grandma-prompt.txt`) |
 | 2023 sidebar ad · wooden cats | reuse `slop-4.jpg` |
 | Endless feed · tail-1 · Grateful Hearts | reuse `posts/dead-internet-1.jpg` (the unused soldier and dog) |
 

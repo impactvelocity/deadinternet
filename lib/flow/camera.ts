@@ -18,10 +18,10 @@
  * - `chat`     hold on the chat (the "user" turns out to be a scheduler)
  * - `servers`  chat → the 5×5 wall of sessions
  * - `farm`     wall → the field it sits in
- * - `dots`, `globe`, `collapse`, `blink`   every session becomes a dot of
- *              light, the dots become a globe, it collapses to one blinking
- *              dot (see dots.ts); the camera keeps drifting slowly out
- * - `end`      the end card, still drifting
+ * - `dots`, `signal`   every session becomes a dot of light; the camera
+ *              pulls further back so the dots pack tight enough to draw symbols
+ *              (see dots.ts, signal.ts)
+ * - `end`      the screen fades out with the music, still creeping out
  *
  * Each pull-back is a pure zoom about one fixed point, so nothing slides
  * sideways in a way the eye reads as panning, and every phase starts exactly
@@ -79,15 +79,18 @@ const F1: Pt = { x: centerTile.x + G.tile.w / 2, y: centerTile.y + G.tile.h / 2 
 const z1 = Math.min(PAGE.w / G.tile.w, PAGE.h / G.tile.h) * 0.86;
 const z2 = Math.min(PAGE.w / GRID_SIZE.w, PAGE.h / GRID_SIZE.h) * 0.94;
 const z3 = z2 / 6;
-/** After the farm the camera keeps drifting out, a little per phase. */
+/** After the farm the camera drifts out a little over the rows of dots... */
 const DRIFT: Partial<Record<RevealPhase, [number, number]>> = {
   dots: [z3, z3 * 0.97],
-  globe: [z3 * 0.97, z3 * 0.94],
-  collapse: [z3 * 0.94, z3 * 0.91],
-  blink: [z3 * 0.91, z3 * 0.88],
-  end: [z3 * 0.88, z3 * 0.86],
 };
-const z4 = z3 * 0.86;
+/**
+ * ...then, once the symbols start, pulls further back so more sessions fill
+ * the screen: the dots pack tighter and the symbols they draw get sharper.
+ * It keeps creeping out to the end.
+ */
+const PUSH = { from: z3 * 0.97, to: z3 * 0.55, creep: 0.97, share: 0.12 };
+/** The farthest the camera ever gets: the end of the film. */
+const z4 = PUSH.to * PUSH.creep;
 
 /**
  * The pattern field around the grid: big enough to fill the page at the
@@ -141,10 +144,44 @@ export function cameraAt(phase: RevealPhase, u: number): Camera {
       const t = phase === 'servers' ? u * servers : servers + u * farm;
       return zoom(F1, z1, VIEW, F1, z3, VIEW, ease(t / (servers + farm)));
     }
+    case 'signal': {
+      // A pull back over the first part of the phase, then a slow creep.
+      const t = 0.85 * ease(Math.min(1, u / PUSH.share)) + 0.15 * u;
+      return zoom(F1, PUSH.from, VIEW, F1, PUSH.to, VIEW, t);
+    }
+    case 'end':
+      return zoom(F1, PUSH.to, VIEW, F1, PUSH.to * PUSH.creep, VIEW, u);
     default: {
       // Keep drifting out, slowly, so no frame is ever quite still.
       const [a, b] = DRIFT[phase] ?? [z4, z4 * 0.99];
       return zoom(F1, a, VIEW, F1, b, VIEW, u);
     }
   }
+}
+
+/**
+ * The screen grows with the web: small at first (MySpace-era screens were
+ * lower resolution) and steadily larger era by era, reaching full size just
+ * as the camera starts to pull back, so the hand-off to the reveal is exact.
+ * The growth rate is constant until the last `WINDOW_GROWTH.landing` of the
+ * way, where it eases to a stop.
+ */
+export const WINDOW_GROWTH = { start: 0.55, landing: 0.08 } as const;
+
+export function windowScale(s: number, pullbackStart: number): number {
+  const { start, landing } = WINDOW_GROWTH;
+  if (pullbackStart <= 0) return 1;
+  const x = Math.min(1, Math.max(0, s / pullbackStart));
+  // Constant speed v, then a linear slowdown to zero over the landing.
+  const v = 1 / (1 - landing / 2);
+  const a = 1 - landing;
+  const p = x <= a ? v * x : v * a + v * (x - a) - (v * (x - a) ** 2) / (2 * landing);
+  return start + (1 - start) * Math.min(1, p);
+}
+
+/** The window's place on the page at scale `g`, grown about the screen's centre. */
+export function windowTransform(g: number): string {
+  const cx = WINDOW.w / 2;
+  const cy = WINDOW.chrome + (WINDOW.h - WINDOW.chrome) / 2;
+  return `translate(${PAGE_WINDOW.x + cx * (1 - g)}px, ${PAGE_WINDOW.y + cy * (1 - g)}px) scale(${g})`;
 }

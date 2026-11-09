@@ -367,9 +367,9 @@ const group = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 export function RevealOverlay({ phase, k }: { phase: RevealPhase | null; k: number }) {
   const idx = phase ? REVEAL_PHASES.indexOf(phase) : -1;
   const wide = idx >= REVEAL_PHASES.indexOf('servers');
-  const counting = wide && idx <= REVEAL_PHASES.indexOf('collapse');
-  const counterOpacity = phase === 'servers' ? 'clamp(0, var(--reveal-u, 0) * 5, 1)' : phase === 'collapse' ? 'clamp(0, 1 - var(--reveal-u, 0) * 4, 1)' : counting ? 1 : 0;
-  const cardOpacity = phase === 'end' ? 'clamp(0, (var(--reveal-u, 0) - .18) * 2.5, 1)' : 0;
+  const counting = wide && idx <= REVEAL_PHASES.indexOf('signal');
+  // Up over the rows of dots; gone as the camera pushes in on them.
+  const counterOpacity = phase === 'servers' ? 'clamp(0, var(--reveal-u, 0) * 5, 1)' : phase === 'signal' ? 'clamp(0, 1 - var(--reveal-u, 0) * 20, 1)' : counting ? 1 : 0;
   return (
     <div aria-hidden={!phase} className="pointer-events-none absolute inset-0 z-10" style={{ fontFamily: FONT }}>
       <div className="absolute inset-0" style={{
@@ -384,13 +384,7 @@ export function RevealOverlay({ phase, k }: { phase: RevealPhase | null; k: numb
           <span className="text-white/75">0 people</span>
         </div>
       </div>
-      <div className="absolute inset-0 grid place-items-center" style={{ opacity: cardOpacity, transform: phase === 'end' ? 'translateY(calc((1 - var(--reveal-u, 0)) * 14px))' : undefined }}>
-        <div className="text-center text-[#edeef3]">
-          <div className="text-[44px] font-medium leading-[1.2] tracking-[-1.5px]">Ashley wasn’t running a business.</div>
-          <div className="mt-2 text-[44px] font-medium leading-[1.2] tracking-[-1.5px] text-[#c8cddb]">An agent was running Ashley.</div>
-          <div className="mt-7 text-[14px] text-[#b0b6c4]">One opportunity. {group(48213)} sessions. No one on the other side.</div>
-        </div>
-      </div>
+
     </div>
   );
 }

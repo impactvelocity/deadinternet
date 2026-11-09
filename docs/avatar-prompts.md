@@ -333,13 +333,14 @@ Feel: curated but still real. No text.
 
 ### wanderwithjake
 File `wanderwithjake.jpg` · key `wanderwithjake` · travel influencer, "link in bio for my packing list 🌴"
+Regenerated with the built-in image tool using `public/assets/posts/stories-5.jpg` as Jake's identity reference. Saved at 512×512. Full prompt in `wanderwithjake-avatar-prompt.txt`.
 
 ```
 A 2019 Instagram travel-influencer profile picture, round crop, face centred and large.
-Subject: a 29-year-old man with sun-bleached shoulder-length hair, tanned, white linen shirt, squinting into the sun with a perfect smile.
-Setting: tropical cliff edge over turquoise water.
-Style: 2019 drone-and-iPhone travel aesthetic, oversaturated teal and orange preset, ring-light-free but heavily edited.
-Feel: aspirational, too good to be true. No text.
+Subject: the same man as the moped travel photo, late twenties, sun-bleached wavy shoulder-length hair, light stubble, tanned skin, white linen shirt and cord necklace, relaxed half-smile with eyes visible.
+Setting: tropical Bali coast, turquoise water and palms softly out of focus.
+Style: friend's iPhone XS photo, natural skin texture, faded warm highlights and teal shadows from a 2019 travel preset.
+Feel: casually curated travel bro. Face centred with room for a circular crop. No text.
 ```
 
 ---

@@ -4,9 +4,10 @@ import { describe, expect, it } from 'vitest'
 import { FLOW_ERAS } from '@/data/flow/eras'
 import { FACE_IMAGES, OPPORTUNITY_FACES, faceImage } from '@/data/flow/images'
 import { FLOW_POSTS, VIEWER } from '@/data/flow/posts'
+import { FILM_POSTS } from '@/data/flow/scenes'
 
 const PUBLIC = join(__dirname, '../../public')
-const posts = Object.values(FLOW_POSTS).flat()
+const posts = [...Object.values(FLOW_POSTS).flat(), ...Object.values(FILM_POSTS).flat()]
 
 /**
  * Every avatar key the feed can ask for: post and comment authors, the

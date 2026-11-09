@@ -126,7 +126,7 @@ function Media({ c, radius = 0, className, style }: { c: Ctx; radius?: number | 
       wire={wire}
       radius={radius}
       className={className}
-      style={style}
+      style={{ ...style, ...(post.endsAtSeconds !== undefined && post.media.kind !== 'reel' ? { maxHeight: 440 } : {}) }}
       target={`${post.id}:media`}
       views={post.stats?.views}
       watching={c.watching && !c.watched}
