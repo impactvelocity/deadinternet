@@ -1441,11 +1441,11 @@
   translate: 0 calc(var(--x) * var(--dy) + var(--lift, 0) * var(--ly, 0px));
   scale: calc((1 - var(--x) * 0.08) * (1 - var(--lift, 0) * (1 - var(--ls, 1))));
 }
-/* How it was made (MovieMade): after a moment the title moves up, smaller,
-   and its credit and date move down (--lift, 0..1), leaving the middle of
-   the frame for a few short lines, one at a time, each under a small icon. */
-[data-flow-root][data-movie] .fl-end-title h2 { --ly: -17.5vh; --ls: 0.5; }
-[data-flow-root][data-movie] .fl-end-title :is(.fl-end-credit, .fl-end-date) { --ly: 15.5vh; }
+/* How it was made (MovieMade): after a moment the title moves up to the top
+   edge, smaller, and its credit and date move down to the foot of the frame
+   (--lift, 0..1), leaving the middle for a few short lines, one at a time. */
+[data-flow-root][data-movie] .fl-end-title h2 { --ly: -35.5vh; --ls: 0.42; }
+[data-flow-root][data-movie] .fl-end-title :is(.fl-end-credit, .fl-end-date) { --ly: 29vh; }
 .fl-movie-how {
   position: absolute;
   inset: 0;
@@ -1458,27 +1458,25 @@
 .fl-movie-how-scene {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2.6vh;
+  display: grid;
+  place-items: center;
   padding: 0 24px;
   text-align: center;
   opacity: var(--o);
   /* A slow rise the whole time it's up, so it never sits still. */
   translate: 0 calc((0.5 - var(--p)) * 1.6vh);
 }
-.fl-movie-how-icon { width: 5.4vh; height: 5.4vh; color: #f4f2f8; opacity: 0.9; }
-.fl-movie-how-thumb { translate: 0 calc(var(--p) * 10.8px); }
 .fl-movie-how-scene p {
   margin: 0;
-  font-size: clamp(18px, 3vh, 46px);
+  font-size: clamp(18px, 3.4vh, 52px);
   font-weight: 500;
   line-height: 1.5;
   letter-spacing: 0.09em;
 }
 .fl-movie-how-scene strong { font-weight: 500; color: #f4f2f8; }
+/* "none of this is real": the line it all comes to. It holds still, then glitches out (paintMadeGlitch). */
+.fl-movie-how-last { translate: none; }
+.fl-movie-how-last p { font-size: clamp(22px, 4.6vh, 70px); color: #f4f2f8; text-shadow: none; will-change: transform; }
 .fl-end-dot {
   position: absolute;
   left: 50%;

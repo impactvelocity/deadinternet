@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MobileStory, REVEAL_BEATS } from '@/components/story/MobileStory';
 import { StoryVideo } from '@/components/story/StoryParts';
 import narration from '@/data/flow/narration.json';
@@ -27,6 +27,15 @@ describe('the phone page', () => {
   it('keeps the reveal’s words in step with the narration', () => {
     const squash = (s: string) => s.replace(/\s+/g, ' ').trim();
     expect(squash(REVEAL_BEATS.map((b) => b.says).join(' '))).toBe(squash(narration.reveal.text));
+  });
+
+  it('ends on the upsell, whose button only goes back to the top', () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    render(<MobileStory />);
+    expect(screen.getByText('$29.99')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Upgrade to keep being you' }));
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
+    scrollTo.mockRestore();
   });
 
   it('only loads the player once the poster is pressed', () => {

@@ -144,22 +144,54 @@ describe('the movie frame', () => {
     const titleAt = intro + titleStart(t) / P;
     const peak = intro + t.reveal.find((r) => r.phase === 'end')!.s0 / P;
     const leaves = peak + MOVIE.exit.at;
+    const M = MOVIE.made;
     // The title comes up in the middle first; nothing moves until it has.
     expect(movieFrame(t, titleAt + ENDING.fade).lift).toBe(0);
-    expect(movieFrame(t, titleAt + MOVIE.made.liftAt + MOVIE.made.lift).lift).toBe(1);
-    // Every line gets the middle to itself, fully up, for a few seconds.
-    const full = Array.from({ length: MOVIE.made.scenes }, () => 0);
+    expect(movieFrame(t, titleAt + M.liftAt + M.lift).lift).toBe(1);
+    const full = Array.from({ length: M.lines + 1 }, () => 0);
     for (let x = titleAt; x <= leaves + 2; x += 1 / 30) {
       const f = movieFrame(t, x);
-      expect(f.made.filter((m) => m.o > 0.001).length).toBeLessThanOrEqual(1);
+      expect(f.made.length).toBe(M.lines + 1);
+      const up = f.made.map((m, k) => (m.o > 0.001 ? k : -1)).filter((k) => k >= 0);
+      // One at a time, except the last line fading into the final one.
+      if (up.length > 1) expect(up).toEqual([M.lines - 1, M.lines]);
       f.made.forEach((m, k) => {
-        if (m.o === 1) full[k] += 1 / 30;
-        // None before the title has started to move, none once it starts to leave.
+        if (m.o === 1 && f.glitch === 0) full[k] += 1 / 30;
+        // None before the title has started to move, none once it's about to leave.
         if (m.o > 0) expect(f.lift).toBeGreaterThan(0);
-        if (x >= leaves - MOVIE.made.tail + 1e-6) expect(m.o).toBe(0);
+        if (x >= leaves - M.tail + 1e-6) expect(m.o).toBe(0);
       });
     }
-    for (const seconds of full) expect(seconds).toBeGreaterThan(3);
+    // Every line is fully up for a good few seconds.
+    for (const seconds of full) expect(seconds).toBeGreaterThan(2.5);
+  });
+
+  it('holds the final line, glitches it out, and brings the skull up bright as it goes', () => {
+    const peak = intro + t.reveal.find((r) => r.phase === 'end')!.s0 / P;
+    const M = MOVIE.made;
+    const gone = peak + MOVIE.exit.at - M.tail;
+    const glitchAt = gone - M.glitch;
+    const last = (x: number) => movieFrame(t, x).made[M.lines];
+    // Up and steady before the glitch, with no skull held yet.
+    const steady = movieFrame(t, glitchAt - MOVIE.skullLead - 0.1);
+    expect(steady.made[M.lines].o).toBe(1);
+    expect(steady.glitch).toBe(0);
+    expect(steady.skull).toBe(0);
+    // The glitch runs to the moment it's gone; the skull rises through it and stays.
+    expect(movieFrame(t, glitchAt + M.glitch / 2).glitch).toBeCloseTo(0.5, 6);
+    expect(last(gone - 0.01).o).toBe(1);
+    expect(last(gone).o).toBe(0);
+    let before = 0;
+    for (let x = glitchAt - MOVIE.skullLead; x <= gone; x += 0.1) {
+      const skull = movieFrame(t, x).skull;
+      expect(skull).toBeGreaterThanOrEqual(before);
+      before = skull;
+    }
+    expect(movieFrame(t, gone).skull).toBe(1);
+    expect(movieFrame(t, movieDuration(t)).skull).toBe(1);
+    // And the dimming under the lines lifts for it, without going past clear.
+    expect(ENDING.veil + MOVIE.madeVeil - MOVIE.skullGlow).toBeGreaterThanOrEqual(0);
+    expect(ENDING.veil + MOVIE.madeVeil - MOVIE.skullGlow).toBeLessThan(0.15);
   });
 
   it('ends by taking the title away, outside in, and leaving one dot', () => {

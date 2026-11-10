@@ -135,16 +135,76 @@
 .ms-beat .ms-shot { margin-top: 0; }
 .ms-reveal blockquote { margin-top: 16px; }
 
-/* The end: the mark and three links. */
-.ms-foot { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 30px 20px 0; padding: 30px 0 46px; border-top: 1px solid var(--rule); }
-.ms-foot p + p { margin: 0; font-size: 13px; color: #6f6a7a; }
-.ms-foot a { color: #bdb7c8; text-decoration: none; }
+/* The end: the robot's upsell, as a paywall card, then three quiet links. */
+.ms-foot { margin: 34px 20px 0; padding: 0 0 44px; }
+.ms-upsell {
+  padding: 26px 22px 22px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 22px;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgb(124 92 255 / 22%), transparent 70%),
+    #111016;
+  box-shadow: 0 30px 80px -30px rgb(124 92 255 / 45%);
+  text-align: center;
+}
+.ms-upsell-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 5px 12px 5px 10px;
+  border: 1px solid rgb(255 107 107 / 35%);
+  border-radius: 999px;
+  background: rgb(255 107 107 / 10%);
+  font: 500 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .04em;
+  color: #ff9d9d;
+}
+.ms-upsell-alert span { width: 7px; height: 7px; border-radius: 50%; background: #ff6b6b; animation: ms-blink 1.06s steps(1) infinite; }
+@keyframes ms-blink { 50% { opacity: .15; } }
+.ms-upsell h2 { margin: 18px 0 0; font-size: 28px; font-weight: 600; line-height: 1.1; letter-spacing: -0.035em; text-wrap: balance; }
+.ms-upsell-pitch { margin: 10px auto 0; max-width: 17em; font-size: 16px; line-height: 1.45; color: #cfc9d8; text-wrap: balance; }
+.ms-upsell-price { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 24px 0 0; }
+.ms-upsell-price strong { font-size: 46px; font-weight: 600; line-height: 1; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+.ms-upsell-price span { text-align: left; font-size: 13px; line-height: 1.35; color: var(--muted); }
+.ms-upsell ul { display: grid; gap: 10px; margin: 24px 0 0; padding: 18px 0 0; border-top: 1px solid rgb(255 255 255 / 10%); list-style: none; text-align: left; }
+.ms-upsell li { position: relative; padding-left: 28px; font-size: 14.5px; line-height: 1.4; color: #dcd7e3; }
+.ms-upsell li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #a995ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23111016' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 8.3 2.3 2.3 4.7-5'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+.ms-upgrade {
+  display: block;
+  width: 100%;
+  margin-top: 24px;
+  padding: 15px 20px;
+  border-radius: 999px;
+  background: #f1eef6;
+  color: #0e0d12;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: transform .15s ease, background-color .15s ease;
+}
+.ms-upgrade:active { background: #fff; transform: scale(.98); }
+.ms-upsell-fine { margin: 14px 0 0; font-size: 11.5px; line-height: 1.45; color: #6f6a7a; text-wrap: balance; }
+.ms-credits { margin: 28px 0 0; text-align: center; font-size: 13px; color: #6f6a7a; }
+.ms-credits a { color: #a9a3b2; text-decoration: none; }
 
 /* A phone on its side: keep the column readable. */
 @media (min-width: 601px) {
   .ms-hero > *, .ms-chapter > *, .ms-reveal > *, .ms-foot { max-width: 520px; margin-inline: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ms-down svg { animation: none; }
+  .ms-down svg, .ms-upsell-alert span { animation: none; }
+  .ms-upgrade { transition: none; }
   .ms-video-poster img, .ms-video-play { transition: none; }
 }

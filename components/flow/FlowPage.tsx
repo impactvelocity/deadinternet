@@ -425,52 +425,74 @@ export function MovieIntro({ hint }: { hint: boolean }) {
   );
 }
 
-/** Line icons for the movie's how-it-was-made scenes, drawn like the dead-internet mark. */
-function MadeIcon({ name }: { name: 'code' | 'scroll' | 'spark' | 'voice' }) {
+/**
+ * How the film was made, in the movie's ending (/movie): once the end title
+ * has moved up to the top edge and its credit down to the foot, a few short
+ * lines play in the middle, one at a time. The last fades into "none of this
+ * is real", which stays, then glitches out (`paintMadeGlitch`). The lab sets
+ * each line's opacity and progress every frame (`--how-N`, `--how-p-N`,
+ * lib/flow/movie.ts movieEnding).
+ */
+export function MovieMade({ lastRef }: { lastRef: Ref<HTMLParagraphElement> }) {
+  const lines = [
+    <>This short film was <strong>made in code</strong></>,
+    <>The <strong>scroll bar</strong> pushes the story forward</>,
+    <>Every era, person and post was <strong>AI generated</strong></>,
+    <>The voice, the emotion, the song</>,
+  ];
+  const vars = (k: number) => ({ '--o': `var(--how-${k}, 0)`, '--p': `var(--how-p-${k}, 0)` }) as CSSProperties;
   return (
-    <svg aria-hidden="true" className="fl-movie-how-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-      {name === 'code' && <path d="m7.5 7-5 5 5 5M16.5 7l5 5-5 5M13.6 4.5l-3.2 15" />}
-      {name === 'scroll' && (
-        <>
-          {/* A scroll bar; its thumb travels down while the scene plays. */}
-          <rect x="9.25" y="1.75" width="5.5" height="20.5" rx="2.75" />
-          <rect className="fl-movie-how-thumb" x="10.9" y="3.4" width="2.2" height="6.4" rx="1.1" fill="currentColor" stroke="none" />
-        </>
-      )}
-      {name === 'spark' && (
-        <>
-          <path d="M10 3.5 11.8 8.2 16.5 10 11.8 11.8 10 16.5 8.2 11.8 3.5 10 8.2 8.2Z" />
-          <path d="M18 14.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9Z" />
-        </>
-      )}
-      {name === 'voice' && <path d="M3.5 10.5v3M7.75 7v10M12 3.5v17M16.25 7.5v9M20.5 10.5v3" />}
-    </svg>
+    <div aria-hidden className="fl-movie-how">
+      {lines.map((line, k) => (
+        <div key={k} className="fl-movie-how-scene" style={vars(k)}>
+          <p><span>{line}</span></p>
+        </div>
+      ))}
+      <div className="fl-movie-how-scene fl-movie-how-last" style={vars(lines.length)}>
+        <p ref={lastRef}>none of this is real</p>
+      </div>
+    </div>
   );
 }
 
+/** Deterministic 0..1 noise. */
+function noise(n: number): number {
+  const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 /**
- * How the film was made, in the movie's ending (/movie): once the end title
- * has moved up and its credit down, a few short lines play between them, one
- * at a time, each under a small icon. The lab sets each scene's opacity and
- * progress every frame (`--how-N`, `--how-p-N`, lib/flow/movie.ts movieEnding).
+ * The final line glitching out: `g` runs 0..1. It twitches sideways in
+ * bursts that come more often and harder, its colours split, slices of it
+ * drop out, it flickers, and by the end it's gone. Re-rolled every 50ms of
+ * `now`, so a held frame still twitches and a rendered one is repeatable.
  */
-export function MovieMade() {
-  const scenes = [
-    { icon: 'code', line: <>This short film was <strong>made in code</strong></> },
-    { icon: 'scroll', line: <>The <strong>scroll bar</strong> pushes the story forward</> },
-    { icon: 'spark', line: <>Every era, person and post was <strong>AI generated</strong></> },
-    { icon: 'voice', line: <><span className="block">The voice, the emotion, the song</span><span className="block"><strong>none of this is real</strong></span></> },
-  ] as const;
-  return (
-    <div aria-hidden className="fl-movie-how">
-      {scenes.map((scene, k) => (
-        <div key={scene.icon} className="fl-movie-how-scene" style={{ '--o': `var(--how-${k}, 0)`, '--p': `var(--how-p-${k}, 0)` } as CSSProperties}>
-          <MadeIcon name={scene.icon} />
-          <p>{scene.line}</p>
-        </div>
-      ))}
-    </div>
-  );
+export function paintMadeGlitch(el: HTMLElement, g: number, now: number) {
+  if (g <= 0) {
+    if (el.dataset.glitch) {
+      delete el.dataset.glitch;
+      el.style.transform = el.style.textShadow = el.style.clipPath = el.style.opacity = '';
+    }
+    return;
+  }
+  el.dataset.glitch = 'on';
+  const tick = Math.floor(now / 50);
+  const r = (i: number) => noise(tick * 31 + i * 7.13);
+  const burst = r(0) < 0.3 + 0.65 * g;
+  const a = burst ? 0.18 + g * g : 0.04;
+  el.style.transform = `translate(${((r(1) - 0.5) * 90 * a).toFixed(1)}px, ${((r(2) - 0.5) * 12 * a).toFixed(1)}px) skewX(${((r(3) - 0.5) * 36 * a).toFixed(1)}deg)`;
+  const split = Math.min(1, a * 2.2);
+  el.style.textShadow = `${(3 + 30 * a * r(4)).toFixed(1)}px 0 rgb(255 50 90 / ${(0.85 * split).toFixed(2)}), ${(-3 - 30 * a * r(5)).toFixed(1)}px 0 rgb(0 225 255 / ${(0.85 * split).toFixed(2)})`;
+  // Now and then only a slice of it shows.
+  if (burst && r(6) < 0.25 + 0.5 * g) {
+    const top = r(7) * 65;
+    el.style.clipPath = `inset(${top.toFixed(0)}% 0 ${Math.max(0, 100 - top - 18 - r(8) * 40).toFixed(0)}% 0)`;
+  } else {
+    el.style.clipPath = '';
+  }
+  const out = Math.min(1, Math.max(0, (g - 0.78) / 0.22));
+  const flicker = r(9) < g * 0.55 ? 0.2 : 1;
+  el.style.opacity = (flicker * (1 - out * out * (3 - 2 * out))).toFixed(3);
 }
 
 /**

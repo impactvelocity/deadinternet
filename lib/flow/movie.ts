@@ -12,7 +12,8 @@
  * (`ambienceAt`); the cards stay on plain black. At the reveal the frame
  * eases out from the screen to the whole page, so the pull-back has the same
  * room it has on the site. The end title then moves up, smaller, and a few
- * lines say how the film was made. Once the score has peaked, the title's
+ * lines say how the film was made; the last, "none of this is real",
+ * glitches out as the skull brightens. Once the score has peaked, the title's
  * lines leave one by one, from the edges in, and a single dot is left where
  * it was; it holds alone for a moment after the score ends.
  *
@@ -56,14 +57,19 @@ export const MOVIE = {
   exit: { at: 1, stagger: 0.35, each: 1.3, groups: 4 },
   /**
    * How it was made, under the end title. `liftAt` seconds after the title
-   * starts to appear it moves up, smaller, and its credit moves down (over
-   * `lift` seconds); between them `scenes` short lines with an icon play one
-   * at a time, each fading over `fade`, the last one gone `tail` seconds
-   * before the title starts to leave.
+   * starts to appear it moves up to the top edge, smaller, and its credit
+   * moves down to the foot of the frame (over `lift` seconds). In the middle
+   * `lines` short lines play one at a time, each fading over `fade`; the
+   * last of them fades into the final line, which holds for `last` seconds,
+   * glitches out over `glitch`, and is gone `tail` seconds before the title
+   * starts to leave.
    */
-  made: { liftAt: 2.6, lift: 1.4, scenes: 4, fade: 0.5, tail: 1.8 },
-  /** How much further the field of dots dims while those lines are up (added to the title's veil). */
+  made: { liftAt: 2.2, lift: 0.8, lines: 4, fade: 0.5, last: 3.2, glitch: 1.7, tail: 1.6 },
+  /** How much further the field of dots dims while those lines are up (added to the title's veil)... */
   madeVeil: 0.22,
+  /** ...and how much of the dimming lifts as the skull comes up under the final line, starting `skullLead` seconds before the glitch. */
+  skullGlow: 0.78,
+  skullLead: 1.2,
   /** The last dot fading up where the title was, in seconds after the score's peak. */
   dot: { at: 2.6, in: 1.2 },
   /** Score level under the cards (linear gain); it settles to the bed under the voice as the window arrives. */
@@ -176,8 +182,12 @@ export interface MovieFrame {
   dot: number;
   /** 0..1: the end title moved up and smaller, its credit down, making room for the scenes. */
   lift: number;
-  /** Each how-it-was-made scene: opacity `o`, and `p`, 0..1 through its time on screen. */
+  /** Each how-it-was-made line, the final one last: opacity `o`, and `p`, 0..1 through its time on screen. */
   made: { o: number; p: number }[];
+  /** 0..1: how far the final line has glitched out. */
+  glitch: number;
+  /** 0..1: the skull held up in the dots under the final line, brightening. */
+  skull: number;
 }
 
 /**
@@ -222,31 +232,44 @@ export function movieFrame(t: Pick<Timeline, 'total' | 'pullbackStart' | 'reveal
 
 /**
  * The end. Once the title is up it moves aside for a few lines on how the
- * film was made; then, from the score's peak (the start of the `end` phase),
- * the title's lines leave, outside in, and one dot is left.
+ * film was made, the last of which glitches out as the skull brightens
+ * behind it; then, from the score's peak (the start of the `end` phase), the
+ * title's lines leave, outside in, and one dot is left.
  */
 export function movieEnding(
   t: Pick<Timeline, 'total' | 'reveal' | 'revealStart'>,
   seconds: number,
-): Pick<MovieFrame, 'exit' | 'dot' | 'lift' | 'made'> {
+): Pick<MovieFrame, 'exit' | 'dot' | 'lift' | 'made' | 'glitch' | 'skull'> {
   const peak = movieIntro() + (t.reveal.find((r) => r.phase === 'end')?.s0 ?? t.total) / PLAY_SPEED;
   const x = seconds - peak;
   const { at, stagger, each, groups } = MOVIE.exit;
-  // The scenes share the time between the title settling and its leaving.
+  // Worked back from the title's leaving: the final line gone, its glitch, its hold.
   const M = MOVIE.made;
   const liftAt = movieIntro() + titleStart(t) / PLAY_SPEED + M.liftAt;
-  const first = liftAt + M.lift * 0.7;
-  const span = (peak + at - M.tail - first) / M.scenes;
+  const gone = peak + at - M.tail;
+  const glitchAt = gone - M.glitch;
+  const lastAt = glitchAt - M.last - M.fade;
+  // The other lines share the time from the title settling to the final line.
+  const first = liftAt + M.lift * 0.6;
+  const span = (lastAt + M.fade - first) / M.lines;
+  // Too little time for them (a much shorter ending): leave them all out.
+  const room = span >= 4 * M.fade;
+  const made = Array.from({ length: M.lines }, (_, k) => {
+    const y = seconds - (first + k * span);
+    return { o: room ? smooth(y / M.fade) * (1 - smooth((y - (span - M.fade)) / M.fade)) : 0, p: clamp01(y / span) };
+  });
+  // The final line comes up through the end of the one before it, and holds until it has glitched away.
+  made.push({
+    o: room && seconds < gone ? smooth((seconds - lastAt - M.fade * 0.4) / M.fade) : 0,
+    p: clamp01((seconds - lastAt) / (gone - lastAt)),
+  });
   return {
     exit: Array.from({ length: groups }, (_, k) => smooth((x - at - k * stagger) / each)),
     dot: smooth((x - MOVIE.dot.at) / MOVIE.dot.in),
     lift: smooth((seconds - liftAt) / M.lift),
-    made: Array.from({ length: M.scenes }, (_, k) => {
-      const y = seconds - (first + k * span);
-      // Too little time for them (a much shorter ending): leave them out.
-      if (span < 4 * M.fade) return { o: 0, p: 0 };
-      return { o: smooth(y / M.fade) * (1 - smooth((y - (span - M.fade)) / M.fade)), p: clamp01(y / span) };
-    }),
+    made,
+    glitch: room ? clamp01((seconds - glitchAt) / M.glitch) : 0,
+    skull: room ? smooth((seconds - (glitchAt - MOVIE.skullLead)) / (M.glitch + MOVIE.skullLead)) : 0,
   };
 }
 

@@ -87,6 +87,8 @@ export interface DotState {
   voice?: VoiceTrack;
   /** Page px kept clear of the typing while the title is up (its words sit there). */
   hush?: Rect;
+  /** 0..1: hold the skull up, steady, at this level, instead of letting it blink (the movie's ending). */
+  skull?: number;
 }
 
 /* ------------------------------- Grid dots -------------------------------- */
@@ -318,7 +320,8 @@ export function drawDots(ctx: CanvasRenderingContext2D, cam: Camera, st: DotStat
 
   // `signal` and `end`: the same small round dots, now showing symbols.
   const frame = signalAt(clock, st.speech ?? Infinity);
-  const main = frame.glyph && frame.level > 0 ? maskOf(frame.glyph) : null;
+  const held = st.skull ?? 0;
+  const main = held > 0 ? maskOf('skull') : frame.glyph && frame.level > 0 ? maskOf(frame.glyph) : null;
   const flash = frame.flash ? maskOf(frame.flash) : null;
   const settle = st.phase === 'signal' ? smooth(st.u / SIGNAL_SETTLE) : 1;
   // Dots stay small and round (about 4px on screen) however close the camera gets.
@@ -359,7 +362,7 @@ export function drawDots(ctx: CanvasRenderingContext2D, cam: Camera, st: DotStat
     let gr = 0;
     let b = 0;
     if (main) {
-      const level = frame.level * hum;
+      const level = Math.max(frame.level, held) * hum;
       r = sampleMask(main, g.sx - split, g.sy, radius) * level;
       gr = sampleMask(main, g.sx, g.sy, radius) * level;
       b = sampleMask(main, g.sx + split, g.sy, radius) * level;

@@ -19,7 +19,7 @@ import narration from '@/data/flow/narration.json';
 import { viewerFor } from '@/data/flow/posts';
 import { FILM_ERAS } from '@/data/flow/scenes';
 import type { FlowEraId } from '@/data/flow/types';
-import { StoryVideo } from './StoryParts';
+import { StoryVideo, UpgradeButton } from './StoryParts';
 
 const REPO = 'https://github.com/impactvelocity/deadinternet';
 const NIGHT = '#050507';
@@ -69,6 +69,14 @@ export const REVEAL_BEATS = [
     says: '...Is there anyone here? Can anyone hear me?',
   },
 ] as const;
+
+/** What the upgrade gets you, in the robot's cheerful terms. */
+const UPSELL_PERKS = [
+  'More credits to keep being you',
+  'An agent that posts as you, every five minutes',
+  'Friends who always say YES',
+  'Unlimited likes from accounts like yours',
+];
 
 function mix(from: string, to: string, t: number): string {
   const channel = (hex: string, i: number) => parseInt(hex.slice(1 + 2 * i, 3 + 2 * i), 16);
@@ -182,12 +190,31 @@ export function MobileStory() {
           ))}
         </section>
 
+        {/* The film's last voice: the robot, selling Ashley back to herself (narration.json, reveal.subscription). */}
         <footer className="ms-foot">
-          <p className="ms-brand">
-            <Mark size={20} />
-            <span>dead internet</span>
-          </p>
-          <p>
+          <section className="ms-upsell" aria-labelledby="ms-upsell-title">
+            <p className="ms-upsell-alert">
+              <span aria-hidden="true" />0 credits remaining
+            </p>
+            <h2 id="ms-upsell-title">You’ve run out of credits.</h2>
+            <p className="ms-upsell-pitch">To continue being yourself, upgrade to Pro Max Plus Pro.</p>
+            <p className="ms-upsell-price">
+              <strong>$29.99</strong>
+              <span>
+                per month,
+                <br />
+                for the rest of your life
+              </span>
+            </p>
+            <ul>
+              {UPSELL_PERKS.map((perk) => (
+                <li key={perk}>{perk}</li>
+              ))}
+            </ul>
+            <UpgradeButton>Upgrade to keep being you</UpgradeButton>
+            <p className="ms-upsell-fine">Renews automatically. Cancelling is not available on your plan.</p>
+          </section>
+          <p className="ms-credits">
             <a href="https://hidylanjones.com/" target="_blank" rel="noopener noreferrer">Dylan Jones</a>
             <span aria-hidden="true"> · </span>
             <a href="https://kiroween.devpost.com/" target="_blank" rel="noopener noreferrer">Kiroween</a>

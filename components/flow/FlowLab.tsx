@@ -80,7 +80,7 @@ import { FlowHud, HUD_HEIGHT } from './FlowHud';
 import { HowItsMade } from './HowItsMade';
 import { FlowMusic } from './FlowMusic';
 import { FlowNarration } from './FlowNarration';
-import { EndTitle, EraDrawer, FilmVideo, HEADER_H, MovieAmbience, MovieIntro, MovieMade, PageBackdrop, PageHeader, paintAmbience, ShareFilm, StartScreen, WindowToggle } from './FlowPage';
+import { EndTitle, EraDrawer, FilmVideo, HEADER_H, MovieAmbience, MovieIntro, MovieMade, PageBackdrop, PageHeader, paintAmbience, paintMadeGlitch, ShareFilm, StartScreen, WindowToggle } from './FlowPage';
 
 /** Least room kept above and below the browser window, in page units. */
 const PAGE_GAP = 20;
@@ -321,6 +321,8 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
   const glitchRef = useRef<HTMLDivElement>(null);
   const displayRef = useRef<HTMLDivElement>(null);
   const ambienceRef = useRef<HTMLDivElement>(null);
+  /** The movie's final how-it-was-made line, which glitches out. */
+  const madeLastRef = useRef<HTMLParagraphElement>(null);
   const timelineRef = useRef<Timeline | null>(null);
   const snapRef = useRef<Snap>(INITIAL_SNAP);
   const shownRef = useRef(0);
@@ -387,7 +389,7 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
       const left = Math.min(...boxes.map((r) => r.left)) - 40;
       const right = Math.max(...boxes.map((r) => r.right)) + 40;
       // (The movie's title and credit move apart for the lines between them: keep that whole column clear.)
-      const spread = movie ? window.innerHeight * 0.18 : 0;
+      const spread = movie ? window.innerHeight * 0.32 : 0;
       const top = Math.min(...boxes.map((r) => r.top)) - 36 - spread;
       const bottom = Math.max(...boxes.map((r) => r.bottom)) + 36 + spread;
       const k = endFit.scale;
@@ -646,10 +648,12 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
         rootRef.current?.style.setProperty('--end-dot', mv.dot.toFixed(3));
         // Before that, the title moves aside for a few lines on how the film was made.
         rootRef.current?.style.setProperty('--lift', mv.lift.toFixed(4));
-        mv.made.forEach((scene, k) => {
-          rootRef.current?.style.setProperty(`--how-${k}`, scene.o.toFixed(3));
-          rootRef.current?.style.setProperty(`--how-p-${k}`, scene.p.toFixed(4));
+        mv.made.forEach((line, k) => {
+          rootRef.current?.style.setProperty(`--how-${k}`, line.o.toFixed(3));
+          rootRef.current?.style.setProperty(`--how-p-${k}`, line.p.toFixed(4));
         });
+        // The last of them, "none of this is real", glitches out.
+        if (madeLastRef.current) paintMadeGlitch(madeLastRef.current, mv.glitch, now);
         // A faint glow in the era's colours behind the window.
         if (ambienceRef.current) {
           const px = grow * fit.scale;
@@ -718,8 +722,10 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
                 now,
                 clock: (f.s - t.revealStart) / PLAY_SPEED,
                 speech: narration.reveal.durationSeconds,
-                // The movie dims the field further while its how-it-was-made lines are up.
-                veil: endingVeil(t, f.s) + (mv ? MOVIE.madeVeil * mv.lift : 0),
+                // The movie dims the field further while its how-it-was-made lines are up,
+                // then lets the skull come up bright under the last of them.
+                veil: endingVeil(t, f.s) + (mv ? MOVIE.madeVeil * mv.lift - MOVIE.skullGlow * mv.skull : 0),
+                skull: mv?.skull,
                 voice: voiceTrack(t, FLOW_ERAS.at(-1)!.id),
                 hush: hushRef.current,
               },
@@ -1085,7 +1091,7 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
           </>
         )}
         <EndTitle onHowMade={movie ? undefined : openMade} />
-        {movie && <MovieMade />}
+        {movie && <MovieMade lastRef={madeLastRef} />}
         {movie && <div aria-hidden className="fl-end-dot" />}
         <FlowNarration
           era={era.id}

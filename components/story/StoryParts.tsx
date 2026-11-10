@@ -1,6 +1,7 @@
 'use client';
 /**
- * The one interactive piece of the phone page: the film as a video.
+ * The interactive pieces of the phone page: the film as a video, and the
+ * upsell's button, which only takes you back to the top.
  */
 import { useState } from 'react';
 import { FILM_VIDEO, youtubeEmbed } from '@/data/flow/video';
@@ -41,5 +42,21 @@ export function StoryVideo() {
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * The upsell's button. There is nothing to buy: pressing it scrolls back to
+ * the top of the page, to start again.
+ */
+export function UpgradeButton({ children }: { children: string }) {
+  const toTop = () => {
+    const calm = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: calm ? 'auto' : 'smooth' });
+  };
+  return (
+    <button type="button" className="ms-upgrade" onClick={toTop}>
+      {children}
+    </button>
   );
 }

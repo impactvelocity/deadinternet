@@ -1,5 +1,7 @@
 # Dead Internet
 
+![Dead Internet: a scrollable film built with React and Kiro IDE](public/assets/devpost/banner.png)
+
 A short film you play by scrolling. As you scroll, Ashley tells the story of the internet she remembers, from her MySpace page in 2005 to a feed where nobody is real.
 
 I made it for Kiroween and built it in Kiro IDE.
@@ -9,6 +11,10 @@ I made it for Kiroween and built it in Kiro IDE.
 Scroll to play, and scroll back to rewind. You can also press play and watch it straight through in under two and a half minutes.
 
 `/movie` plays the same film full frame, with no controls. It's also the page I render the video from.
+
+## How it works
+
+![How Dead Internet works: a film you play by scrolling, from 2005 to the reveal](public/assets/devpost/how-it-works-short.png)
 
 ## The story
 
