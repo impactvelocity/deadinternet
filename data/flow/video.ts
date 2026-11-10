@@ -4,7 +4,7 @@
  * form works). While it's empty, the pop-up says the video is on its way.
  */
 export const FILM_VIDEO = {
-  youtube: 'https://youtu.be/ydEq0oPjJnE',
+  youtube: 'https://youtu.be/lHRMxneXCGo',
   title: 'Dead Internet, the film',
   /** How long it runs, as shown on the phone page's play button. */
   runtime: '2:23',
