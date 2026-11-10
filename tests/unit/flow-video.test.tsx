@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { FilmVideo, PageHeader, ShareFilm, StartScreen, WindowToggle } from '@/components/flow/FlowPage';
+import { EndTitle, FilmVideo, PageHeader, PageScrollbar, ShareFilm, StartScreen, WindowToggle } from '@/components/flow/FlowPage';
 import { SITE } from '@/data/flow/site';
-import { youtubeEmbed } from '@/data/flow/video';
+import { FILM_VIDEO, youtubeEmbed } from '@/data/flow/video';
 
 afterEach(cleanup);
 
@@ -41,7 +41,10 @@ describe('watch as a video', () => {
     expect(container.textContent).not.toContain('on its way');
     rerender(<FilmVideo open onClose={onClose} />);
     expect(container.querySelector('dialog')!.open).toBe(true);
-    expect(container.textContent).toContain('The video version is on its way.');
+    // With a link (data/flow/video.ts) it's the player; without one, the note.
+    const embed = youtubeEmbed(FILM_VIDEO.youtube);
+    if (embed) expect(container.querySelector('iframe')!.getAttribute('src')).toBe(embed);
+    else expect(container.textContent).toContain('The video version is on its way.');
     fireEvent.click(container.querySelector('.fl-video-close')!);
     expect(onClose).toHaveBeenCalledOnce();
   });
@@ -108,5 +111,30 @@ describe('the window as a play/pause button', () => {
     fireEvent.click(button);
     expect(onToggle).not.toHaveBeenCalled();
     expect(playing).toBe(false);
+  });
+});
+
+describe('desktop polish', () => {
+  it('offers watch again and share on the end title, on the site only', () => {
+    const onReplay = vi.fn();
+    const onShare = vi.fn();
+    render(<EndTitle onReplay={onReplay} onShare={onShare} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Watch again' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Share' }));
+    expect(onReplay).toHaveBeenCalledOnce();
+    expect(onShare).toHaveBeenCalledOnce();
+    cleanup();
+    // The movie's end title has neither.
+    render(<EndTitle />);
+    expect(screen.queryByRole('button', { name: 'Watch again' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Share' })).toBeNull();
+  });
+
+  it('sizes the page scroll bar thumb from the story length, and stays out of the accessibility tree', () => {
+    const { container } = render(<PageScrollbar barRef={null} total={9000} viewport={1000} onSeek={vi.fn()} />);
+    const bar = container.querySelector<HTMLElement>('.fl-scrollbar')!;
+    expect(bar.getAttribute('aria-hidden')).toBe('true');
+    expect(bar.style.getPropertyValue('--thumb')).toBe('10.000%');
+    expect(bar.querySelector('.fl-scrollbar-thumb')).toBeTruthy();
   });
 });

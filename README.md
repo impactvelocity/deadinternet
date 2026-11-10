@@ -115,7 +115,7 @@ Each era lasts as long as its line. Near the end, a Web Audio chain (band-pass, 
 
 ### Rendering the film
 
-`npm run film` renders the film to an MP4. It opens `/movie?capture` in headless Chrome, asks the page to draw each frame at an exact time, and takes a screenshot. Nothing runs on the wall clock, so the result doesn't depend on how fast the machine is, and several browsers can render stretches in parallel. The page mixes the soundtrack offline with the same cues and robot voice as the live site, then ffmpeg brings it to −16 LUFS and joins everything up.
+`npm run film` renders the film to an MP4. It opens `/movie?capture` in headless Chrome, asks the page to draw each frame at an exact time, and takes a screenshot. Nothing runs on the wall clock, so the result doesn't depend on how fast the machine is, and several browsers can render stretches in parallel. Each frame is drawn at twice the video's 1920×1080 and scaled down, so text stays steady while the window grows. The page mixes the soundtrack offline with the same cues and robot voice as the live site, then ffmpeg brings it to −16 LUFS and joins everything up.
 
 ![Dead Internet title card](docs/readme/13-title.jpg)
 

@@ -16,6 +16,7 @@ import {
   pageFit,
   pageMix,
   screenFit,
+  titleSwap,
 } from '@/lib/flow/movie';
 import { MUSIC, musicCues, musicGain } from '@/lib/flow/music';
 import { ENDING, titleStart } from '@/lib/flow/ending';
@@ -51,13 +52,17 @@ describe('the movie frame', () => {
   });
 
   it('eases out to the whole page as a pure zoom, without jumps at either end', () => {
-    const a = screenFit(1692, 1080);
-    const b = pageFit(1692, 1080);
+    const a = screenFit(1920, 1080);
+    const b = pageFit(1920, 1080);
     expect(blendFit(a, b, 0)).toEqual(a);
     expect(blendFit(a, b, 1)).toEqual(b);
-    // The page fits inside the frame at the end.
-    expect(PAGE.w * b.scale).toBeLessThanOrEqual(1692 + 1e-6);
-    expect(PAGE.h * b.scale).toBeLessThanOrEqual(1080 + 1e-6);
+    // The page covers the frame at the end, centred: the dots reach every edge.
+    expect(PAGE.w * b.scale).toBeGreaterThanOrEqual(1920 - 1e-6);
+    expect(PAGE.h * b.scale).toBeGreaterThanOrEqual(1080 - 1e-6);
+    expect(b.x).toBeCloseTo(0, 6);
+    expect(b.y).toBeCloseTo((1080 - PAGE.h * b.scale) / 2, 6);
+    // It still zooms out from the screen, so the pull-back gains room.
+    expect(b.scale).toBeLessThan(a.scale);
     // One page point stays put the whole way: the zoom's fixed point.
     const px = (b.x - a.x) / (a.scale - b.scale);
     const py = (b.y - a.y) / (a.scale - b.scale);
@@ -148,6 +153,12 @@ describe('the movie frame', () => {
     // The title comes up in the middle first; nothing moves until it has.
     expect(movieFrame(t, titleAt + ENDING.fade).lift).toBe(0);
     expect(movieFrame(t, titleAt + M.liftAt + M.lift).lift).toBe(1);
+    // It changes places unseen: out where it is, gone at the switch, back in at the edges.
+    expect(titleSwap(0)).toEqual({ placed: 0, o: 1 });
+    expect(titleSwap(0.49).placed).toBe(0);
+    expect(titleSwap(0.5)).toEqual({ placed: 1, o: 0 });
+    expect(titleSwap(1)).toEqual({ placed: 1, o: 1 });
+    expect(titleSwap(0.25).o).toBeCloseTo(titleSwap(0.75).o, 9);
     const full = Array.from({ length: M.lines + 1 }, () => 0);
     for (let x = titleAt; x <= leaves + 2; x += 1 / 30) {
       const f = movieFrame(t, x);
@@ -218,7 +229,11 @@ describe('the movie frame', () => {
     const done = movieFrame(t, storyEnd - 1);
     expect(done.exit).toEqual(Array(MOVIE.exit.groups).fill(1));
     expect(done.dot).toBe(1);
-    expect(movieFrame(t, movieDuration(t)).dot).toBe(1);
+    // It holds alone through the outro, then goes out: the last frame is black.
+    const last = movieDuration(t);
+    expect(movieFrame(t, last - MOVIE.dotOut.black - MOVIE.dotOut.fade).dot).toBe(1);
+    expect(movieFrame(t, last - MOVIE.dotOut.black).dot).toBe(0);
+    expect(movieFrame(t, last).dot).toBe(0);
   });
 
   it('holds the last frame for the outro once the story ends', () => {

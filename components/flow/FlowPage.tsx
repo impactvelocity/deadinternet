@@ -48,6 +48,93 @@ export function PageBackdrop({ era }: { era: FlowEra }) {
   );
 }
 
+/**
+ * The screen's own light on the page. The page darkens as the film goes on
+ * (lib/flow/darkness.ts), so by the end the screen is the only light in the
+ * room: a soft glow in the era's colours comes up around it at the same rate
+ * (`--page-dark`) and goes out with the page at the reveal (`--page-o`).
+ * `rect` is the screen at full size, in viewport px; the lab scales the glow
+ * with the window every frame (a transform, so nothing repaints).
+ */
+export function ScreenGlow({ era, glowRef, rect, scale }: {
+  era: FlowEra;
+  glowRef: Ref<HTMLDivElement>;
+  rect: { x: number; y: number; w: number; h: number };
+  /** The window's opening size; the frame loop takes over from there. */
+  scale: number;
+}) {
+  const b = era.backdrop;
+  return (
+    <div
+      ref={glowRef}
+      aria-hidden
+      className="fl-screen-glow"
+      style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h, transform: `scale(${scale})`, '--glow-a': b.glow, '--glow-b': b.glow2 } as CSSProperties}
+    />
+  );
+}
+
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+
+/**
+ * The page's scroll bar, drawn by the film. Scrolling is how the film plays,
+ * so the bar gets the same quiet treatment as the rest of the page chrome
+ * instead of the system's grey gutter: a slim thumb at the right edge, dark
+ * on the bright page and light once it has darkened, that fades away with
+ * the play bar. The page still scrolls natively (wheel, keys, touch); this
+ * shows where you are and can be dragged, or clicked to jump. The lab writes
+ * `--p` (0..1) on it every frame.
+ */
+export function PageScrollbar({ barRef, total, viewport, onSeek }: {
+  barRef: Ref<HTMLDivElement>;
+  /** Story length in scroll px (0 until the timeline is compiled). */
+  total: number;
+  /** Viewport height in px. */
+  viewport: number;
+  onSeek: (s: number) => void;
+}) {
+  /** Where inside the thumb it was grabbed (px from its top), while dragging. */
+  const grab = useRef<number | null>(null);
+  const seekTo = (bar: HTMLElement, clientY: number, offset: number) => {
+    const thumb = bar.firstElementChild as HTMLElement;
+    const r = bar.getBoundingClientRect();
+    const room = r.height - thumb.offsetHeight;
+    if (room > 0 && total > 0) onSeek(clamp01((clientY - r.top - offset) / room) * total);
+  };
+  const release = (bar: HTMLElement) => {
+    grab.current = null;
+    delete bar.dataset.dragging;
+  };
+  return (
+    <div
+      ref={barRef}
+      aria-hidden
+      className="fl-scrollbar"
+      style={{ '--thumb': `${((viewport / Math.max(1, total + viewport)) * 100).toFixed(3)}%` } as CSSProperties}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        const bar = e.currentTarget;
+        const t = (bar.firstElementChild as HTMLElement).getBoundingClientRect();
+        // On the thumb, keep hold of it where it was grabbed; on the track, bring its middle there.
+        const offset = e.clientY >= t.top && e.clientY <= t.bottom ? e.clientY - t.top : t.height / 2;
+        grab.current = offset;
+        bar.setPointerCapture(e.pointerId);
+        bar.dataset.dragging = 'true';
+        e.preventDefault();
+        seekTo(bar, e.clientY, offset);
+      }}
+      onPointerMove={(e) => {
+        if (grab.current !== null) seekTo(e.currentTarget, e.clientY, grab.current);
+      }}
+      onPointerUp={(e) => release(e.currentTarget)}
+      onPointerCancel={(e) => release(e.currentTarget)}
+      onLostPointerCapture={(e) => release(e.currentTarget)}
+    >
+      <div className="fl-scrollbar-thumb" />
+    </div>
+  );
+}
+
 /** Kiro's ghost, as on gpty.lol, in the grey of the text around it. */
 function KiroGhost({ size }: { size: number }) {
   return (
@@ -76,7 +163,13 @@ function BrandMark({ size }: { size: number }) {
  * set every frame by the lab from story position (lib/flow/ending.ts); it
  * only takes clicks once it's showing.
  */
-export function EndTitle({ onHowMade }: { onHowMade?: () => void } = {}) {
+export function EndTitle({ onHowMade, onShare, onReplay }: {
+  onHowMade?: () => void;
+  /** The site only: share the film from its last frame, where you'd want to. */
+  onShare?: () => void;
+  /** The site only: play it again from the top. */
+  onReplay?: () => void;
+} = {}) {
   return (
     <section className="fl-end-title" aria-label="Dead Internet: credits">
       <span className="fl-end-mark">
@@ -88,6 +181,15 @@ export function EndTitle({ onHowMade }: { onHowMade?: () => void } = {}) {
         <p className="fl-end-date">2026 — the year the internet died</p>
       </div>
       <nav className="fl-end-links" aria-label="Links">
+        {onReplay && (
+          <>
+            <button type="button" onClick={onReplay}>
+              <ReplayIcon size={14} />
+              <span>Watch again</span>
+            </button>
+            <span aria-hidden="true">·</span>
+          </>
+        )}
         <a href="https://hidylanjones.com/" target="_blank" rel="noopener noreferrer">Written &amp; built by Dylan Jones</a>
         <span aria-hidden="true">·</span>
         <a href="https://kiroween.devpost.com/" target="_blank" rel="noopener noreferrer">
@@ -100,6 +202,15 @@ export function EndTitle({ onHowMade }: { onHowMade?: () => void } = {}) {
             <button type="button" onClick={onHowMade} aria-haspopup="dialog">
               <LayersIcon size={14} />
               <span>How it’s made</span>
+            </button>
+          </>
+        )}
+        {onShare && (
+          <>
+            <span aria-hidden="true">·</span>
+            <button type="button" onClick={onShare} aria-haspopup="dialog">
+              <ShareIcon size={13} />
+              <span>Share</span>
             </button>
           </>
         )}
@@ -230,6 +341,15 @@ function ShareIcon({ size }: { size: number }) {
   return (
     <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5" />
+    </svg>
+  );
+}
+
+/** An arrow turning back on itself: play it again. */
+function ReplayIcon({ size }: { size: number }) {
+  return (
+    <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5" />
     </svg>
   );
 }
@@ -510,7 +630,8 @@ export function PageHeader({ interactive, onShare, onHowMade }: { interactive: b
         {
           height: HEADER_H,
           fontFamily: UI,
-          opacity: 'var(--page-o, 1)',
+          // Fades with the page at the reveal, and while the film is watched hands-off (`--idle-o`, flow.css).
+          opacity: 'calc(var(--page-o, 1) * var(--idle-o, 1))',
           pointerEvents: interactive ? 'auto' : 'none',
         } as CSSProperties
       }

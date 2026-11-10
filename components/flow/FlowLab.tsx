@@ -59,6 +59,7 @@ import {
   pageFit,
   pageMix,
   screenFit,
+  titleSwap,
 } from '@/lib/flow/movie';
 import { MUSIC, musicCues } from '@/lib/flow/music';
 import { PLAY_SPEED } from '@/lib/flow/playback';
@@ -80,7 +81,7 @@ import { FlowHud, HUD_HEIGHT } from './FlowHud';
 import { HowItsMade } from './HowItsMade';
 import { FlowMusic } from './FlowMusic';
 import { FlowNarration } from './FlowNarration';
-import { EndTitle, EraDrawer, FilmVideo, HEADER_H, MovieAmbience, MovieIntro, MovieMade, PageBackdrop, PageHeader, paintAmbience, paintMadeGlitch, ShareFilm, StartScreen, WindowToggle } from './FlowPage';
+import { EndTitle, EraDrawer, FilmVideo, HEADER_H, MovieAmbience, MovieIntro, MovieMade, PageBackdrop, PageHeader, PageScrollbar, paintAmbience, paintMadeGlitch, ScreenGlow, ShareFilm, StartScreen, WindowToggle } from './FlowPage';
 
 /** Least room kept above and below the browser window, in page units. */
 const PAGE_GAP = 20;
@@ -92,6 +93,8 @@ import { box, SCREEN, SLOTS } from './parts';
 
 /** Scroll smoothing time constant (s). */
 const SMOOTHING = 0.09;
+/** While the film plays, how long the pointer rests (ms) before the page chrome fades away. */
+const IDLE_AFTER = 2600;
 
 interface Snap {
   era: number;
@@ -157,13 +160,15 @@ function crossFadeChrome(screen: HTMLElement | null) {
 }
 
 /**
- * Her runaway inbox, from the rush on: about ten steps a second at first and
- * quicker and quicker after, held once the window is too small to see.
+ * Her runaway inbox, from the rush on. A new message lands every two steps:
+ * a little over one a second at first, so each can be read, then steadily
+ * quicker (about three a second by the time the window is small). Any
+ * faster and it pulls the eye off the feed and the pull-back.
  */
 function rushStep(t: Timeline, s: number): number {
   if (s < t.rushStart) return -1;
   const x = (s - t.rushStart) / PLAY_SPEED;
-  return Math.min(200, Math.floor(10 * x + 3 * x * x));
+  return Math.min(200, Math.floor(2.4 * x + 0.25 * x * x));
 }
 
 /** Deterministic 0..1 noise. */
@@ -299,6 +304,8 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
   const startScreenBottom = fitY + (PAGE_WINDOW.y + growthCentre * (1 - g0) + WINDOW.h * g0) * scale;
   const startBelow = startScreenBottom + 26;
   const startCenter = { x: vw / 2, y: fitY + (PAGE_WINDOW.y + growthCentre) * scale };
+  // The screen at full size, in viewport px: its glow on the page is scaled from here (ScreenGlow).
+  const glowRect = { x: startCenter.x - (SCREEN.w * scale) / 2, y: startCenter.y - (SCREEN.h * scale) / 2, w: SCREEN.w * scale, h: SCREEN.h * scale };
   // How the page sits in the viewport by the ending (the movie has eased out to the whole page by then).
   const endFit = movie ? pageFit(vw, vh) : { scale, x: fitX, y: fitY };
   const [drawer, setDrawer] = useState(false);
@@ -321,6 +328,10 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
   const glitchRef = useRef<HTMLDivElement>(null);
   const displayRef = useRef<HTMLDivElement>(null);
   const ambienceRef = useRef<HTMLDivElement>(null);
+  /** The screen's light on the page (the site only). */
+  const glowRef = useRef<HTMLDivElement>(null);
+  /** The page's own scroll bar (the site only). */
+  const scrollbarRef = useRef<HTMLDivElement>(null);
   /** The movie's final how-it-was-made line, which glitches out. */
   const madeLastRef = useRef<HTMLParagraphElement>(null);
   const timelineRef = useRef<Timeline | null>(null);
@@ -497,6 +508,9 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
     [seek],
   );
 
+  // From the end title: play it again from the top.
+  const replay = useCallback(() => playFromEra(0), [playFromEra]);
+
   const toggle = useCallback((key: 'guides' | 'wire' | 'cursor' | 'hud') => {
     if (key === 'guides') setGuides((v) => !v);
     if (key === 'wire') setWire((v) => !v);
@@ -646,8 +660,11 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
         // At the very end the title's lines leave, and one dot is left.
         mv.exit.forEach((x, k) => rootRef.current?.style.setProperty(`--exit-${k}`, x.toFixed(3)));
         rootRef.current?.style.setProperty('--end-dot', mv.dot.toFixed(3));
-        // Before that, the title moves aside for a few lines on how the film was made.
-        rootRef.current?.style.setProperty('--lift', mv.lift.toFixed(4));
+        // Before that, the title makes room for a few lines on how the film was made:
+        // it fades out of the middle and back in at the edges.
+        const swap = titleSwap(mv.lift);
+        rootRef.current?.style.setProperty('--lift', String(swap.placed));
+        rootRef.current?.style.setProperty('--swap', swap.o.toFixed(3));
         mv.made.forEach((line, k) => {
           rootRef.current?.style.setProperty(`--how-${k}`, line.o.toFixed(3));
           rootRef.current?.style.setProperty(`--how-p-${k}`, line.p.toFixed(4));
@@ -667,10 +684,14 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
         cursor.style.transform = `translate(${f.cursor.x}px, ${f.cursor.y}px)`;
         cursor.dataset.pressed = f.pressed ? 'true' : 'false';
       }
+      // How far through, 0..1: the play bar fills behind its playhead, and the page's scroll bar follows.
+      const progress = (f.s / t.total).toFixed(5);
       if (playheadRef.current) {
         playheadRef.current.style.left = `${(f.s / t.total) * 100}%`;
+        playheadRef.current.parentElement?.style.setProperty('--p', progress);
         playheadRef.current.closest('[role="slider"]')?.setAttribute('aria-valuenow', String(Math.round((f.s / t.total) * 100)));
       }
+      scrollbarRef.current?.style.setProperty('--p', progress);
       if (readoutRef.current) readoutRef.current.textContent = `${Math.round(f.s)}`;
 
       const back = worldBackRef.current;
@@ -746,6 +767,8 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
           front.style.transform = '';
           // The screen grows steadily with the web, to full size at the pull-back.
           win.style.transform = windowTransform(grow);
+          // Its glow on the page grows with it.
+          if (glowRef.current) glowRef.current.style.transform = `scale(${grow})`;
         }
         // The movie's window fades in as it arrives after the title.
         win.style.opacity = mv && !f.reveal && mv.window < 1 ? mv.window.toFixed(3) : '';
@@ -982,6 +1005,47 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
     };
   }, [movie, seek, stopPlay, toggle, togglePlay, toggleDrawer]);
 
+  // Watching hands-off: once the film is playing and the pointer has rested a
+  // moment, the page chrome (header, play bar, scroll bar, the pause button
+  // over the window) and the pointer itself fade away, like a video player's.
+  // Any movement or key brings them back (`[data-idle]` in flow.css).
+  useEffect(() => {
+    const root = rootRef.current;
+    if (movie || !root) return;
+    if (!playing) {
+      root.dataset.idle = 'false';
+      return;
+    }
+    let timer = 0;
+    let at = { x: NaN, y: NaN };
+    const wake = () => {
+      if (root.dataset.idle !== 'false') root.dataset.idle = 'false';
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        // Not while the pointer is on a control, or one has the keyboard.
+        if (root.querySelector(':is(.fl-player, .fl-page-header, .fl-scrollbar):hover, :focus-visible')) wake();
+        else root.dataset.idle = 'true';
+      }, IDLE_AFTER);
+    };
+    // The feed moving under a still pointer can raise moves of its own: only a change of place counts.
+    const onMove = (e: PointerEvent) => {
+      if (e.clientX === at.x && e.clientY === at.y) return;
+      at = { x: e.clientX, y: e.clientY };
+      wake();
+    };
+    wake();
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('pointerdown', wake, { passive: true });
+    window.addEventListener('keydown', wake);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerdown', wake);
+      window.removeEventListener('keydown', wake);
+      root.dataset.idle = 'false';
+    };
+  }, [movie, playing]);
+
   /* -------------------------------- Render --------------------------------- */
 
   const revealOn = snap.phase !== null;
@@ -1015,6 +1079,8 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
 
         {/* The page: covers the reveal world until the hand-off fades it out. */}
         <PageBackdrop era={era} />
+        {/* The screen lights the page as it darkens. */}
+        {!movie && <ScreenGlow era={era} glowRef={glowRef} rect={glowRect} scale={WINDOW_GROWTH.start} />}
         {/* The movie's title sits on the page, under the window that arrives over it. */}
         {movie && <MovieAmbience ambienceRef={ambienceRef} />}
         {movie && <MovieIntro hint={!capture && !hasStarted} />}
@@ -1090,7 +1156,7 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
             <HowItsMade open={madeOpen} onClose={closeMade} onPlayFrom={playFromEra} />
           </>
         )}
-        <EndTitle onHowMade={movie ? undefined : openMade} />
+        <EndTitle onHowMade={movie ? undefined : openMade} onShare={movie ? undefined : openShare} onReplay={movie ? undefined : replay} />
         {movie && <MovieMade lastRef={madeLastRef} />}
         {movie && <div aria-hidden className="fl-end-dot" />}
         <FlowNarration
@@ -1109,6 +1175,7 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
         {!movie && <EraDrawer era={era} index={snap.era} open={drawerOpen} onClose={() => setDrawer(false)} onJump={jumpToEra} />}
       </div>
 
+      {!movie && <PageScrollbar barRef={scrollbarRef} total={timeline?.total ?? 0} viewport={vh} onSeek={seek} />}
       {movie ? null : hud ? (
         <FlowHud
           // As wide as the window; on phones, the whole width of the screen.

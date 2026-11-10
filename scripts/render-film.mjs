@@ -19,6 +19,10 @@
  * with one static gain and a true-peak limiter, so the balance between the
  * voice, the score and its swell stays exactly as on the site.
  *
+ * The video is 1920×1080. Every frame is drawn at twice that and scaled
+ * down (`--supersample`), which keeps text and edges steady as the window
+ * grows a little each frame.
+ *
  * Needs Google Chrome and ffmpeg.
  */
 import { spawn } from 'node:child_process';
@@ -32,7 +36,7 @@ const { values: opt } = parseArgs({
   options: {
     url: { type: 'string', default: 'http://localhost:7822/movie' },
     out: { type: 'string', default: 'out/film/dead-internet.mp4' },
-    width: { type: 'string', default: '1692' },
+    width: { type: 'string', default: '1920' },
     height: { type: 'string', default: '1080' },
     pad: { type: 'string', default: '30' },
     fps: { type: 'string', default: '30' },
@@ -40,6 +44,8 @@ const { values: opt } = parseArgs({
     from: { type: 'string' },
     to: { type: 'string' },
     crf: { type: 'string', default: '16' },
+    /** Draw every frame this many times larger and scale it down: smooths text and edges as the window grows. */
+    supersample: { type: 'string', default: '2' },
     preroll: { type: 'string', default: '2.5' },
     /** Integrated loudness to bring the mix to (LUFS), or `off` for the site's own levels. */
     loudness: { type: 'string', default: '-16' },
@@ -52,6 +58,7 @@ const { values: opt } = parseArgs({
 const W = Number(opt.width);
 const H = Number(opt.height);
 const FPS = Number(opt.fps);
+const SS = Math.max(1, Number(opt.supersample));
 const WORKERS = Math.max(1, Number(opt.workers));
 const OUT = path.resolve(opt.out);
 const PARTS = `${OUT.replace(/\.mp4$/, '')}.parts`;
@@ -84,7 +91,7 @@ async function launch() {
 
 /** Open the movie in capture mode and wait until it is ready to draw frames. */
 async function openMovie(browser, images) {
-  const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: SS });
   page.on('pageerror', (err) => console.error('[page error]', err.message));
   const url = new URL(opt.url);
   url.searchParams.set('capture', '');
@@ -135,10 +142,11 @@ async function renderStretch(k, a, b, images) {
     // Warm up on the frames just before the stretch (not recorded).
     for (let i = Math.max(0, a - Math.round(Number(opt.preroll) * FPS)); i < a; i++) await seek(i);
     const file = path.join(PARTS, `part-${String(k).padStart(2, '0')}.mp4`);
-    const enc = ffmpeg(['-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', opt.crf, '-pix_fmt', 'yuv420p', '-r', String(FPS), file]);
+    const enc = ffmpeg(['-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', ...(SS > 1 ? ['-vf', `scale=${W}:${H}:flags=lanczos`] : []), '-c:v', 'libx264', '-preset', 'medium', '-crf', opt.crf, '-pix_fmt', 'yuv420p', '-r', String(FPS), file]);
     for (let i = a; i < b; i++) {
       await seek(i);
-      const { data } = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 95, optimizeForSpeed: true });
+      // (An explicit clip with a scale: without it the screenshot comes back at 1× whatever the page is drawn at.)
+      const { data } = await cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: 95, optimizeForSpeed: true, clip: { x: 0, y: 0, width: W, height: H, scale: SS } });
       if (!enc.proc.stdin.write(Buffer.from(data, 'base64'))) await once(enc.proc.stdin, 'drain');
       progress.done++;
     }
@@ -194,7 +202,7 @@ async function main() {
   }
   const images = await assetImages();
 
-  console.log(`Opening ${opt.url} (${W}×${H}, ${opt.pad}px padding, ${FPS} fps)…`);
+  console.log(`Opening ${opt.url} (${W}×${H}${SS > 1 ? `, drawn at ${SS}×` : ''}, ${opt.pad}px padding, ${FPS} fps)…`);
   const probe = await launch();
   let duration;
   const wav = path.join(PARTS, 'soundtrack.wav');

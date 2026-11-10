@@ -11,7 +11,7 @@
  * Under each era, a thin bar shows who is posting in it: people, brands and
  * pages, bots. That bar is the story arc; tune it in `data/flow/posts.ts`.
  */
-import { memo, useState, type Ref } from 'react';
+import { memo, useState, type CSSProperties, type Ref } from 'react';
 import { composition } from '@/data/flow/posts';
 import { FILM_ERAS as FLOW_ERAS, FILM_POSTS as FLOW_POSTS } from '@/data/flow/scenes';
 import type { Timeline } from '@/lib/flow/timeline';
@@ -144,7 +144,8 @@ export const FlowHud = memo(function FlowHud(props: FlowHudProps) {
                   key={segment.id}
                   className="fl-player-segment"
                   data-active={segment.active}
-                  style={{ left: pct(segment.start), width: pct(segment.end - segment.start) }}
+                  // Where it starts and how long it is, as fractions: its fill follows the playhead (`--p`, flow.css).
+                  style={{ left: pct(segment.start), width: pct(segment.end - segment.start), '--s0': segment.start / total, '--w': (segment.end - segment.start) / total } as CSSProperties}
                 >
                   <span className="fl-player-segment-fill" />
                   <span className="fl-player-tooltip" style={index === 0 ? { left: 0, transform: 'none' } : index === segments.length - 1 ? { left: 'auto', right: 0, transform: 'none' } : undefined}>
