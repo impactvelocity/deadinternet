@@ -50,7 +50,7 @@ describe('watch as a video', () => {
 describe('share', () => {
   it('opens from a Share button next to the credits', () => {
     const onShare = vi.fn();
-    render(<PageHeader interactive onShare={onShare} />);
+    render(<PageHeader interactive onShare={onShare} onHowMade={vi.fn()} />);
     expect(screen.getByText('Kiroween')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     expect(onShare).toHaveBeenCalledOnce();

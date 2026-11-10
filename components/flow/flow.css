@@ -1438,9 +1438,47 @@
 [data-flow-root][data-movie] .fl-end-title h2 { --x: var(--exit-3, 0); --dy: 6px; }
 [data-flow-root][data-movie] .fl-end-title :is(.fl-end-mark, .fl-end-links, .fl-end-date, .fl-end-credit, h2) {
   filter: blur(calc(var(--x) * 9px)) opacity(calc(1 - var(--x)));
-  translate: 0 calc(var(--x) * var(--dy));
-  scale: calc(1 - var(--x) * 0.08);
+  translate: 0 calc(var(--x) * var(--dy) + var(--lift, 0) * var(--ly, 0px));
+  scale: calc((1 - var(--x) * 0.08) * (1 - var(--lift, 0) * (1 - var(--ls, 1))));
 }
+/* How it was made (MovieMade): after a moment the title moves up, smaller,
+   and its credit and date move down (--lift, 0..1), leaving the middle of
+   the frame for a few short lines, one at a time, each under a small icon. */
+[data-flow-root][data-movie] .fl-end-title h2 { --ly: -17.5vh; --ls: 0.5; }
+[data-flow-root][data-movie] .fl-end-title :is(.fl-end-credit, .fl-end-date) { --ly: 15.5vh; }
+.fl-movie-how {
+  position: absolute;
+  inset: 0;
+  z-index: 36;
+  pointer-events: none;
+  color: #c9c4d3;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  text-shadow: 0 0 24px rgb(5 5 7 / 90%), 0 0 4px rgb(5 5 7 / 90%);
+}
+.fl-movie-how-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.6vh;
+  padding: 0 24px;
+  text-align: center;
+  opacity: var(--o);
+  /* A slow rise the whole time it's up, so it never sits still. */
+  translate: 0 calc((0.5 - var(--p)) * 1.6vh);
+}
+.fl-movie-how-icon { width: 5.4vh; height: 5.4vh; color: #f4f2f8; opacity: 0.9; }
+.fl-movie-how-thumb { translate: 0 calc(var(--p) * 10.8px); }
+.fl-movie-how-scene p {
+  margin: 0;
+  font-size: clamp(18px, 3vh, 46px);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.09em;
+}
+.fl-movie-how-scene strong { font-weight: 500; color: #f4f2f8; }
 .fl-end-dot {
   position: absolute;
   left: 50%;
@@ -1455,4 +1493,260 @@
   opacity: var(--end-dot, 0);
   scale: calc(0.35 + 0.65 * var(--end-dot, 0));
   pointer-events: none;
+}
+
+/* "How it's made": a dark drawer from the right, over the film (HowItsMade.tsx). */
+.fl-made-button { margin-left: 3px; }
+.fl-made-button + .fl-share-button { margin-left: 0; }
+.fl-end-links button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  color: #bdb7c8;
+  cursor: pointer;
+  text-underline-offset: 4px;
+}
+.fl-end-links button:hover { color: #f1eef6; text-decoration: underline; }
+.fl-end-links button:focus-visible { outline: 2px solid #d6d0dd; outline-offset: 3px; border-radius: 2px; }
+
+.fl-made {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(620px, 100vw);
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: #0e0d12;
+  color: #e9e5ef;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-shadow: -24px 0 70px rgb(0 0 0 / 45%), -1px 0 0 rgb(255 255 255 / 8%);
+  pointer-events: auto;
+}
+.fl-made[open] { animation: fl-made-in .34s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.fl-made::backdrop { background: rgb(5 5 7 / 50%); }
+.fl-made[open]::backdrop { animation: fl-made-veil .34s ease-out; }
+@keyframes fl-made-in { from { transform: translateX(40px); opacity: 0; } }
+@keyframes fl-made-veil { from { opacity: 0; } }
+.fl-made-panel { position: relative; height: 100%; }
+.fl-made-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 34px 32px 48px;
+}
+/* The drawer's own scrollbar: a slim pill in the timeline's pink-to-blue, on no track. */
+.fl-made-scroll::-webkit-scrollbar { width: 12px; }
+.fl-made-scroll::-webkit-scrollbar-track { background: transparent; margin-block: 6px; }
+.fl-made-scroll::-webkit-scrollbar-thumb {
+  min-height: 48px;
+  border: 4px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, rgb(245 168 212 / 55%), rgb(169 184 238 / 55%)) padding-box;
+}
+.fl-made-scroll::-webkit-scrollbar-thumb:hover,
+.fl-made-scroll::-webkit-scrollbar-thumb:active {
+  border-width: 3px;
+  background: linear-gradient(to bottom, #f5a8d4, #a9b8ee) padding-box;
+}
+/* Firefox: no gradients there, so a thin thumb in the same blue. */
+@supports not selector(::-webkit-scrollbar) {
+  .fl-made-scroll { scrollbar-width: thin; scrollbar-color: rgb(169 184 238 / 60%) transparent; }
+}
+.fl-made-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #a9a3b2;
+  background: rgb(14 13 18 / 72%);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+.fl-made-close:hover { background: rgb(255 255 255 / 9%); color: #fff; }
+.fl-made .fl-made-close:focus-visible { outline-offset: 0; }
+.fl-made :is(button, a):focus-visible { outline: 2px solid #d6d0dd; outline-offset: 3px; }
+/* The top of the drawer: the title over a faint glow in 2005's pink and blue. */
+.fl-made-hero {
+  margin: -34px -32px 0;
+  padding: 44px 32px 28px;
+  border-bottom: 1px solid rgb(255 255 255 / 9%);
+  background:
+    radial-gradient(120% 95% at 0% 0%, rgb(247 168 212 / 22%), transparent 62%),
+    radial-gradient(95% 85% at 100% 0%, rgb(150 172 240 / 20%), transparent 64%);
+}
+.fl-made-hero > * { animation: fl-made-rise .6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.fl-made-hero > :nth-child(2) { animation-delay: .06s; }
+.fl-made-hero > :nth-child(3) { animation-delay: .12s; }
+.fl-made-hero > :nth-child(4) { animation-delay: .2s; }
+@keyframes fl-made-rise { from { opacity: 0; transform: translateY(10px); } }
+.fl-made-eyebrow {
+  margin: 0;
+  font: 500 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .04em;
+  text-transform: capitalize;
+  color: #a9a3b2;
+}
+.fl-made h2 { margin: 10px 0 0; font-size: 44px; font-weight: 500; line-height: 1; letter-spacing: -0.045em; color: #fff; }
+.fl-made-lede { margin: 16px 0 0; max-width: 30em; font-size: 19px; line-height: 1.42; letter-spacing: -0.005em; color: #e3dee9; text-wrap: balance; }
+/* The film in four numbers. */
+.fl-made-stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: 26px 0 0; }
+.fl-made-stats div { display: flex; flex-direction: column-reverse; padding-left: 14px; border-left: 1px solid rgb(255 255 255 / 12%); }
+.fl-made-stats div:first-child { padding-left: 0; border-left: 0; }
+.fl-made-stats dd { margin: 0; font-size: 26px; font-weight: 500; line-height: 1.1; letter-spacing: -0.03em; color: #fff; font-variant-numeric: tabular-nums; }
+.fl-made-stats dt { margin-top: 4px; font: 500 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; color: #8f899b; }
+
+.fl-made section { margin-top: 36px; padding-top: 30px; border-top: 1px solid rgb(255 255 255 / 9%); }
+.fl-made-hero + section { margin-top: 0; border-top: 0; }
+.fl-made h3 { margin: 0; font-size: 19px; font-weight: 550; line-height: 1.25; letter-spacing: -0.02em; color: #fff; }
+.fl-made section p { margin: 10px 0 0; max-width: 34em; font-size: 15px; line-height: 1.6; color: #bdb7c8; text-wrap: pretty; }
+.fl-made section p.fl-made-hint { display: flex; align-items: center; gap: 8px; margin-top: 14px; font: 500 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: #8f899b; }
+.fl-made-hint::before { content: '↓'; color: #f5a8d4; animation: fl-made-nudge 1.8s ease-in-out infinite; }
+@keyframes fl-made-nudge { 50% { transform: translateY(3px); } }
+/* Sections ease in as they scroll into view (useReveal). */
+.fl-made [data-reveal] { transition: opacity .7s ease, transform .7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.fl-made [data-reveal='wait'] { opacity: 0; transform: translateY(16px); }
+
+/* The eras as a timeline: year, a line, then one post in that era's tokens.
+   The drawer's scroll lights the rows it has reached and fills the spine. */
+.fl-made-timeline { position: relative; margin: 22px 0 0; padding: 0; list-style: none; }
+.fl-made-timeline::before,
+.fl-made-timeline::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: var(--spine-top, 0);
+  width: 1px;
+  height: var(--spine-h, 100%);
+  background: rgb(255 255 255 / 12%);
+}
+/* How far the scroll has got: 2005's pink cooling to grey. */
+.fl-made-timeline::after {
+  height: var(--spine-fill, 0px);
+  background: linear-gradient(to bottom, #f5a8d4, #a9b8ee 45%, #8f899b);
+  box-shadow: 0 0 10px rgb(245 168 212 / 45%);
+}
+.fl-made-timeline li { position: relative; display: flex; align-items: center; padding: 9px 0; }
+.fl-made-timeline li > * { transition: opacity .5s ease; }
+.fl-made-timeline li[data-state='next'] > * { opacity: .32; }
+.fl-made-when { position: relative; flex: 0 0 150px; padding-left: 22px; }
+.fl-made-when::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: #dcd7e3;
+  transition: background-color .4s ease, box-shadow .4s ease, transform .4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+li[data-state='next'] .fl-made-when::before { background: #0e0d12; box-shadow: inset 0 0 0 1px #8f899b; }
+li[data-state='now'] .fl-made-when::before {
+  background: color-mix(in oklab, var(--f-accent) 45%, #fff);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--f-accent) 55%, transparent), 0 0 16px color-mix(in oklab, var(--f-accent) 80%, #fff);
+  transform: scale(1.25);
+}
+/* The year, small, then the era's name as the row's title. */
+.fl-made-year { display: block; font: 500 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; color: #a9a3b2; transition: color .4s ease; }
+li[data-state='now'] .fl-made-year { color: color-mix(in oklab, var(--f-accent) 40%, #fff); }
+.fl-made-era { display: block; margin-top: 4px; font-size: 16px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: #fff; text-wrap: balance; }
+/* Start the film from this era. */
+.fl-made-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  padding: 3px 10px 3px 7px;
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #bdb7c8;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.fl-made-play:hover { background: #f1eef6; border-color: #f1eef6; color: #0e0d12; }
+.fl-made-rule { flex: 1 1 16px; min-width: 12px; height: 0; border-top: 1px dashed rgb(255 255 255 / 22%); margin-right: 12px; }
+li[data-state='now'] .fl-made-rule { border-top-color: color-mix(in oklab, var(--f-accent) 50%, #fff); }
+.fl-made-demo { flex: 0 0 min(340px, 62%); }
+/* Each era's shape, type and accent, in the drawer's dark: the era's own
+   colours are lifted toward white so they read on it. */
+.fl-made-post {
+  width: 100%;
+  padding: var(--f-pad);
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: var(--f-radius);
+  background: linear-gradient(180deg, #1b1a22, #15141b);
+  color: #e9e5ef;
+  font-family: var(--f-font);
+  font-size: var(--f-size);
+  line-height: 1.4;
+  transition: border-color .5s ease, box-shadow .5s ease, transform .5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* The era the scroll is on glows in its own accent. */
+li[data-state='now'] .fl-made-post {
+  border-color: color-mix(in oklab, var(--f-accent) 55%, #fff);
+  box-shadow: 0 18px 44px -20px color-mix(in oklab, var(--f-accent) 85%, #fff), 0 0 0 4px color-mix(in oklab, var(--f-accent) 16%, transparent);
+  transform: translateX(-4px);
+}
+.fl-made-post header { display: flex; align-items: center; gap: 10px; }
+.fl-made-post-name { font-weight: 700; color: color-mix(in oklab, var(--f-name) 30%, #fff); }
+.fl-made-post-meta { margin-top: 2px; font-size: 11px; color: #8f899b; }
+.fl-made section .fl-made-post p { margin: 10px 0 0; max-width: none; font-size: inherit; line-height: inherit; color: inherit; }
+.fl-made-post footer {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  font-weight: 600;
+  color: color-mix(in oklab, var(--f-accent) 50%, #fff);
+}
+
+.fl-made-foot { margin-top: 40px; padding-top: 28px; border-top: 1px solid rgb(255 255 255 / 9%); }
+.fl-made-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; }
+.fl-made-links a {
+  padding: 9px 16px;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #f1eef6;
+  text-decoration: none;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.fl-made-links a:first-child { background: #f1eef6; border-color: #f1eef6; color: #0e0d12; }
+.fl-made-links a:first-child:hover { background: #fff; }
+.fl-made-links a:not(:first-child):hover { border-color: rgb(255 255 255 / 40%); background: rgb(255 255 255 / 6%); }
+.fl-made-stack { margin: 18px 0 0; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; color: #6f6a7a; }
+@media (max-width: 600px) {
+  .fl-made-scroll { padding: 28px 20px 40px; }
+  .fl-made-hero { margin: -28px -20px 0; padding: 40px 20px 24px; }
+  .fl-made h2 { font-size: 36px; }
+  .fl-made-lede { font-size: 17px; }
+  .fl-made-stats dd { font-size: 21px; }
+  .fl-made-stats div { padding-left: 10px; }
+  .fl-made-button { padding: 5px; }
+  .fl-made-when { flex-basis: 96px; padding-left: 16px; }
+  .fl-made-era { font-size: 13.5px; }
+  .fl-made-rule { flex: 0 0 12px; margin-right: 8px; }
+  .fl-made-demo { flex: 1 1 auto; min-width: 0; }
+  li[data-state='now'] .fl-made-post { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-made[open], .fl-made[open]::backdrop, .fl-made-hero > *, .fl-made-hint::before { animation: none; }
+  .fl-made [data-reveal], .fl-made-timeline li > *, .fl-made-when::before, .fl-made-post { transition: none; }
 }

@@ -77,9 +77,10 @@ import { ChromeBackground, ChromeLayers, Guides } from './FlowChrome';
 import { paintDisplay, ScreenDisplay, screenRadius } from './FlowDisplay';
 import { FlowFeed } from './FlowFeed';
 import { FlowHud, HUD_HEIGHT } from './FlowHud';
+import { HowItsMade } from './HowItsMade';
 import { FlowMusic } from './FlowMusic';
 import { FlowNarration } from './FlowNarration';
-import { EndTitle, EraDrawer, FilmVideo, HEADER_H, MovieAmbience, MovieIntro, PageBackdrop, PageHeader, paintAmbience, ShareFilm, StartScreen, WindowToggle } from './FlowPage';
+import { EndTitle, EraDrawer, FilmVideo, HEADER_H, MovieAmbience, MovieIntro, MovieMade, PageBackdrop, PageHeader, paintAmbience, ShareFilm, StartScreen, WindowToggle } from './FlowPage';
 
 /** Least room kept above and below the browser window, in page units. */
 const PAGE_GAP = 20;
@@ -385,8 +386,10 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
       if (!boxes.length) return;
       const left = Math.min(...boxes.map((r) => r.left)) - 40;
       const right = Math.max(...boxes.map((r) => r.right)) + 40;
-      const top = Math.min(...boxes.map((r) => r.top)) - 36;
-      const bottom = Math.max(...boxes.map((r) => r.bottom)) + 36;
+      // (The movie's title and credit move apart for the lines between them: keep that whole column clear.)
+      const spread = movie ? window.innerHeight * 0.18 : 0;
+      const top = Math.min(...boxes.map((r) => r.top)) - 36 - spread;
+      const bottom = Math.max(...boxes.map((r) => r.bottom)) + 36 + spread;
       const k = endFit.scale;
       hushRef.current = { x: (left - endFit.x) / k, y: (top - endFit.y) / k, w: (right - left) / k, h: (bottom - top) / k };
     };
@@ -395,7 +398,7 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
     ro.observe(words);
     document.fonts?.ready.then(measure, () => {});
     return () => ro.disconnect();
-  }, [endFit.scale, endFit.x, endFit.y]);
+  }, [endFit.scale, endFit.x, endFit.y, movie]);
 
   useEffect(() => {
     captureRef.current = capture;
@@ -429,15 +432,22 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
     setShareOpen(true);
   }, [stopPlay]);
   const closeShare = useCallback(() => setShareOpen(false), []);
+  // "How it's made": a drawer about the film itself; the film holds still behind it too.
+  const [madeOpen, setMadeOpen] = useState(false);
+  const openMade = useCallback(() => {
+    stopPlay();
+    setMadeOpen(true);
+  }, [stopPlay]);
+  const closeMade = useCallback(() => setMadeOpen(false), []);
   useEffect(() => {
-    if (!videoOpen && !shareOpen) return;
+    if (!videoOpen && !shareOpen && !madeOpen) return;
     const html = document.documentElement;
     const before = html.style.overflow;
     html.style.overflow = 'hidden';
     return () => {
       html.style.overflow = before;
     };
-  }, [videoOpen, shareOpen]);
+  }, [videoOpen, shareOpen, madeOpen]);
 
   const togglePlay = useCallback(() => {
     const t = timelineRef.current;
@@ -468,6 +478,21 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
       window.scrollTo(0, destination);
     },
     [stopPlay],
+  );
+
+  // From "How it's made": close the drawer and play the film from an era.
+  const playFromEra = useCallback(
+    (k: number) => {
+      setMadeOpen(false);
+      const t = timelineRef.current;
+      if (!t || t.eraStarts[k] === undefined) return;
+      seek(t.eraStarts[k]);
+      playRef.current = true;
+      startedRef.current = true;
+      setHasStarted(true);
+      setPlaying(true);
+    },
+    [seek],
   );
 
   const toggle = useCallback((key: 'guides' | 'wire' | 'cursor' | 'hud') => {
@@ -619,6 +644,12 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
         // At the very end the title's lines leave, and one dot is left.
         mv.exit.forEach((x, k) => rootRef.current?.style.setProperty(`--exit-${k}`, x.toFixed(3)));
         rootRef.current?.style.setProperty('--end-dot', mv.dot.toFixed(3));
+        // Before that, the title moves aside for a few lines on how the film was made.
+        rootRef.current?.style.setProperty('--lift', mv.lift.toFixed(4));
+        mv.made.forEach((scene, k) => {
+          rootRef.current?.style.setProperty(`--how-${k}`, scene.o.toFixed(3));
+          rootRef.current?.style.setProperty(`--how-p-${k}`, scene.p.toFixed(4));
+        });
         // A faint glow in the era's colours behind the window.
         if (ambienceRef.current) {
           const px = grow * fit.scale;
@@ -687,7 +718,8 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
                 now,
                 clock: (f.s - t.revealStart) / PLAY_SPEED,
                 speech: narration.reveal.durationSeconds,
-                veil: endingVeil(t, f.s),
+                // The movie dims the field further while its how-it-was-made lines are up.
+                veil: endingVeil(t, f.s) + (mv ? MOVIE.madeVeil * mv.lift : 0),
                 voice: voiceTrack(t, FLOW_ERAS.at(-1)!.id),
                 hush: hushRef.current,
               },
@@ -1045,13 +1077,15 @@ export function FlowLab({ movie = false }: { movie?: boolean } = {}) {
 
         {!movie && (
           <>
-            <PageHeader interactive={!revealOn} onShare={openShare} />
+            <PageHeader interactive={!revealOn} onShare={openShare} onHowMade={openMade} />
             <StartScreen visible={!hasStarted} above={startScreenTop - 18} below={startBelow} center={startCenter} onPlay={togglePlay} onWatchVideo={openVideo} />
             <FilmVideo open={videoOpen} onClose={closeVideo} />
             <ShareFilm open={shareOpen} onClose={closeShare} />
+            <HowItsMade open={madeOpen} onClose={closeMade} onPlayFrom={playFromEra} />
           </>
         )}
-        <EndTitle />
+        <EndTitle onHowMade={movie ? undefined : openMade} />
+        {movie && <MovieMade />}
         {movie && <div aria-hidden className="fl-end-dot" />}
         <FlowNarration
           era={era.id}

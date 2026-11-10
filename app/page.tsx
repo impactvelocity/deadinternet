@@ -1,11 +1,18 @@
 /**
- * The only route: the dead internet feed. One continuous feed with pinned
- * pieces around it; each era swaps what is in them and restyles the feed.
- * `/flow`, where this lived while it was a lab, redirects here
- * (see `next.config.ts`).
+ * The only route. On a computer it is the film: one continuous feed with
+ * pinned pieces around it, played by scrolling (FlowLab, behind FilmGate).
+ * A phone can't play that, so it gets the film as a video and the story to
+ * read instead (MobileStory). `/flow`, where the film lived while it was a
+ * lab, redirects here (see `next.config.ts`).
  */
-import { FlowLab } from '@/components/flow/FlowLab';
+import { FilmGate } from '@/components/flow/FilmGate';
+import { MobileStory } from '@/components/story/MobileStory';
 
 export default function Home() {
-  return <FlowLab />;
+  return (
+    <>
+      <MobileStory />
+      <FilmGate />
+    </>
+  );
 }

@@ -1,0 +1,150 @@
+/*
+ * The phone page (MobileStory.tsx): the film as a video, then the story to
+ * read. Hidden everywhere else; the media query matches PHONE_QUERY in
+ * data/flow/site.ts.
+ */
+.ms { display: none; }
+@media (max-width: 600px), (max-height: 500px) and (pointer: coarse) {
+  .ms { display: block; }
+}
+
+.ms {
+  --ink: #1f1d1a;
+  --muted: #625d57;
+  --rule: rgb(31 29 26 / 14%);
+  min-height: 100dvh;
+  background: #050507;
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.ms :is(a, button):focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 4px; }
+
+/* The top: 2005's page, as the film opens on it. */
+.ms-hero {
+  padding: 18px 20px 30px;
+  background:
+    radial-gradient(90% 60% at 0% 0%, var(--bd-glow), transparent 70%),
+    radial-gradient(80% 55% at 100% 8%, var(--bd-glow2), transparent 72%),
+    var(--bd-base);
+}
+.ms-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ms-brand { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -0.045em; }
+/* What it was built for, top right, as in the film's header. */
+.ms-kiro { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; text-decoration: none; }
+.ms-kiro svg { opacity: .85; }
+.ms-kiro strong { font-weight: 500; color: #393530; }
+.ms-eyebrow { margin: 46px 0 0; text-align: center; font: 500 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; color: var(--muted); }
+.ms h1 { margin: 10px 0 0; text-align: center; font-size: clamp(46px, 14.5vw, 64px); font-weight: 600; line-height: .95; letter-spacing: -0.05em; }
+.ms-lede { margin: 16px auto 0; max-width: 19em; text-align: center; font-size: 18px; line-height: 1.4; letter-spacing: -0.01em; color: #393530; text-wrap: balance; }
+
+/* The film as a video: its poster under a play button, like the film's own
+   start screen; the player takes its place (and plays) once it's pressed. */
+.ms-video {
+  position: relative;
+  margin: 30px 0 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #050507;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 14%), 0 10px 28px rgb(0 0 0 / 16%), 0 34px 70px -20px rgb(0 0 0 / 40%);
+}
+.ms-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.ms-video-poster { position: absolute; inset: 0; display: block; width: 100%; height: 100%; padding: 0; color: #fff; cursor: pointer; }
+.ms-video-poster img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ms-video-poster:active img { transform: scale(1.03); }
+.ms-video-poster::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgb(5 5 7 / 70%), transparent 50%); }
+/* The play button: a pill along the bottom, clear of the poster's title. */
+.ms-video-play {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 18px 9px 12px;
+  border-radius: 999px;
+  background: rgb(241 238 246 / 96%);
+  color: #0e0d12;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-shadow: 0 0 0 6px rgb(255 255 255 / 12%), 0 10px 30px rgb(0 0 0 / 55%);
+  transform: translateX(-50%);
+  transition: transform .2s ease;
+}
+.ms-video-poster:active .ms-video-play { transform: translateX(-50%) scale(.96); }
+.ms-video-play span { font: 500 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; opacity: .6; }
+.ms-video-label { position: absolute; z-index: 1; inset: auto 0 16px; text-align: center; font-size: 13.5px; font-weight: 550; }
+
+/* What a phone is missing, in one line. */
+.ms-desktop { margin: 18px auto 0; max-width: 21em; text-align: center; font-size: 14px; line-height: 1.5; color: var(--muted); text-wrap: balance; }
+/* Down to the story: a label between two hairlines, over a chevron. */
+.ms-down { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 38px 0 0; color: #393530; text-decoration: none; }
+.ms-down span { display: flex; align-items: center; gap: 14px; width: 100%; font-size: 15px; font-weight: 550; letter-spacing: -0.01em; white-space: nowrap; }
+.ms-down span::before, .ms-down span::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+.ms-down svg { animation: ms-nudge 1.8s ease-in-out infinite; }
+@keyframes ms-nudge { 50% { transform: translateY(4px); } }
+
+/* The story: one era a screen, each on its own backdrop draining toward
+   black. The colour only changes in the gap under the words. */
+.ms-chapter {
+  /* Overlap by a pixel: at fractional heights the black behind would show as a hairline. */
+  margin-top: -1px;
+  padding: 47px 20px 150px;
+  background: linear-gradient(to bottom, var(--tone) calc(100% - 150px), var(--tone-next));
+  color: var(--ink);
+}
+.ms-chapter:first-child { background: linear-gradient(to bottom, #ece4ec, var(--tone) 60px, var(--tone) calc(100% - 150px), var(--tone-next)); }
+.ms-chapter[data-ink='light'], .ms-reveal, .ms-foot {
+  --ink: #f1eef6;
+  --muted: #a9a3b2;
+  --rule: rgb(255 255 255 / 14%);
+  color: var(--ink);
+}
+.ms-chapter, .ms-reveal { text-align: center; }
+/* The year, plainly. */
+.ms-when { margin: 0; font: 500 14px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .1em; color: var(--muted); }
+/* A still of the feed, cropped to its middle so the posts are big enough to read. */
+.ms-shot {
+  margin: 22px 0 0;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgb(0 0 0 / 10%);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 12%), 0 8px 24px rgb(0 0 0 / 12%), 0 30px 60px -24px rgb(0 0 0 / 40%);
+}
+.ms-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ms-shot[data-wide] { aspect-ratio: 1280 / 818; box-shadow: 0 0 0 1px rgb(255 255 255 / 10%); }
+/* What the reveal shows, under its stills. */
+.ms-sees { margin: 14px auto 0; max-width: 24em; font-size: 13.5px; line-height: 1.5; color: var(--muted); text-wrap: pretty; }
+/* What Ashley says, signed with her picture from that year. */
+.ms blockquote { display: flex; flex-direction: column; align-items: center; gap: 20px; margin: 30px 0 0; }
+.ms blockquote > :not(p) { flex: 0 0 auto; box-shadow: 0 0 0 3px rgb(255 255 255 / 60%), 0 12px 28px -8px rgb(0 0 0 / 45%); }
+.ms-chapter[data-ink='light'] blockquote > :not(p) { box-shadow: 0 0 0 3px rgb(255 255 255 / 22%), 0 12px 28px -8px rgb(0 0 0 / 60%); }
+.ms blockquote p { margin: 0; max-width: 17em; font-size: 21px; font-weight: 450; line-height: 1.36; letter-spacing: -0.015em; text-wrap: balance; }
+.ms blockquote p::before { content: '“'; }
+.ms blockquote p::after { content: '”'; }
+
+/* Behind the feed: black from here on. */
+.ms-reveal { padding: 20px 20px 40px; }
+.ms-beat { margin-top: 34px; }
+.ms-when + .ms-beat { margin-top: 22px; }
+.ms-beat .ms-shot { margin-top: 0; }
+.ms-reveal blockquote { margin-top: 16px; }
+
+/* The end: the mark and three links. */
+.ms-foot { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 30px 20px 0; padding: 30px 0 46px; border-top: 1px solid var(--rule); }
+.ms-foot p + p { margin: 0; font-size: 13px; color: #6f6a7a; }
+.ms-foot a { color: #bdb7c8; text-decoration: none; }
+
+/* A phone on its side: keep the column readable. */
+@media (min-width: 601px) {
+  .ms-hero > *, .ms-chapter > *, .ms-reveal > *, .ms-foot { max-width: 520px; margin-inline: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ms-down svg { animation: none; }
+  .ms-video-poster img, .ms-video-play { transition: none; }
+}

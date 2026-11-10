@@ -17,6 +17,7 @@ import { SITE } from '@/data/flow/site';
 import { FILM_VIDEO, youtubeEmbed } from '@/data/flow/video';
 import type { FlowEra } from '@/data/flow/types';
 import type { Ambience, Rgb } from '@/lib/flow/movie';
+import { LayersIcon } from './HowItsMade';
 import { Icon } from './icons';
 
 /** Header height in real (unscaled) px. The page is fitted below it. */
@@ -75,7 +76,7 @@ function BrandMark({ size }: { size: number }) {
  * set every frame by the lab from story position (lib/flow/ending.ts); it
  * only takes clicks once it's showing.
  */
-export function EndTitle() {
+export function EndTitle({ onHowMade }: { onHowMade?: () => void } = {}) {
   return (
     <section className="fl-end-title" aria-label="Dead Internet: credits">
       <span className="fl-end-mark">
@@ -93,6 +94,15 @@ export function EndTitle() {
           <KiroGhost size={14} />
           <span>built for Kiroween</span>
         </a>
+        {onHowMade && (
+          <>
+            <span aria-hidden="true">·</span>
+            <button type="button" onClick={onHowMade} aria-haspopup="dialog">
+              <LayersIcon size={14} />
+              <span>How it’s made</span>
+            </button>
+          </>
+        )}
       </nav>
     </section>
   );
@@ -415,13 +425,61 @@ export function MovieIntro({ hint }: { hint: boolean }) {
   );
 }
 
+/** Line icons for the movie's how-it-was-made scenes, drawn like the dead-internet mark. */
+function MadeIcon({ name }: { name: 'code' | 'scroll' | 'spark' | 'voice' }) {
+  return (
+    <svg aria-hidden="true" className="fl-movie-how-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      {name === 'code' && <path d="m7.5 7-5 5 5 5M16.5 7l5 5-5 5M13.6 4.5l-3.2 15" />}
+      {name === 'scroll' && (
+        <>
+          {/* A scroll bar; its thumb travels down while the scene plays. */}
+          <rect x="9.25" y="1.75" width="5.5" height="20.5" rx="2.75" />
+          <rect className="fl-movie-how-thumb" x="10.9" y="3.4" width="2.2" height="6.4" rx="1.1" fill="currentColor" stroke="none" />
+        </>
+      )}
+      {name === 'spark' && (
+        <>
+          <path d="M10 3.5 11.8 8.2 16.5 10 11.8 11.8 10 16.5 8.2 11.8 3.5 10 8.2 8.2Z" />
+          <path d="M18 14.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9Z" />
+        </>
+      )}
+      {name === 'voice' && <path d="M3.5 10.5v3M7.75 7v10M12 3.5v17M16.25 7.5v9M20.5 10.5v3" />}
+    </svg>
+  );
+}
+
+/**
+ * How the film was made, in the movie's ending (/movie): once the end title
+ * has moved up and its credit down, a few short lines play between them, one
+ * at a time, each under a small icon. The lab sets each scene's opacity and
+ * progress every frame (`--how-N`, `--how-p-N`, lib/flow/movie.ts movieEnding).
+ */
+export function MovieMade() {
+  const scenes = [
+    { icon: 'code', line: <>This short film was <strong>made in code</strong></> },
+    { icon: 'scroll', line: <>The <strong>scroll bar</strong> pushes the story forward</> },
+    { icon: 'spark', line: <>Every era, person and post was <strong>AI generated</strong></> },
+    { icon: 'voice', line: <><span className="block">The voice, the emotion, the song</span><span className="block"><strong>none of this is real</strong></span></> },
+  ] as const;
+  return (
+    <div aria-hidden className="fl-movie-how">
+      {scenes.map((scene, k) => (
+        <div key={scene.icon} className="fl-movie-how-scene" style={{ '--o': `var(--how-${k}, 0)`, '--p': `var(--how-p-${k}, 0)` } as CSSProperties}>
+          <MadeIcon name={scene.icon} />
+          <p>{scene.line}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
  * The header pinned to the top of the viewport, at real size: the logo at
  * the top left (it rewinds to the beginning), who built it in the middle and
- * what for at the right with a share button, kept quiet so the page reads
- * like a film's. (The era drawer still opens with the E key.)
+ * what for at the right with "How it's made" and a share button, kept quiet
+ * so the page reads like a film's. (The era drawer still opens with the E key.)
  */
-export function PageHeader({ interactive, onShare }: { interactive: boolean; onShare: () => void }) {
+export function PageHeader({ interactive, onShare, onHowMade }: { interactive: boolean; onShare: () => void; onHowMade: () => void }) {
   return (
     <header
       className="fl-page-header absolute inset-x-0 top-0 z-30"
@@ -459,6 +517,10 @@ export function PageHeader({ interactive, onShare }: { interactive: boolean; onS
         >
           <GitHubIcon size={16} />
         </a>
+        <button type="button" className="fl-share-button fl-made-button" onClick={onHowMade} aria-haspopup="dialog" aria-label="How it’s made" title="How it’s made">
+          <LayersIcon size={14} />
+          <span className="fl-share-label">How it’s made</span>
+        </button>
         <button type="button" className="fl-share-button" onClick={onShare} aria-haspopup="dialog">
           <ShareIcon size={14} />
           <span className="fl-share-label">Share</span>

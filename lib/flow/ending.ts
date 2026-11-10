@@ -30,7 +30,7 @@ const smooth = (x: number) => {
 };
 
 /** When the title starts to appear, in story px. */
-export function titleStart(t: Timeline): number {
+export function titleStart(t: Pick<Timeline, 'revealStart'>): number {
   return t.revealStart + (narration.reveal.durationSeconds + ENDING.delay) * P;
 }
 

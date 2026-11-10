@@ -18,6 +18,7 @@ import {
   screenFit,
 } from '@/lib/flow/movie';
 import { MUSIC, musicCues, musicGain } from '@/lib/flow/music';
+import { ENDING, titleStart } from '@/lib/flow/ending';
 import { PLAY_SPEED } from '@/lib/flow/playback';
 import { musicLevels, storyMusicLevel, voiceCues } from '@/lib/flow/soundtrack';
 import { compileTimeline, FLOW_TIMING } from '@/lib/flow/timeline';
@@ -137,6 +138,28 @@ describe('the movie frame', () => {
     for (let x = 0; x <= cardsEnd; x += 0.1) expect(movieFrame(t, x).glow).toBe(0);
     expect(movieFrame(t, cardsEnd + MOVIE.arrive / 2).glow).toBeGreaterThan(0);
     expect(movieFrame(t, cardsEnd + MOVIE.ambienceIn).glow).toBe(1);
+  });
+
+  it('moves the end title aside for the how-it-was-made lines, one at a time, before it leaves', () => {
+    const titleAt = intro + titleStart(t) / P;
+    const peak = intro + t.reveal.find((r) => r.phase === 'end')!.s0 / P;
+    const leaves = peak + MOVIE.exit.at;
+    // The title comes up in the middle first; nothing moves until it has.
+    expect(movieFrame(t, titleAt + ENDING.fade).lift).toBe(0);
+    expect(movieFrame(t, titleAt + MOVIE.made.liftAt + MOVIE.made.lift).lift).toBe(1);
+    // Every line gets the middle to itself, fully up, for a few seconds.
+    const full = Array.from({ length: MOVIE.made.scenes }, () => 0);
+    for (let x = titleAt; x <= leaves + 2; x += 1 / 30) {
+      const f = movieFrame(t, x);
+      expect(f.made.filter((m) => m.o > 0.001).length).toBeLessThanOrEqual(1);
+      f.made.forEach((m, k) => {
+        if (m.o === 1) full[k] += 1 / 30;
+        // None before the title has started to move, none once it starts to leave.
+        if (m.o > 0) expect(f.lift).toBeGreaterThan(0);
+        if (x >= leaves - MOVIE.made.tail + 1e-6) expect(m.o).toBe(0);
+      });
+    }
+    for (const seconds of full) expect(seconds).toBeGreaterThan(3);
   });
 
   it('ends by taking the title away, outside in, and leaving one dot', () => {

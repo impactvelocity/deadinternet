@@ -11,9 +11,10 @@
  * it's there, a faint glow in each era's colours sits behind it
  * (`ambienceAt`); the cards stay on plain black. At the reveal the frame
  * eases out from the screen to the whole page, so the pull-back has the same
- * room it has on the site. Once the score has peaked on the end title, the
- * title's lines leave one by one, from the edges in, and a single dot is
- * left where it was; it holds alone for a moment after the score ends.
+ * room it has on the site. The end title then moves up, smaller, and a few
+ * lines say how the film was made. Once the score has peaked, the title's
+ * lines leave one by one, from the edges in, and a single dot is left where
+ * it was; it holds alone for a moment after the score ends.
  *
  * Because the score starts under the titles, the story gets that much less
  * of it (`movieScoreSeconds`, compiled into the movie's timeline), so the
@@ -25,6 +26,7 @@
  */
 import type { Backdrop } from '@/data/flow/types';
 import { PAGE, PAGE_WINDOW, WINDOW, WINDOW_GROWTH, windowScale } from './camera';
+import { titleStart } from './ending';
 import { MUSIC, musicCues, musicSwell } from './music';
 import { PLAY_SPEED } from './playback';
 import type { Timeline } from './timeline';
@@ -52,6 +54,16 @@ export const MOVIE = {
    * links, the date, the credit, then the title itself), each over `each`.
    */
   exit: { at: 1, stagger: 0.35, each: 1.3, groups: 4 },
+  /**
+   * How it was made, under the end title. `liftAt` seconds after the title
+   * starts to appear it moves up, smaller, and its credit moves down (over
+   * `lift` seconds); between them `scenes` short lines with an icon play one
+   * at a time, each fading over `fade`, the last one gone `tail` seconds
+   * before the title starts to leave.
+   */
+  made: { liftAt: 2.6, lift: 1.4, scenes: 4, fade: 0.5, tail: 1.8 },
+  /** How much further the field of dots dims while those lines are up (added to the title's veil). */
+  madeVeil: 0.22,
   /** The last dot fading up where the title was, in seconds after the score's peak. */
   dot: { at: 2.6, in: 1.2 },
   /** Score level under the cards (linear gain); it settles to the bed under the voice as the window arrives. */
@@ -162,6 +174,10 @@ export interface MovieFrame {
   exit: number[];
   /** The last dot, 0..1. */
   dot: number;
+  /** 0..1: the end title moved up and smaller, its credit down, making room for the scenes. */
+  lift: number;
+  /** Each how-it-was-made scene: opacity `o`, and `p`, 0..1 through its time on screen. */
+  made: { o: number; p: number }[];
 }
 
 /**
@@ -184,7 +200,7 @@ export function movieWindowScale(t: Pick<Timeline, 'pullbackStart'>, seconds: nu
 }
 
 /** What the movie shows at `seconds`. */
-export function movieFrame(t: Pick<Timeline, 'total' | 'pullbackStart' | 'reveal'>, seconds: number): MovieFrame {
+export function movieFrame(t: Pick<Timeline, 'total' | 'pullbackStart' | 'reveal' | 'revealStart'>, seconds: number): MovieFrame {
   const { starts, end } = cardStarts();
   const intro = end + MOVIE.arrive;
   const f = MOVIE.cardFade;
@@ -205,16 +221,32 @@ export function movieFrame(t: Pick<Timeline, 'total' | 'pullbackStart' | 'reveal
 }
 
 /**
- * The end, from the score's peak on the end title (the start of the `end`
- * phase): the title's lines leave, outside in, and one dot is left.
+ * The end. Once the title is up it moves aside for a few lines on how the
+ * film was made; then, from the score's peak (the start of the `end` phase),
+ * the title's lines leave, outside in, and one dot is left.
  */
-export function movieEnding(t: Pick<Timeline, 'total' | 'reveal'>, seconds: number): Pick<MovieFrame, 'exit' | 'dot'> {
+export function movieEnding(
+  t: Pick<Timeline, 'total' | 'reveal' | 'revealStart'>,
+  seconds: number,
+): Pick<MovieFrame, 'exit' | 'dot' | 'lift' | 'made'> {
   const peak = movieIntro() + (t.reveal.find((r) => r.phase === 'end')?.s0 ?? t.total) / PLAY_SPEED;
   const x = seconds - peak;
   const { at, stagger, each, groups } = MOVIE.exit;
+  // The scenes share the time between the title settling and its leaving.
+  const M = MOVIE.made;
+  const liftAt = movieIntro() + titleStart(t) / PLAY_SPEED + M.liftAt;
+  const first = liftAt + M.lift * 0.7;
+  const span = (peak + at - M.tail - first) / M.scenes;
   return {
     exit: Array.from({ length: groups }, (_, k) => smooth((x - at - k * stagger) / each)),
     dot: smooth((x - MOVIE.dot.at) / MOVIE.dot.in),
+    lift: smooth((seconds - liftAt) / M.lift),
+    made: Array.from({ length: M.scenes }, (_, k) => {
+      const y = seconds - (first + k * span);
+      // Too little time for them (a much shorter ending): leave them out.
+      if (span < 4 * M.fade) return { o: 0, p: 0 };
+      return { o: smooth(y / M.fade) * (1 - smooth((y - (span - M.fade)) / M.fade)), p: clamp01(y / span) };
+    }),
   };
 }
 

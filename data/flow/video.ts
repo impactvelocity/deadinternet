@@ -6,6 +6,8 @@
 export const FILM_VIDEO = {
   youtube: 'https://youtu.be/ydEq0oPjJnE',
   title: 'Dead Internet, the film',
+  /** How long it runs, as shown on the phone page's play button. */
+  runtime: '2:23',
 } as const;
 
 /** The privacy-friendly embed URL for a YouTube link or bare video id, or null if it isn't one. */
